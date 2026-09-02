@@ -135,10 +135,10 @@ export default function SuggestedProducts() {
 
                 <div className="pt-2 border-t border-slate-100">
                   <div className="flex items-baseline gap-1.5 mb-2">
-                    <span className="text-sm font-bold text-slate-900">${product.price}</span>
+                    <span className="text-sm font-bold text-slate-900">Rs. {product.price}</span>
                     {product.originalPrice && (
                       <span className="text-[10px] text-slate-400 line-through">
-                        ${product.originalPrice}
+                        Rs. {product.originalPrice}
                       </span>
                     )}
                   </div>
