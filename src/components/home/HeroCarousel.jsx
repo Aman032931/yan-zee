@@ -1,4 +1,4 @@
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 const slides = [
   {
@@ -47,17 +47,19 @@ const HeroCarousel = () => {
   };
 
   return (
-    <section className="yz-hero-carousel yz-hero-carousel--promo" aria-label="Featured offers">
-      <div className="yz-hero-carousel__track">
+    <section className="relative w-full overflow-hidden bg-black" aria-label="Featured offers">
+      <div className="relative h-[420px] w-full max-[768px]:h-[280px] max-[480px]:h-[200px]">
         {slides.map((slide, index) => (
           <article
             key={slide.id}
-            className={`yz-hero-carousel__slide ${index === currentSlide ? "is-active" : ""}`}
             aria-hidden={index !== currentSlide}
+            className={`absolute inset-0 h-full w-full transition-opacity duration-[0.8s] ease-in-out ${
+              index === currentSlide ? "opacity-100" : "opacity-0"
+            }`}
           >
-            <div className="yz-hero yz-hero--overlay yz-hero--layout yz-hero-carousel__panel yz-hero--dark">
+            <div className="relative flex h-full w-full items-center overflow-hidden">
               <div
-                className="yz-hero__bg"
+                className="absolute inset-0 h-full w-full"
                 style={{
                   "--yz-banner-object-position": slide.objectPosition,
                   "--yz-banner-object-position-mobile": slide.objectPositionMobile,
@@ -65,7 +67,7 @@ const HeroCarousel = () => {
               >
                 <img
                   alt=""
-                  className="yz-hero__photo"
+                  className="h-full w-full object-cover object-center"
                   loading={index === 0 ? "eager" : "lazy"}
                   draggable="false"
                   decoding="async"
@@ -76,11 +78,11 @@ const HeroCarousel = () => {
                   }}
                 />
               </div>
-              <div className="yz-hero__overlay"></div>
-              <div className="yz-hero__content yz-hero__content--yanzee">
+              <div className="absolute inset-0 bg-[rgba(0,0,0,0.35)]"></div>
+              <div className="relative z-[1] max-w-[550px] px-[8%] py-[40px] max-[768px]:max-w-[90%] max-[768px]:px-[5%] max-[768px]:py-[20px]">
                 {slide.pill && (
                   <span
-                    className="yz-feature-card__pill"
+                    className="mb-[12px] inline-block rounded-[20px] bg-[rgba(255,255,255,0.2)] px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.5px] text-white backdrop-blur-[4px]"
                     style={{
                       position: "relative",
                       top: "0px",
@@ -92,11 +94,19 @@ const HeroCarousel = () => {
                     {slide.pill}
                   </span>
                 )}
-                <h2 className="yz-hero__title" style={{ fontSize: "32px", color: "#ffffff" }}>
+                <h2
+                  className="m-0 mb-2 font-bold leading-[1.2] text-white max-[768px]:text-[24px] max-[480px]:text-[18px]"
+                  style={{ fontSize: "32px", color: "#ffffff" }}
+                >
                   {slide.title}
                 </h2>
-                <p className="yz-hero__subtitle">{slide.subtitle}</p>
-                <a className="yz-hero__btn" href={slide.buttonLink}>
+                <p className="m-0 mb-[20px] text-[16px] text-[rgba(255,255,255,0.9)] max-[480px]:mb-[12px] max-[480px]:text-[13px]">
+                  {slide.subtitle}
+                </p>
+                <a
+                  className="inline-block rounded-[4px] bg-white px-8 py-3 text-[14px] font-semibold text-black no-underline transition-colors duration-200 hover:bg-[#eee] max-[480px]:px-5 max-[480px]:py-2 max-[480px]:text-[12px]"
+                  href={slide.buttonLink}
+                >
                   {slide.buttonText}
                 </a>
               </div>
@@ -107,7 +117,7 @@ const HeroCarousel = () => {
 
       <button
         type="button"
-        className="yz-hero-carousel__arrow yz-hero-carousel__arrow--prev"
+        className="absolute left-[20px] top-1/2 z-[2] -translate-y-1/2 cursor-pointer rounded-full border-none bg-[rgba(255,255,255,0.2)] px-5 py-4 text-[28px] text-white backdrop-blur-[4px] transition-colors duration-200 hover:bg-[rgba(255,255,255,0.4)] max-[768px]:hidden"
         onClick={prevSlide}
         aria-label="Previous offer"
       >
@@ -115,14 +125,14 @@ const HeroCarousel = () => {
       </button>
       <button
         type="button"
-        className="yz-hero-carousel__arrow yz-hero-carousel__arrow--next"
+        className="absolute right-[20px] top-1/2 z-[2] -translate-y-1/2 cursor-pointer rounded-full border-none bg-[rgba(255,255,255,0.2)] px-5 py-4 text-[28px] text-white backdrop-blur-[4px] transition-colors duration-200 hover:bg-[rgba(255,255,255,0.4)] max-[768px]:hidden"
         onClick={nextSlide}
         aria-label="Next offer"
       >
         ›
       </button>
 
-      <div className="yz-hero-carousel__dots" role="tablist" aria-label="Offer navigation">
+      <div className="absolute bottom-4 left-1/2 z-[2] flex -translate-x-1/2 gap-2" role="tablist" aria-label="Offer navigation">
         {slides.map((slide, index) => (
           <button
             key={slide.id}
@@ -130,7 +140,9 @@ const HeroCarousel = () => {
             role="tab"
             aria-selected={index === currentSlide}
             aria-label={`Offer ${index + 1}: ${slide.title}`}
-            className={index === currentSlide ? "is-active" : ""}
+            className={`h-[10px] w-[10px] cursor-pointer rounded-full border-none bg-[rgba(255,255,255,0.4)] p-0 transition-colors duration-200 max-[768px]:h-2 max-[768px]:w-2 ${
+              index === currentSlide ? "bg-white" : ""
+            }`}
             onClick={() => goToSlide(index)}
           />
         ))}

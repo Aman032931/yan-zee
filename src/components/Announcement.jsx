@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-
 const countries = [
   { name: "United States", flag: "🇺🇸" },
   { name: "Saudi Arabia", flag: "🇸🇦" },
@@ -34,81 +33,79 @@ function Announcement() {
   };
 
   return (
-    <div className="announcement">
-
+    <div className="flex h-[55px] items-center justify-between border-b-[3px] border-red-600 bg-black px-[68px] font-serif text-[14px] text-white">
       {/* LEFT */}
-      <div className="announcement-left">
-        <span className="brand">YANZEE</span>
+      <div className="flex w-[250px] items-center justify-between">
+        <span className="text-[16px] font-bold italic">YANZEE</span>
 
-        <button onClick={previousAnnouncement}>
+        <button
+          onClick={previousAnnouncement}
+          className="cursor-pointer border-0 bg-transparent text-[18px] text-white"
+        >
           ‹
         </button>
       </div>
 
       {/* CENTER */}
-      <div className="announcement-message">
+      <div className="flex-1 text-center font-medium">
         {announcements[current]}
       </div>
 
       {/* RIGHT */}
-      <div className="announcement-right">
-
-        <button onClick={nextAnnouncement}>
+      <div className="flex w-[300px] items-center justify-end gap-[18px]">
+        <button
+          onClick={nextAnnouncement}
+          className="cursor-pointer border-0 bg-transparent text-[18px] text-white"
+        >
           ›
         </button>
 
         {/* COUNTRY DROPDOWN */}
-        <div className="country-dropdown">
-
+        <div className="relative">
           <button
-            className="country-button"
+            className="flex cursor-pointer items-center gap-2 border-0 bg-transparent font-[inherit] text-[14px] text-white"
             onClick={() => setIsCountryOpen(!isCountryOpen)}
           >
-            <span className="flag">
+            <span className="text-[20px]">
               {countries[0].flag}
             </span>
 
             <span>USA</span>
 
-            <span className="arrow">
+            <span className="ml-[2px] text-[15px]">
               {isCountryOpen ? "⌃" : "⌄"}
             </span>
           </button>
 
           {/* DROPDOWN MENU */}
           {isCountryOpen && (
-            <div className="country-menu">
-
+            <div className="absolute right-[-10px] top-[34px] z-[1000] max-h-[360px] w-[280px] overflow-y-auto rounded-[14px] bg-white py-[10px] text-black shadow-[0_4px_15px_rgba(0,0,0,0.25)]">
               {countries.map((country, index) => (
                 <div
-                  className="country-item"
+                  className="flex h-[50px] cursor-pointer items-center gap-[12px] px-4 hover:bg-[#f5f5f5]"
                   key={country.name}
                 >
-                  <span className="flag">
+                  <span className="text-[20px]">
                     {country.flag}
                   </span>
 
                   <span>{country.name}</span>
 
                   {index === 0 && (
-                    <span className="check">✓</span>
+                    <span className="ml-auto text-[18px]">✓</span>
                   )}
                 </div>
               ))}
-
             </div>
           )}
-
         </div>
 
         {/* LANGUAGE */}
-        <div className="language">
+        <div className="flex cursor-pointer items-center gap-[7px] border-l border-[#555] pl-[15px]">
           <span>◎</span>
           <span>English</span>
         </div>
-
       </div>
-
     </div>
   );
 }

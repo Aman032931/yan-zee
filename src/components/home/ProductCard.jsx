@@ -1,7 +1,15 @@
-import  { useState } from "react";
+import { useState } from "react";
+
+const badgeStyles = {
+  "top-selling": "bg-[#ff6b00] text-white",
+  sale: "bg-[#ff0000] text-white",
+  "new-in": "bg-[#0066cc] text-white",
+  discounted: "bg-[#ff0000] text-white",
+};
 
 const ProductCard = ({ product, isCarousel = false }) => {
   const [isWishlisted, setIsWishlisted] = useState(product.wishlisted || false);
+  const badgeKey = product.badge ? product.badge.toLowerCase().replace(/ /g, "-") : "";
 
   const toggleWishlist = (e) => {
     e.preventDefault();
@@ -10,11 +18,20 @@ const ProductCard = ({ product, isCarousel = false }) => {
   };
 
   return (
-    <a className={`yz-product-card ${isCarousel ? 'yz-product-card--carousel' : 'yz-product-card--grid'}`} href={product.href}>
-      <div className="yz-product-card__img-wrap">
+    <a
+      className={`flex flex-col text-[#333] no-underline transition-transform duration-200 hover:-translate-y-1 ${
+        isCarousel ? "yz-product-card--carousel" : "yz-product-card--grid"
+      }`}
+      href={product.href}
+    >
+      <div className="relative aspect-square overflow-hidden rounded-[8px] bg-[#f5f5f5]">
         {product.badge && (
-          <div className="yz-product-card__badges">
-            <span className={`yz-product-card__highlight yz-product-card__highlight--${product.badge.toLowerCase().replace(/ /g, '-')}`}>
+          <div className="absolute left-2 top-2 z-[1] flex flex-col gap-1">
+            <span
+              className={`rounded-[3px] px-[10px] py-[2px] text-[10px] font-semibold uppercase tracking-[0.3px] max-[480px]:px-2 max-[480px]:py-[1px] max-[480px]:text-[9px] ${
+                badgeStyles[badgeKey] || ""
+              }`}
+            >
               {product.badge}
             </span>
           </div>
@@ -24,7 +41,7 @@ const ProductCard = ({ product, isCarousel = false }) => {
             alt={product.title}
             loading="lazy"
             decoding="async"
-            className="yz-product-card__img"
+            className="h-full w-full object-cover"
             src={product.image}
             style={{ position: "absolute", height: "100%", width: "100%", inset: "0px", color: "transparent", objectFit: "cover" }}
           />
@@ -32,7 +49,9 @@ const ProductCard = ({ product, isCarousel = false }) => {
         <span
           role="button"
           tabIndex="0"
-          className={`yz-product-card__wish ${isWishlisted ? "is-active" : ""}`}
+          className={`absolute right-2 top-2 z-[1] flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-[rgba(255,255,255,0.9)] text-[#999] transition-all duration-200 hover:scale-110 hover:bg-white max-[480px]:h-7 max-[480px]:w-7 ${
+            isWishlisted ? "text-[#ff0000]" : ""
+          }`}
           onClick={toggleWishlist}
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
           aria-pressed={isWishlisted}
@@ -42,28 +61,30 @@ const ProductCard = ({ product, isCarousel = false }) => {
           </svg>
         </span>
       </div>
-      <div className="yz-product-card__body">
-        <div className="yz-product-card__brand">
+      <div className="px-1 py-[10px]">
+        <div className="mb-1 text-[12px] font-semibold uppercase text-[#666] max-[768px]:text-[11px] max-[480px]:text-[10px]">
           <span>{product.brand}</span>
         </div>
-        <div className="yz-product-card__rating">
+        <div className="mb-1">
           <div className="yz-rating-stars yz-rating-stars--sm" aria-label="Rated 0.0 out of 5">
-            <span className="yz-rating-stars__row" aria-hidden="true">
-              <span className="yz-rating-stars__star">★</span>
-              <span className="yz-rating-stars__star">★</span>
-              <span className="yz-rating-stars__star">★</span>
-              <span className="yz-rating-stars__star">★</span>
-              <span className="yz-rating-stars__star">★</span>
+            <span className="flex gap-[2px]" aria-hidden="true">
+              <span className="text-[12px] text-[#f5a623]">★</span>
+              <span className="text-[12px] text-[#f5a623]">★</span>
+              <span className="text-[12px] text-[#f5a623]">★</span>
+              <span className="text-[12px] text-[#f5a623]">★</span>
+              <span className="text-[12px] text-[#f5a623]">★</span>
             </span>
           </div>
         </div>
-        <p className="yz-product-card__title">{product.title}</p>
-        <p className="yz-product-card__price">
+        <p className="m-0 mb-[6px] line-clamp-2 overflow-hidden text-[14px] leading-[1.3] max-[768px]:text-[13px] max-[480px]:text-[12px]">
+          {product.title}
+        </p>
+        <p className="m-0 text-[16px] font-semibold max-[768px]:text-[14px] max-[480px]:text-[13px]">
           <span className="yz-product-card__price-current">{product.price}</span>
           {product.comparePrice && (
             <>
-              <del className="yz-product-card__price-compare">{product.comparePrice}</del>
-              <span className="yz-product-card__discount">{product.discount}</span>
+              <del className="ml-2 text-[13px] font-normal text-[#999] line-through">{product.comparePrice}</del>
+              <span className="ml-2 text-[13px] font-semibold text-[#ff0000]">{product.discount}</span>
             </>
           )}
         </p>

@@ -1,9 +1,8 @@
-
 const MenuButton = ({ isOpen, onClick }) => {
   return (
     <button
       type="button"
-      className="yz-header__menu-btn"
+      className="flex items-center justify-center cursor-pointer border-none bg-transparent p-2 text-black hover:opacity-70"
       onClick={onClick}
       aria-label="Open menu"
       aria-expanded={isOpen}

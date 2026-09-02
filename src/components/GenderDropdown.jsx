@@ -9,16 +9,16 @@ const GenderDropdown = React.forwardRef(({
   onSelectGender 
 }, ref) => {
   return (
-    <div className="yz-gender yz-gender--header" ref={ref}>
+    <div className="relative" ref={ref}>
       <button
         type="button"
-        className="yz-header__cat-btn yz-gender__trigger"
+        className="flex cursor-pointer items-center gap-[6px] rounded-[4px] border-none bg-transparent px-3 py-2 text-[14px] font-medium text-black transition-colors duration-200 hover:bg-[#f5f5f5]"
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label="Shop by category"
       >
-        <span>{selectedGender}</span>
+        <span className="max-[768px]:hidden">{selectedGender}</span>
         <svg
           width="10"
           height="10"
@@ -29,13 +29,17 @@ const GenderDropdown = React.forwardRef(({
           strokeLinecap="round"
           strokeLinejoin="round"
           aria-hidden="true"
+          className="transition-transform duration-200 aria-expanded:rotate-180"
         >
           <path d="M3 4.5L6 7.5L9 4.5" />
         </svg>
       </button>
 
       {isOpen && (
-        <div className="yz-gender__dropdown" role="listbox">
+        <div
+          className="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[180px] rounded-[8px] border border-[#e5e5e5] bg-white py-2 shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-[768px]:left-[-70px] max-[768px]:min-w-[160px]"
+          role="listbox"
+        >
           <GenderOption
             label="Women"
             isSelected={selectedGender === "Women"}
@@ -46,19 +50,19 @@ const GenderDropdown = React.forwardRef(({
             isSelected={selectedGender === "Men"}
             onClick={() => onSelectGender("Men")}
           />
-          
+
           <div className="yz-gender__kids-group">
-            <div className="yz-gender__option yz-gender__option--parent">
+            <div className="mt-1 flex border-t border-[#e5e5e5] pt-1">
               <button
                 type="button"
-                className="yz-gender__option-label"
+                className="flex-1 cursor-pointer border-0 bg-transparent px-4 py-[10px] text-left text-[14px] text-[#333] transition-colors duration-150 hover:bg-[#f5f5f5]"
                 onClick={() => onSelectGender("Kids")}
               >
                 Kids
               </button>
               <button
                 type="button"
-                className="yz-gender__option-toggle"
+                className="cursor-pointer border-0 bg-transparent px-4 py-[10px] text-[#666] transition-colors duration-150 hover:bg-[#f5f5f5]"
                 onClick={onToggleKids}
                 aria-expanded={isKidsOpen}
                 aria-label="Kids"
@@ -71,14 +75,15 @@ const GenderDropdown = React.forwardRef(({
                   stroke="currentColor"
                   strokeWidth="1.5"
                   aria-hidden="true"
+                  className="transition-transform duration-200 aria-expanded:rotate-180"
                 >
                   <path d="M3 4.5L6 7.5L9 4.5" />
                 </svg>
               </button>
             </div>
-            
+
             {isKidsOpen && (
-              <div className="yz-gender__sub">
+              <div className="pl-2">
                 <GenderOption
                   label="Boy"
                   isSub={true}
@@ -106,7 +111,9 @@ const GenderOption = ({ label, isSelected, onClick, isSub = false }) => {
     <button
       type="button"
       role="option"
-      className={`yz-gender__option ${isSelected ? "is-selected" : ""} ${isSub ? "yz-gender__option--sub" : ""}`}
+      className={`flex w-full cursor-pointer items-center justify-between border-0 bg-transparent px-4 py-[10px] text-left text-[14px] text-[#333] transition-colors duration-150 hover:bg-[#f5f5f5] ${
+        isSelected ? "bg-[#f0f0f0] font-semibold text-black" : ""
+      } ${isSub ? "pl-8 text-[13px]" : ""}`}
       onClick={onClick}
       aria-selected={isSelected}
     >

@@ -1,13 +1,13 @@
-
-import "./Home.css";
 import HeroCarousel from "./home/HeroCarousel";
 import TopBrands from "./home/TopBrands";
 import Categories from "./home/Categories";
 import AllShop from "./home/AllShop";
+import SuggestedProducts from "./SuggestedProducts";
+
 
 const Home = () => {
   return (
-    <main id="yanzee-main" className="yz-home yz-all-page">
+    <main id="yanzee-main">
       {/* Hero Carousel */}
       <HeroCarousel />
 
@@ -19,8 +19,11 @@ const Home = () => {
       {/* Categories */}
       <Categories />
 
+      <SuggestedProducts/>
+
       {/* All Shop Section */}
       <AllShop />
+
     </main>
   );
 };

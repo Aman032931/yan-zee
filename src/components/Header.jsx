@@ -43,12 +43,12 @@ const Header = () => {
   };
 
   return (
-    <header className="yz-header">
-      <div className="yz-header__inner">
+    <header className="sticky top-0 z-[1000] border-b border-[#e5e5e5] bg-white px-[20px] max-[768px]:px-[12px]">
+      <div className="mx-auto flex h-[70px] max-w-[1440px] items-center justify-between gap-[20px] max-[768px]:h-[60px] max-[768px]:gap-[12px]">
         {/* LEFT SECTION */}
-        <div className="yz-header__cluster">
+        <div className="flex flex-1 items-center gap-[20px]">
           <MenuButton isOpen={isSidebarOpen} onClick={toggleSidebar} />
-          
+
           <GenderDropdown
             ref={genderRef}
             isOpen={isGenderOpen}
@@ -58,20 +58,20 @@ const Header = () => {
             onToggleKids={toggleKids}
             onSelectGender={selectGender}
           />
-          
+
           <MainNavigation />
         </div>
 
         {/* RIGHT SECTION */}
-        <div className="yz-header__tools">
-          <SearchBar 
+        <div className="flex shrink-0 items-center gap-[12px]">
+          <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
             onSubmit={handleSearch}
           />
-          
+
           <HeaderIcons />
-          
+
           <LoginButton />
         </div>
       </div>

@@ -22,7 +22,7 @@ const products = [
     badge: "Top Selling",
   },
 ];
- 
+
 const featuredProducts = [
   {
     id: 3,
@@ -183,6 +183,14 @@ const newInKids = [
   },
 ];
 
+const productGridClass =
+  "grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-6 max-[1024px]:grid-cols-3 max-[1024px]:gap-[20px] max-[768px]:grid-cols-2 max-[768px]:gap-4 max-[480px]:grid-cols-2 max-[480px]:gap-[10px]";
+
+const sectionHeadClass = "mb-[20px]";
+const sectionTitleClass = "text-[20px] font-bold text-[#1a1a1a] max-[768px]:text-[17px]";
+const moreBtnClass =
+  "inline-block rounded-[4px] border border-[#ddd] px-10 py-[10px] text-[14px] font-medium text-[#333] no-underline transition-all duration-200 hover:border-[#ccc] hover:bg-[#f5f5f5] max-[480px]:px-6 max-[480px]:py-2 max-[480px]:text-[12px]";
+
 const AllShop = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterCount, setFilterCount] = useState(1);
@@ -212,21 +220,21 @@ const AllShop = () => {
   };
 
   return (
-    <section className="yz-all-shop yz-all-shop--store-card" aria-label="Yanzee">
-      <div className="yz-all-shop__head">
+    <section className="bg-white px-[8%] pb-[40px] pt-[30px] max-[768px]:px-[4%] max-[768px]:pb-[30px] max-[768px]:pt-4" aria-label="Yanzee">
+      <div className="mb-[30px] py-[20px] text-center max-[768px]:mb-[20px] max-[768px]:py-[10px]">
         <div className="yz-all-shop__head-copy">
-          <h1 className="yz-all-shop__title">Yanzee</h1>
-          <p className="yz-all-shop__subtitle">
+          <h1 className="m-0 mb-2 text-[28px] font-bold text-[#1a1a1a] max-[768px]:text-[22px]">Yanzee</h1>
+          <p className="m-0 text-[16px] text-[#666] max-[768px]:text-[14px]">
             Discover fashion, sports, beauty, home &amp; more — filter by brand or department.
           </p>
         </div>
       </div>
 
-      <div className="yz-all-shop__layout">
+      <div className="relative flex gap-[30px]">
         {/* Backdrop for mobile */}
         <button
           type="button"
-          className={`yz-all-shop__backdrop ${isFilterOpen ? 'active' : ''}`}
+          className={`max-[1024px]:hidden ${isFilterOpen ? "max-[1024px]:fixed max-[1024px]:inset-0 max-[1024px]:z-[999] max-[1024px]:block max-[1024px]:cursor-pointer max-[1024px]:bg-[rgba(0,0,0,0.5)]" : ""}`}
           aria-hidden="true"
           aria-label="Close filters"
           onClick={toggleFilter}
@@ -239,26 +247,27 @@ const AllShop = () => {
           onClear={handleClearFilters}
         />
 
-        <div className="yz-all-shop__main">
+        <div className="min-w-0 flex-1">
           {/* Toolbar */}
-          <div className="yz-all-shop__toolbar">
+          <div className="mb-6 flex items-center justify-between border-b border-[#eee] pb-4 max-[768px]:flex-wrap max-[768px]:gap-[12px]">
             <button
               type="button"
-              className="yz-all-shop__filter-toggle"
+              className="hidden cursor-pointer items-center gap-[6px] rounded-[4px] border border-[#ddd] px-4 py-2 text-[14px] transition-colors duration-200 hover:bg-[#f5f5f5] max-[1024px]:flex"
               aria-expanded={isFilterOpen}
               onClick={toggleFilter}
             >
               Filters
               {filterCount > 0 && (
-                <span className="yz-all-shop__filter-count">{filterCount}</span>
+                <span className="ml-1 rounded-[12px] bg-[#0066cc] px-2 py-[1px] text-[12px] text-white">{filterCount}</span>
               )}
             </button>
-            <label className="yz-all-shop__sort">
+            <label className="flex items-center gap-2 text-[14px] text-[#333] max-[768px]:text-[13px]">
               <span>Sort by</span>
               <select
                 aria-label="Sort by"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
+                className="min-w-[160px] cursor-pointer rounded-[4px] border border-[#ddd] bg-white px-3 py-2 text-[14px] text-[#333] focus:border-[#0066cc] focus:outline-none max-[768px]:min-w-[130px] max-[768px]:px-[10px] max-[768px]:py-[6px] max-[768px]:text-[13px]"
               >
                 <option value="featured">Featured</option>
                 <option value="price-asc">Price: Low to High</option>
@@ -268,13 +277,13 @@ const AllShop = () => {
             </label>
           </div>
 
-          <div className="yz-all-shop__highlights">
+          <div className="flex flex-col gap-[40px] max-[768px]:gap-[30px] max-[480px]:gap-6">
             {/* Trending Section */}
             <section className="yz-shop-highlight-section">
-              <div className="yz-section-head">
-                <h2>Trending</h2>
+              <div className={sectionHeadClass}>
+                <h2 className={sectionTitleClass}>Trending</h2>
               </div>
-              <div className="yz-all-shop__grid yz-product-grid yz-shop-highlight-section__grid">
+              <div className={`${productGridClass} yz-shop-highlight-section__grid`}>
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -282,59 +291,75 @@ const AllShop = () => {
             </section>
 
             {/* For You Section - Horizontal Carousel */}
-            <section className="yz-product-carousel">
-              <div className="yz-section-head">
-                <h2>For You</h2>
-                <a href="/all?tag=for-you">SEE ALL</a>
+            <section className="relative">
+              <div className={sectionHeadClass}>
+                <h2 className={sectionTitleClass}>For You</h2>
+                <a
+                  href="/all?tag=for-you"
+                  className="text-[14px] font-medium text-[#0066cc] no-underline hover:underline max-[768px]:text-[12px]"
+                >
+                  SEE ALL
+                </a>
               </div>
-              <div className="yz-carousel-wrap yz-carousel-wrap--products">
-                <button 
-                  type="button" 
-                  className="yz-carousel__btn yz-carousel__btn--prev" 
+              <div className="relative overflow-hidden px-[40px] max-[768px]:px-[20px] max-[480px]:px-[10px]">
+                <button
+                  type="button"
+                  className="absolute left-0 top-1/2 z-[2] flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[#e5e5e5] bg-white text-[20px] text-[#333] shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-200 hover:bg-[#f5f5f5] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] max-[768px]:h-7 max-[768px]:w-7 max-[768px]:text-[16px] max-[480px]:hidden"
                   onClick={() => scrollCarousel('left')}
                   aria-label="Previous"
                 >
                   ‹
                 </button>
-                <div className="yz-carousel" ref={carouselRef}>
+                <div
+                  className="flex gap-4 overflow-x-auto py-1 scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  ref={carouselRef}
+                >
                   {featuredProducts.map((product) => (
-                    <div className="yz-carousel__item" key={product.id}>
+                    <div
+                      className="min-w-[220px] max-w-[220px] flex-[0_0_220px] max-[1024px]:min-w-[200px] max-[1024px]:max-w-[200px] max-[1024px]:flex-[0_0_200px] max-[768px]:min-w-[160px] max-[768px]:max-w-[160px] max-[768px]:flex-[0_0_160px] max-[480px]:min-w-[140px] max-[480px]:max-w-[140px] max-[480px]:flex-[0_0_140px]"
+                      key={product.id}
+                    >
                       <ProductCard product={product} isCarousel={true} />
                     </div>
                   ))}
                 </div>
-                <button 
-                  type="button" 
-                  className="yz-carousel__btn yz-carousel__btn--next" 
+                <button
+                  type="button"
+                  className="absolute right-0 top-1/2 z-[2] flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[#e5e5e5] bg-white text-[20px] text-[#333] shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-200 hover:bg-[#f5f5f5] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] max-[768px]:h-7 max-[768px]:w-7 max-[768px]:text-[16px] max-[480px]:hidden"
                   onClick={() => scrollCarousel('right')}
                   aria-label="Next"
                 >
                   ›
                 </button>
               </div>
-              <div className="yz-dots yz-dots--progress yz-dots--products">
-                <span className="is-active"></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
+              <div className="mt-4 flex justify-center gap-2">
+                <span className="h-2 w-6 cursor-pointer rounded-[4px] bg-[#1a1a1a]"></span>
+                <span className="h-2 w-2 cursor-pointer rounded-full bg-[#ddd]"></span>
+                <span className="h-2 w-2 cursor-pointer rounded-full bg-[#ddd]"></span>
+                <span className="h-2 w-2 cursor-pointer rounded-full bg-[#ddd]"></span>
+                <span className="h-2 w-2 cursor-pointer rounded-full bg-[#ddd]"></span>
+                <span className="h-2 w-2 cursor-pointer rounded-full bg-[#ddd]"></span>
               </div>
             </section>
 
             {/* New in Fashion */}
             <section className="yz-shop-highlight-section">
-              <div className="yz-section-head">
-                <h2>New in Fashion</h2>
-                <a href="/fashion">See more</a>
+              <div className={sectionHeadClass}>
+                <h2 className={sectionTitleClass}>New in Fashion</h2>
+                <a
+                  href="/fashion"
+                  className="text-[14px] font-medium text-[#0066cc] no-underline hover:underline max-[768px]:text-[12px]"
+                >
+                  See more
+                </a>
               </div>
-              <div className="yz-all-shop__grid yz-product-grid yz-shop-highlight-section__grid">
+              <div className={`${productGridClass} yz-shop-highlight-section__grid`}>
                 {newInFashion.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
-              <div className="yz-shop-highlight-section__more">
-                <a className="yz-shop-highlight-section__more-btn" href="/fashion">
+              <div className="mt-6 text-center">
+                <a className={moreBtnClass} href="/fashion">
                   See more
                 </a>
               </div>
@@ -342,17 +367,22 @@ const AllShop = () => {
 
             {/* New in Beauty */}
             <section className="yz-shop-highlight-section">
-              <div className="yz-section-head">
-                <h2>New in Beauty</h2>
-                <a href="/beauty">See more</a>
+              <div className={sectionHeadClass}>
+                <h2 className={sectionTitleClass}>New in Beauty</h2>
+                <a
+                  href="/beauty"
+                  className="text-[14px] font-medium text-[#0066cc] no-underline hover:underline max-[768px]:text-[12px]"
+                >
+                  See more
+                </a>
               </div>
-              <div className="yz-all-shop__grid yz-product-grid yz-shop-highlight-section__grid">
+              <div className={`${productGridClass} yz-shop-highlight-section__grid`}>
                 {newInBeauty.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
-              <div className="yz-shop-highlight-section__more">
-                <a className="yz-shop-highlight-section__more-btn" href="/beauty">
+              <div className="mt-6 text-center">
+                <a className={moreBtnClass} href="/beauty">
                   See more
                 </a>
               </div>
@@ -360,17 +390,22 @@ const AllShop = () => {
 
             {/* New in Kids */}
             <section className="yz-shop-highlight-section">
-              <div className="yz-section-head">
-                <h2>New in Kids</h2>
-                <a href="/kids">See more</a>
+              <div className={sectionHeadClass}>
+                <h2 className={sectionTitleClass}>New in Kids</h2>
+                <a
+                  href="/kids"
+                  className="text-[14px] font-medium text-[#0066cc] no-underline hover:underline max-[768px]:text-[12px]"
+                >
+                  See more
+                </a>
               </div>
-              <div className="yz-all-shop__grid yz-product-grid yz-shop-highlight-section__grid">
+              <div className={`${productGridClass} yz-shop-highlight-section__grid`}>
                 {newInKids.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
-              <div className="yz-shop-highlight-section__more">
-                <a className="yz-shop-highlight-section__more-btn" href="/kids">
+              <div className="mt-6 text-center">
+                <a className={moreBtnClass} href="/kids">
                   See more
                 </a>
               </div>
@@ -378,9 +413,13 @@ const AllShop = () => {
           </div>
 
           {/* Active Tags */}
-          <div className="yz-all-shop__active-tags" aria-label="Active filters">
+          <div className="my-4 flex flex-wrap gap-2" aria-label="Active filters">
             {filterCount > 0 && (
-              <button type="button" className="yz-all-shop__tag" onClick={handleRemoveTag}>
+              <button
+                type="button"
+                className="inline-flex cursor-pointer items-center gap-[6px] rounded-[20px] border border-[#ddd] bg-[#f0f0f0] px-3 py-1 text-[13px] text-[#333] transition-colors duration-200 hover:bg-[#e5e5e5]"
+                onClick={handleRemoveTag}
+              >
                 Sports ×
               </button>
             )}
@@ -388,9 +427,13 @@ const AllShop = () => {
 
           {/* Empty State */}
           {filterCount > 0 && (
-            <div className="yz-all-shop__empty">
-              <p className="yz-all-shop__empty-title">No items match your filters.</p>
-              <button type="button" className="yz-all-shop__empty-btn" onClick={handleClearFilters}>
+            <div className="px-5 py-[40px] text-center">
+              <p className="m-0 mb-4 text-[18px] text-[#666]">No items match your filters.</p>
+              <button
+                type="button"
+                className="cursor-pointer rounded-[4px] border-none bg-[#0066cc] px-8 py-[10px] text-[14px] text-white transition-colors duration-200 hover:bg-[#0055aa]"
+                onClick={handleClearFilters}
+              >
                 View all {products.length + featuredProducts.length + newInFashion.length + newInBeauty.length + newInKids.length} items
               </button>
             </div>
