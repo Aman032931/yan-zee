@@ -2,7 +2,7 @@ import HeroCarousel from "./home/HeroCarousel";
 import TopBrands from "./home/TopBrands";
 import Categories from "./home/Categories";
 import AllShop from "./home/AllShop";
-import SuggestedProducts from "./SuggestedProducts";
+
 
 
 const Home = () => {
@@ -19,7 +19,7 @@ const Home = () => {
       {/* Categories */}
       <Categories />
 
-      <SuggestedProducts/>
+      
 
       {/* All Shop Section */}
       <AllShop />
