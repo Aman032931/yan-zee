@@ -1,4 +1,5 @@
-// Simple category data with just text (no images for cleaner look)
+
+
 const categories = [
   "Makeup",
   "Skincare",
@@ -18,8 +19,8 @@ const categories = [
   "Just In",
 ];
 
-const Categories = () => {
-  // Duplicate for smooth infinite scroll
+const Categories = ({ selectedCategory = "all", onSelectCategory }) => {
+  // Duplicate array for smooth infinite scrolling
   const allCategories = [...categories, ...categories, ...categories];
 
   return (
@@ -29,21 +30,34 @@ const Categories = () => {
           Categories
         </h2>
       </div>
+
       <div className="relative w-full overflow-hidden">
         <div className="w-full overflow-hidden py-2">
           <div className="flex w-max animate-cat-marquee gap-[12px] max-[768px]:animate-[marqueeScroll_30s_linear_infinite] max-[768px]:gap-2 max-[480px]:animate-[marqueeScroll_25s_linear_infinite] max-[480px]:gap-[6px]">
-            {allCategories.map((category, index) => (
-              <div key={`${category}-${index}`} className="w-auto flex-none">
-                <a
-                  className="inline-block rounded-[8px] border border-[#e5e5e5] bg-white px-6 py-[10px] whitespace-nowrap no-underline transition-all duration-200 hover:-translate-y-[2px] hover:border-[#ccc] hover:bg-[#f5f5f5] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] max-[768px]:px-4 max-[768px]:py-2 max-[480px]:px-3 max-[480px]:py-[6px]"
-                  href={`/category/${category.toLowerCase().replace(/ /g, '-')}`}
-                >
-                  <span className="text-[14px] font-medium text-[#1a1a1a] whitespace-nowrap max-[768px]:text-[12px] max-[480px]:text-[11px]">
-                    {category}
-                  </span>
-                </a>
-              </div>
-            ))}
+            {allCategories.map((category, index) => {
+              const categorySlug = category.toLowerCase();
+              const isActive = selectedCategory?.toLowerCase() === categorySlug;
+
+              return (
+                <div key={`${category}-${index}`} className="w-auto flex-none">
+                  <button
+                    type="button"
+                    onClick={() => onSelectCategory && onSelectCategory(categorySlug)}
+                    className={`inline-block rounded-[8px] border px-6 py-[10px] whitespace-nowrap transition-all duration-200 cursor-pointer max-[768px]:px-4 max-[768px]:py-2 max-[480px]:px-3 max-[480px]:py-[6px] ${
+                      isActive
+                        ? 'bg-black text-white border-black shadow-md font-semibold'
+                        : 'bg-white text-[#1a1a1a] border-[#e5e5e5] hover:-translate-y-[2px] hover:border-[#ccc] hover:bg-[#f5f5f5] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]'
+                    }`}
+                  >
+                    <span className={`text-[14px] font-medium whitespace-nowrap max-[768px]:text-[12px] max-[480px]:text-[11px] ${
+                      isActive ? 'text-white' : 'text-[#1a1a1a]'
+                    }`}>
+                      {category}
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

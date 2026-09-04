@@ -1,96 +1,73 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-const badgeStyles = {
-  "top-selling": "bg-[#ff6b00] text-white",
-  sale: "bg-[#ff0000] text-white",
-  "new-in": "bg-[#0066cc] text-white",
-  discounted: "bg-[#ff0000] text-white",
-};
+export default function ProductCard({ product }) {
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
-const ProductCard = ({ product, isCarousel = false }) => {
-  const [isWishlisted, setIsWishlisted] = useState(product.wishlisted || false);
-  const badgeKey = product.badge ? product.badge.toLowerCase().replace(/ /g, "-") : "";
-
-  const toggleWishlist = (e) => {
-    e.preventDefault();
+  const handleWishlistToggle = (e) => {
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    setIsWishlisted((prev) => !prev);
   };
 
   return (
-    <a
-      className={`flex flex-col text-[#333] no-underline transition-transform duration-200 hover:-translate-y-1 ${
-        isCarousel ? "yz-product-card--carousel" : "yz-product-card--grid"
-      }`}
-      href={product.href}
-    >
-      <div className="relative aspect-square overflow-hidden rounded-[8px] bg-[#f5f5f5]">
-        {product.badge && (
-          <div className="absolute left-2 top-2 z-[1] flex flex-col gap-1">
-            <span
-              className={`rounded-[3px] px-[10px] py-[2px] text-[10px] font-semibold uppercase tracking-[0.3px] max-[480px]:px-2 max-[480px]:py-[1px] max-[480px]:text-[9px] ${
-                badgeStyles[badgeKey] || ""
-              }`}
-            >
-              {product.badge}
-            </span>
-          </div>
-        )}
-        <div className="yz-img-wrap yz-img-wrap--fill is-loaded">
-          <img
-            alt={product.title}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover"
-            src={product.image}
-            style={{ position: "absolute", height: "100%", width: "100%", inset: "0px", color: "transparent", objectFit: "cover" }}
-          />
-        </div>
-        <span
-          role="button"
-          tabIndex="0"
-          className={`absolute right-2 top-2 z-[1] flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-[rgba(255,255,255,0.9)] text-[#999] transition-all duration-200 hover:scale-110 hover:bg-white max-[480px]:h-7 max-[480px]:w-7 ${
-            isWishlisted ? "text-[#ff0000]" : ""
-          }`}
-          onClick={toggleWishlist}
-          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          aria-pressed={isWishlisted}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill={isWishlisted ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
+    <div className="w-full min-w-0 bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition duration-200 flex flex-col overflow-hidden relative group">
+      {/* Top Badge */}
+      {product?.badge && (
+        <span className="absolute top-2 left-2 z-10 text-[10px] font-bold uppercase bg-orange-600 text-white px-2 py-0.5 rounded">
+          {product.badge}
         </span>
+      )}
+
+      {/* Wishlist Button */}
+      <button
+        type="button"
+        onClick={handleWishlistToggle}
+        className="absolute top-2 right-2 z-10 p-1.5 bg-white/80 backdrop-blur-sm rounded-full text-gray-600 hover:text-red-500 transition cursor-pointer"
+        aria-label="Add to wishlist"
+      >
+        <svg
+          className={`w-4 h-4 ${
+            isWishlisted ? 'fill-red-500 text-red-500' : 'fill-none stroke-current'
+          }`}
+          viewBox="0 0 24 24"
+          strokeWidth="2"
+        >
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+        </svg>
+      </button>
+
+      {/* Product Image */}
+      <div className="w-full h-48 bg-gray-50 flex items-center justify-center p-4 overflow-hidden">
+        <img
+          src={product?.image}
+          alt={product?.title || 'Product'}
+          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+        />
       </div>
-      <div className="px-1 py-[10px]">
-        <div className="mb-1 text-[12px] font-semibold uppercase text-[#666] max-[768px]:text-[11px] max-[480px]:text-[10px]">
-          <span>{product.brand}</span>
-        </div>
-        <div className="mb-1">
-          <div className="yz-rating-stars yz-rating-stars--sm" aria-label="Rated 0.0 out of 5">
-            <span className="flex gap-[2px]" aria-hidden="true">
-              <span className="text-[12px] text-[#f5a623]">★</span>
-              <span className="text-[12px] text-[#f5a623]">★</span>
-              <span className="text-[12px] text-[#f5a623]">★</span>
-              <span className="text-[12px] text-[#f5a623]">★</span>
-              <span className="text-[12px] text-[#f5a623]">★</span>
-            </span>
+
+      {/* Product Details */}
+      <div className="p-3 flex flex-col flex-grow justify-between">
+        <div>
+          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider block truncate">
+            {product?.brand || 'GENERIC'}
+          </span>
+          <h4 className="text-xs font-semibold text-gray-800 line-clamp-2 mt-1 min-h-[32px]">
+            {product?.title}
+          </h4>
+
+          {/* Star Rating */}
+          <div className="flex items-center gap-1 mt-1 text-yellow-400 text-xs">
+            {'★'.repeat(product?.rating || 4)}
+            {'☆'.repeat(5 - (product?.rating || 4))}
           </div>
         </div>
-        <p className="m-0 mb-[6px] line-clamp-2 overflow-hidden text-[14px] leading-[1.3] max-[768px]:text-[13px] max-[480px]:text-[12px]">
-          {product.title}
-        </p>
-        <p className="m-0 text-[16px] font-semibold max-[768px]:text-[14px] max-[480px]:text-[13px]">
-          <span className="yz-product-card__price-current">{product.price}</span>
-          {product.comparePrice && (
-            <>
-              <del className="ml-2 text-[13px] font-normal text-[#999] line-through">{product.comparePrice}</del>
-              <span className="ml-2 text-[13px] font-semibold text-[#ff0000]">{product.discount}</span>
-            </>
-          )}
-        </p>
-      </div>
-    </a>
-  );
-};
 
-export default ProductCard;
+        {/* Price Tag */}
+        <div className="mt-2">
+          <span className="text-sm font-bold text-gray-900">
+            Nrs {product?.price ? product.price.toLocaleString() : '0'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}

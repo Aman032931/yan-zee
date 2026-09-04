@@ -1,31 +1,31 @@
-import HeroCarousel from "./home/HeroCarousel";
-import TopBrands from "./home/TopBrands";
-import Categories from "./home/Categories";
-import AllShop from "./home/AllShop";
+import { useState } from 'react';
+import HeroCarousel from './home/HeroCarousel';
+import TopBrands from './home/TopBrands';
+import Categories from './home/Categories';
+import AllShop from './home/AllShop';
 
+export default function Home() {
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
-
-const Home = () => {
   return (
-    <main id="yanzee-main">
-      {/* Hero Carousel */}
+    <main className="min-h-screen bg-white">
+      {/* 1. Top Hero Banner Carousel */}
       <HeroCarousel />
 
-      {/* Top Brands */}
-      <div className="yz-all-shop__brands">
-        <TopBrands />
-      </div>
+      {/* 2. Top Brands Infinite Marquee Scroller */}
+      <TopBrands />
 
-      {/* Categories */}
-      <Categories />
+      {/* 3. Category Selection Bar */}
+      <Categories
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
 
-      
-
-      {/* All Shop Section */}
-      <AllShop />
-
+      {/* 4. Filter Sidebar & Products Grid */}
+      <AllShop
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+      />
     </main>
   );
-};
-
-export default Home;
+}
