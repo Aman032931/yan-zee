@@ -8,6 +8,7 @@ import Cart from "./pages/Cart";
 import Fashion from "./pages/Fashion";
 import Sports from "./pages/Sports";
 import Wishlist from "./pages/Wishlist";
+import Outlet from "./pages/Outlet";
 
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
     { path: "/fashion", element: <Fashion /> },
     { path: "/beauty", element: <Beauty /> },
     { path: "/sports", element: <Sports /> },
+    { path: "/outlet", element: <Outlet/>},
     { path: "/cart", element: <Cart /> },
     { path: "/wishlist", element: <Wishlist /> },
   ]);
