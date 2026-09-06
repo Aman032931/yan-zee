@@ -9,23 +9,18 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white">
-      {/* 1. Top Hero Banner Carousel */}
-      <HeroCarousel />
-
-      {/* 2. Top Brands Infinite Marquee Scroller */}
-      <TopBrands />
-
-      {/* 3. Category Selection Bar */}
-      <Categories
-        selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
-      />
-
-      {/* 4. Filter Sidebar & Products Grid */}
-      <AllShop
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-      />
+      <div className="mx-auto max-w-[1440px] px-4">
+        <HeroCarousel />
+        <TopBrands />
+        <Categories
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
+        <AllShop
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+        />
+      </div>
     </main>
   );
 }

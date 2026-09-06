@@ -124,7 +124,7 @@ export default function AllShop({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="py-6">
       {/* Recommended Carousel Section */}
       {showRecommended && <RecommendedSection />}
 
