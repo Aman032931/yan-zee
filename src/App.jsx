@@ -9,7 +9,7 @@ import Fashion from "./pages/Fashion";
 import Sports from "./pages/Sports";
 import Wishlist from "./pages/Wishlist";
 import Outlet from "./pages/Outlet";
-
+import Premium from "./pages/Premium";
 
 function App() {
   const routeElements = useRoutes([
@@ -19,6 +19,7 @@ function App() {
     { path: "/beauty", element: <Beauty /> },
     { path: "/sports", element: <Sports /> },
     { path: "/outlet", element: <Outlet/>},
+    { path: "/premium", element: <Premium/>},
     { path: "/cart", element: <Cart /> },
     { path: "/wishlist", element: <Wishlist /> },
   ]);
