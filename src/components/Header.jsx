@@ -43,10 +43,10 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-[1000] border-b border-[#e5e5e5] bg-white px-[20px] max-[768px]:px-[12px]">
-      <div className="mx-auto flex h-[70px] max-w-[1440px] items-center justify-between gap-[20px] max-[768px]:h-[60px] max-[768px]:gap-[12px]">
+    <header className="sticky top-0 z-1000 border-b border-[#e5e5e5] bg-white px-5 max-[768px]:px-3">
+      <div className="mx-auto flex h-17.5 max-w-360 items-center justify-between gap-5 max-[768px]:h-15 max-[768px]:gap-3">
         {/* LEFT SECTION */}
-        <div className="flex flex-1 items-center gap-[20px]">
+        <div className="flex flex-1 items-center gap-5">
           <MenuButton isOpen={isSidebarOpen} onClick={toggleSidebar} />
 
           <GenderDropdown
@@ -63,7 +63,7 @@ const Header = () => {
         </div>
 
         {/* RIGHT SECTION */}
-        <div className="flex shrink-0 items-center gap-[12px]">
+        <div className="flex shrink-0 items-center gap-3">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}

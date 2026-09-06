@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import FilterPanel from './FilterPanel';
 import RecommendedSection from './RecommendedSection';
+import ProductSkeleton from '../ProductSkeleton';
 
 export default function AllShop({ selectedCategory = "all", setSelectedCategory }) {
   const [products, setProducts] = useState([]);
@@ -12,7 +13,6 @@ export default function AllShop({ selectedCategory = "all", setSelectedCategory 
   const [sortBy, setSortBy] = useState("featured");
   const [visibleCount, setVisibleCount] = useState(12);
 
-  // Filter Handler Wrappers (Resets pagination when filters change)
   const handleCategorySelect = (cat) => {
     if (setSelectedCategory) setSelectedCategory(cat);
     setVisibleCount(12);
@@ -38,7 +38,6 @@ export default function AllShop({ selectedCategory = "all", setSelectedCategory 
     setVisibleCount(12);
   };
 
-  // Fetch products from FakeStore API
   useEffect(() => {
     fetch('https://fakestoreapi.com/products')
       .then((res) => res.json())
@@ -71,7 +70,6 @@ export default function AllShop({ selectedCategory = "all", setSelectedCategory 
     setVisibleCount(12);
   };
 
-  // Category mapping logic: Matches UI labels to FakeStore API product categories
   const isCategoryMatch = (productCategory, selectedCat) => {
     if (!selectedCat || selectedCat === "all" || selectedCat === "All Departments") return true;
 
@@ -80,23 +78,18 @@ export default function AllShop({ selectedCategory = "all", setSelectedCategory 
 
     if (pCat === cat) return true;
 
-    // High-level UI Category Mappings
     if (["fashion", "clothing"].includes(cat)) {
       return pCat === "men's clothing" || pCat === "women's clothing";
     }
-
     if (["beauty", "jewelry", "jewelery"].includes(cat)) {
       return pCat === "jewelery";
     }
-
     if (["electronics"].includes(cat)) {
       return pCat === "electronics";
     }
-
     if (["women's clothing", "dresses", "handbags"].includes(cat)) {
       return pCat === "women's clothing";
     }
-
     if (["men's clothing", "tops & tees"].includes(cat)) {
       return pCat === "men's clothing";
     }
@@ -104,7 +97,6 @@ export default function AllShop({ selectedCategory = "all", setSelectedCategory 
     return pCat.includes(cat) || cat.includes(pCat);
   };
 
-  // Complete Filtering & Sorting Pipeline
   const filteredProducts = products
     .filter((p) => isCategoryMatch(p.category, selectedCategory))
     .filter((p) => 
@@ -125,14 +117,9 @@ export default function AllShop({ selectedCategory = "all", setSelectedCategory 
     setVisibleCount((prev) => prev + 12);
   };
 
-  if (loading) {
-    return <div className="p-12 text-center text-sm font-semibold text-gray-500">Loading products...</div>;
-  }
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-
-      {/* Recommended Products Carousel Banner */}
+      {/* Recommended Carousel Section */}
       <RecommendedSection />
 
       {/* Header section */}
@@ -158,7 +145,7 @@ export default function AllShop({ selectedCategory = "all", setSelectedCategory 
         </div>
       </div>
 
-      {/* 2-Column CSS Grid Layout */}
+      {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-start">
         {/* Left Column: Filter Panel */}
         <div>
@@ -175,9 +162,15 @@ export default function AllShop({ selectedCategory = "all", setSelectedCategory 
           />
         </div>
 
-        {/* Right Column: Product Grid */}
+        {/* Right Column: Product Grid OR Skeleton Loader */}
         <div className="min-w-0">
-          {filteredProducts.length === 0 ? (
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+              {[...Array(8)].map((_, index) => (
+                <ProductSkeleton key={index} />
+              ))}
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="text-center py-16 bg-gray-50 rounded-lg border border-dashed border-gray-200">
               <p className="text-sm font-medium text-gray-600">No products match your selected filters.</p>
               <button
