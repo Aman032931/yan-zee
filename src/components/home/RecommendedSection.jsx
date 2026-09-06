@@ -42,9 +42,9 @@ export default function RecommendedSection({ onSelectProduct }) {
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="min-w-[180px] sm:min-w-[200px] border border-gray-100 rounded-lg p-3 space-y-3"
+              className="min-w-[180px] sm:min-w-45 border border-gray-100 rounded-lg p-3 space-y-3"
             >
-              <div className="w-full h-32 bg-gray-200 rounded-md"></div>
+              <div className="w-full h-32 bg-ray-200 rounded-md"></div>
               <div className="w-1/2 h-2.5 bg-gray-200 rounded"></div>
               <div className="w-3/4 h-3.5 bg-gray-200 rounded"></div>
               <div className="pt-2 flex justify-between items-center border-t border-gray-100">

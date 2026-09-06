@@ -43,7 +43,8 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-1000 border-b border-[#e5e5e5] bg-white px-5 max-[768px]:px-3">
+    /* CHANGED z-1000 TO z-40 BELOW */
+    <header className="sticky top-0 z-40 border-b border-[#e5e5e5] bg-white px-5 max-[768px]:px-3">
       <div className="mx-auto flex h-17.5 max-w-360 items-center justify-between gap-5 max-[768px]:h-15 max-[768px]:gap-3">
         {/* LEFT SECTION */}
         <div className="flex flex-1 items-center gap-5">

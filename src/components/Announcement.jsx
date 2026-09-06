@@ -33,7 +33,8 @@ function Announcement() {
   };
 
   return (
-    <div className="flex h-[55px] items-center justify-between border-b-[3px] border-red-600 bg-black px-[68px] font-serif text-[14px] text-white">
+    /* Set relative z-[1001] on root container to sit above Header's z-1000 */
+    <div className="relative z-[1001] flex h-[55px] items-center justify-between border-b-[3px] border-red-600 bg-black px-[68px] font-serif text-[14px] text-white">
       {/* LEFT */}
       <div className="flex w-[250px] items-center justify-between">
         <span className="text-[16px] font-bold italic">YANZEE</span>
@@ -79,7 +80,7 @@ function Announcement() {
 
           {/* DROPDOWN MENU */}
           {isCountryOpen && (
-            <div className="absolute right-[-10px] top-[34px] z-[1000] max-h-[360px] w-[280px] overflow-y-auto rounded-[14px] bg-white py-[10px] text-black shadow-[0_4px_15px_rgba(0,0,0,0.25)]">
+            <div className="absolute right-[-10px] top-[34px] z-[1010] max-h-[360px] w-[280px] overflow-y-auto rounded-[14px] bg-white py-[10px] text-black shadow-[0_4px_15px_rgba(0,0,0,0.25)]">
               {countries.map((country, index) => (
                 <div
                   className="flex h-[50px] cursor-pointer items-center gap-[12px] px-4 hover:bg-[#f5f5f5]"

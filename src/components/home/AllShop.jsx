@@ -4,7 +4,13 @@ import FilterPanel from './FilterPanel';
 import RecommendedSection from './RecommendedSection';
 import ProductSkeleton from '../ProductSkeleton';
 
-export default function AllShop({ selectedCategory = "all", setSelectedCategory }) {
+export default function AllShop({
+  selectedCategory = "all",
+  setSelectedCategory,
+  title = "Yanzee",
+  subtitle = "Discover fashion, sports, beauty, home & more — filter by brand or department.",
+  showRecommended = true,
+}) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBrand, setSelectedBrand] = useState("All Brands");
@@ -99,8 +105,8 @@ export default function AllShop({ selectedCategory = "all", setSelectedCategory 
 
   const filteredProducts = products
     .filter((p) => isCategoryMatch(p.category, selectedCategory))
-    .filter((p) => 
-      selectedBrand === "All Brands" || 
+    .filter((p) =>
+      selectedBrand === "All Brands" ||
       p.brand.toLowerCase() === selectedBrand.toLowerCase()
     )
     .filter((p) => p.price <= maxPrice)
@@ -120,15 +126,13 @@ export default function AllShop({ selectedCategory = "all", setSelectedCategory 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Recommended Carousel Section */}
-      <RecommendedSection />
+      {showRecommended && <RecommendedSection />}
 
       {/* Header section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight capitalize">Yanzee</h2>
-          <p className="text-xs text-gray-500 mt-1">
-            Discover fashion, sports, beauty, home & more — filter by brand or department.
-          </p>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight capitalize">{title}</h2>
+          <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto">
