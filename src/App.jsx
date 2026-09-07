@@ -10,6 +10,8 @@ import Sports from "./pages/Sports";
 import Wishlist from "./pages/Wishlist";
 import Outlet from "./pages/Outlet";
 import Premium from "./pages/Premium";
+import Kids from "./pages/Kids";
+import HomeDecor from "./pages/HomeDecor";
 
 function App() {
   const routeElements = useRoutes([
@@ -19,7 +21,9 @@ function App() {
     { path: "/beauty", element: <Beauty /> },
     { path: "/sports", element: <Sports /> },
     { path: "/outlet", element: <Outlet/>},
+    { path: "/kids", element: <Kids/>},
     { path: "/premium", element: <Premium/>},
+    { path: "/home-decor", element: <HomeDecor/>},
     { path: "/cart", element: <Cart /> },
     { path: "/wishlist", element: <Wishlist /> },
   ]);

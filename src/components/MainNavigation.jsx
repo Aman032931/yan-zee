@@ -8,7 +8,7 @@ const navLinks = [
   { label: "Outlet", href: "/outlet" },
   { label: "Kids", href: "/kids" },
   { label: "Premium", href: "/premium" },
-  { label: "Home Decor & Appliances", href: "/home" },
+  { label: "Home Decor & Appliances", href: "/home-decor" },
 ];
 
 const MainNavigation = () => {
