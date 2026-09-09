@@ -1,15 +1,21 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export default function ProductCard({ product }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   const handleWishlistToggle = (e) => {
+     e.preventDefault();
     e.stopPropagation();
     setIsWishlisted((prev) => !prev);
   };
 
   return (
-    <div className="w-full min-w-0 bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition duration-200 flex flex-col overflow-hidden relative group">
+    <Link
+      to={`/product/${product.id}`}
+      className="w-full min-w-0 bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition duration-200 flex flex-col overflow-hidden relative group"
+    >
+   
       {/* Top Badge */}
       {product?.badge && (
         <span className="absolute top-2 left-2 z-10 text-[10px] font-bold uppercase bg-orange-600 text-white px-2 py-0.5 rounded">
@@ -68,6 +74,6 @@ export default function ProductCard({ product }) {
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

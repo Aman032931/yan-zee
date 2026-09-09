@@ -24,6 +24,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import SellerLayout from "./components/seller/SellerLayout";
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import SellerProducts from "./pages/seller/SellerProducts";
+import ProductDetail from "./pages/ProductDetail";
 
 function App() {
   const location = useLocation();
@@ -60,6 +61,7 @@ function App() {
         { path: "products", element: <SellerProducts /> },
       ],
     },
+    { path: "/product/:id", element: <ProductDetail /> },
   ]);
 
   return (

@@ -10,9 +10,33 @@ export default function ProductFormModal({ initialData, onSave, onClose }) {
       description: '',
     }
   );
+  const [imageError, setImageError] = useState('');
 
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setImageError('Please choose an image file.');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setImageError('Image must be under 2MB.');
+      return;
+    }
+
+    setImageError('');
+    const reader = new FileReader();
+    reader.onload = () => {
+      // Stored as a local data URL for now — no real upload endpoint exists yet.
+      // Swap this for a real upload (returning a hosted URL) once the backend supports it.
+      setForm((prev) => ({ ...prev, image: reader.result }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = (e) => {
@@ -22,7 +46,7 @@ export default function ProductFormModal({ initialData, onSave, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-bold text-gray-900 mb-4">
           {initialData ? 'Edit Product' : 'Add Product'}
         </h2>
@@ -65,13 +89,24 @@ export default function ProductFormModal({ initialData, onSave, onClose }) {
           </div>
 
           <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Image URL</label>
+            <label className="text-xs font-medium text-gray-600 block mb-1">Product Photo</label>
+
+            {form.image && (
+              <div className="mb-2 w-24 h-24 bg-gray-50 border border-gray-200 rounded overflow-hidden flex items-center justify-center">
+                <img src={form.image} alt="Preview" className="max-w-full max-h-full object-contain" />
+              </div>
+            )}
+
             <input
-              value={form.image}
-              onChange={handleChange('image')}
-              placeholder="https://..."
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-black"
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-xs outline-none file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:bg-black file:text-white file:text-xs file:cursor-pointer cursor-pointer"
             />
+            {imageError && <p className="text-xs text-red-600 mt-1">{imageError}</p>}
+            <p className="text-[11px] text-gray-400 mt-1">
+              Stored locally for this session only — real image hosting isn't connected yet.
+            </p>
           </div>
 
           <div>

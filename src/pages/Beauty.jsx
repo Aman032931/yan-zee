@@ -6,6 +6,7 @@ import BeautyProductCard from '../components/beauty/BeautyProductCard';
 import ProductSkeleton from '../components/ProductSkeleton';
 import { useBeautyProducts } from '../utils/useBeautyProducts';
 import { useGender } from '../context/useGender';
+import { Link } from 'react-router-dom';
 
 export default function Beauty() {
   const { products, loading } = useBeautyProducts();
