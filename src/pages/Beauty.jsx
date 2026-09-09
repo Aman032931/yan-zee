@@ -5,9 +5,11 @@ import BeautyFilterPanel from '../components/beauty/BeautyFilterPanel';
 import BeautyProductCard from '../components/beauty/BeautyProductCard';
 import ProductSkeleton from '../components/ProductSkeleton';
 import { useBeautyProducts } from '../utils/useBeautyProducts';
+import { useGender } from '../context/useGender';
 
 export default function Beauty() {
   const { products, loading } = useBeautyProducts();
+  const { matchesGender } = useGender();
   const [activeTab, setActiveTab] = useState("All");
   const [maxPrice, setMaxPrice] = useState(150000);
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(false);
@@ -28,6 +30,7 @@ export default function Beauty() {
   const filteredProducts = useMemo(() => {
     return products
       .filter((p) => activeTab === "All" || p.category === activeTab)
+      .filter((p) => matchesGender(p.category))
       .filter((p) => p.price <= maxPrice)
       .filter((p) => !onlyNewArrivals || p.isNew)
       .sort((a, b) => {
@@ -35,7 +38,7 @@ export default function Beauty() {
         if (sortBy === "price-high") return b.price - a.price;
         return 0;
       });
-  }, [products, activeTab, maxPrice, onlyNewArrivals, sortBy]);
+  }, [products, activeTab, maxPrice, onlyNewArrivals, sortBy, matchesGender]);
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
 

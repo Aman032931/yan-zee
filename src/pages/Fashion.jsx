@@ -5,15 +5,17 @@ import FashionFilterPanel from '../components/fashion/FashionFilterPanel';
 import FashionProductCard from '../components/fashion/FashionProductCard';
 import ProductSkeleton from '../components/ProductSkeleton';
 import { useFashionProducts } from '../utils/useFashionProducts';
+import { useGender } from '../context/useGender'; 
 
 export default function Fashion() {
   const { products, loading } = useFashionProducts();
+  const { matchesGender } = useGender();
   const [activeTab, setActiveTab] = useState("All");
   const [maxPrice, setMaxPrice] = useState(150000);
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
   const [visibleCount, setVisibleCount] = useState(8);
-
+  
   const clearFilters = () => {
     setMaxPrice(150000);
     setOnlyNewArrivals(false);
@@ -26,16 +28,18 @@ export default function Fashion() {
   };
 
   const filteredProducts = useMemo(() => {
-    return products
-      .filter((p) => activeTab === "All" || p.category === activeTab)
-      .filter((p) => p.price <= maxPrice)
-      .filter((p) => !onlyNewArrivals || p.isNew)
-      .sort((a, b) => {
-        if (sortBy === "price-low") return a.price - b.price;
-        if (sortBy === "price-high") return b.price - a.price;
-        return 0;
-      });
-  }, [products, activeTab, maxPrice, onlyNewArrivals, sortBy]);
+  return products
+    .filter((p) => activeTab === "All" || p.category === activeTab)
+    .filter((p) => matchesGender(p.category))   // ← add this line
+    .filter((p) => p.price <= maxPrice)
+    .filter((p) => !onlyNewArrivals || p.isNew)
+    .sort((a, b) => {
+      if (sortBy === "price-low") return a.price - b.price;
+      if (sortBy === "price-high") return b.price - a.price;
+      return 0;
+    });
+}, [products, activeTab, maxPrice, onlyNewArrivals, sortBy, matchesGender]);
+
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
 

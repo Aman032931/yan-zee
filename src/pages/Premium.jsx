@@ -5,9 +5,11 @@ import PremiumFilterPanel from '../components/premium/PremiumFilterPanel';
 import PremiumProductCard from '../components/premium/PremiumProductCard';
 import ProductSkeleton from '../components/ProductSkeleton';
 import { usePremiumProducts } from '../utils/usePremiumProducts';
+import { useGender } from '../context/useGender';
 
 export default function Premium() {
   const { products, loading } = usePremiumProducts();
+  const { matchesGender } = useGender();
   const [activeTab, setActiveTab] = useState("All");
   const [maxPrice, setMaxPrice] = useState(900000);
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(false);
@@ -20,6 +22,7 @@ export default function Premium() {
   const filteredProducts = useMemo(() => {
     return products
       .filter((p) => activeTab === "All" || p.category === activeTab)
+      .filter((p) => matchesGender(p.category)) 
       .filter((p) => p.price <= maxPrice)
       .filter((p) => !onlyNewArrivals || p.isNew)
       .sort((a, b) => {
@@ -27,7 +30,7 @@ export default function Premium() {
         if (sortBy === "price-high") return b.price - a.price;
         return 0;
       });
-  }, [products, activeTab, maxPrice, onlyNewArrivals, sortBy]);
+  }, [products, activeTab, maxPrice, onlyNewArrivals, sortBy, matchesGender]);
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
 

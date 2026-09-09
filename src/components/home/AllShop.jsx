@@ -3,6 +3,7 @@ import ProductCard from './ProductCard';
 import FilterPanel from './FilterPanel';
 import RecommendedSection from './RecommendedSection';
 import ProductSkeleton from '../ProductSkeleton';
+import { useGender } from '../../context/useGender';
 
 export default function AllShop({
   selectedCategory = "all",
@@ -11,6 +12,7 @@ export default function AllShop({
   subtitle = "Discover fashion, sports, beauty, home & more — filter by brand or department.",
   showRecommended = true,
 }) {
+  const { matchesGender } = useGender();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBrand, setSelectedBrand] = useState("All Brands");
@@ -105,6 +107,7 @@ export default function AllShop({
 
   const filteredProducts = products
     .filter((p) => isCategoryMatch(p.category, selectedCategory))
+    .filter((p) => matchesGender(p.category))
     .filter((p) =>
       selectedBrand === "All Brands" ||
       p.brand.toLowerCase() === selectedBrand.toLowerCase()

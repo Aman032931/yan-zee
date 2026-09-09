@@ -6,11 +6,14 @@ import SearchBar from "./SearchBar";
 import HeaderIcons from "./HeaderIcons";
 import LoginButton from "./LoginButton";
 import MobileSidebar from "./MobileSidebar";
+import { useNavigate } from "react-router-dom";
+import { useGender } from "../context/useGender";
 
 const Header = () => {
+  const navigate = useNavigate();
   const [isGenderOpen, setIsGenderOpen] = React.useState(false);
   const [isKidsOpen, setIsKidsOpen] = React.useState(false);
-  const [selectedGender, setSelectedGender] = React.useState("Women");
+  const { selectedGender, setSelectedGender } = useGender();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const genderRef = React.useRef(null);
@@ -37,9 +40,12 @@ const Header = () => {
     setIsKidsOpen(false);
   };
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log("Searching for:", searchQuery);
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
   };
 
   return (
