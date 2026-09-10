@@ -71,7 +71,6 @@ const Header = () => {
           />
 
           <HeaderIcons />
-
           <LoginButton />
         </div>
       </div>

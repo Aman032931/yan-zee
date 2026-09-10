@@ -1,18 +1,34 @@
-import { useState } from "react";
+import { useState, useRef, useEffect} from "react";
 
 const countries = [
-  { name: "United States", flag: "🇺🇸" },
-  { name: "Saudi Arabia", flag: "🇸🇦" },
-  { name: "United Arab Emirates", flag: "🇦🇪" },
-  { name: "Kuwait", flag: "🇰🇼" },
-  { name: "Qatar", flag: "🇶🇦" },
-  { name: "Bahrain", flag: "🇧🇭" },
-  { name: "Oman", flag: "🇴🇲" },
+  { code: "US", label: "USA", name: "United States" },
+  { code: "SA", label: "SA", name: "Saudi Arabia" },
+  { code: "AE", label: "UAE", name: "United Arab Emirates" },
+  { code: "KW", label: "Kuwait", name: "Kuwait" },
+  { code: "QA", label: "Qatar", name: "Qatar" },
+  { code: "BH", label: "Bahrain", name: "Bahrain" },
+  { code: "OM", label: "Oman", name: "Oman" },
 ];
+
+function FlagIcon({ code, className = "" }) {
+  return (
+    <img
+      src={`https://flagcdn.com/24x18/${code.toLowerCase()}.png`}
+      srcSet={`https://flagcdn.com/48x36/${code.toLowerCase()}.png 2x`}
+      alt=""
+      width={20}
+      height={15}
+      className={`inline-block rounded-[2px] object-cover ${className}`}
+    />
+  );
+}
 
 function Announcement() {
   const [current, setCurrent] = useState(0);
   const [isCountryOpen, setIsCountryOpen] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState(countries[0]);
+  const countryRef = useRef(null);
+  // const location = useLocation();
 
   const announcements = [
     "Made in NEPAL, Made by NEPALI Products",
@@ -32,11 +48,31 @@ function Announcement() {
     );
   };
 
+  // Close the country dropdown when clicking anywhere outside of it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (countryRef.current && !countryRef.current.contains(event.target)) {
+        setIsCountryOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectCountry = (country) => {
+    setSelectedCountry(country);
+    setIsCountryOpen(false);
+  };
+
   return (
     <div className="flex h-[55px] items-center justify-between border-b-[3px] border-red-600 bg-black px-[68px] font-serif text-[14px] text-white">
       {/* LEFT */}
       <div className="flex w-[250px] items-center justify-between">
-        <span className="text-[16px] font-bold italic">YANZEE</span>
+        <a href="/">
+          <span className="text-[16px] font-bold italic">
+            YanZee
+          </span>
+        </a>
 
         <button
           onClick={previousAnnouncement}
@@ -61,41 +97,48 @@ function Announcement() {
         </button>
 
         {/* COUNTRY DROPDOWN */}
-        <div className="relative">
+        <div className="relative" ref={countryRef}>
           <button
+            type="button"
             className="flex cursor-pointer items-center gap-2 border-0 bg-transparent font-[inherit] text-[14px] text-white"
-            onClick={() => setIsCountryOpen(!isCountryOpen)}
+            onClick={() => setIsCountryOpen((prev) => !prev)}
+            aria-expanded={isCountryOpen}
+            aria-haspopup="listbox"
           >
-            <span className="text-[20px]">
-              {countries[0].flag}
-            </span>
-
-            <span>USA</span>
-
-            <span className="ml-[2px] text-[15px]">
+            <FlagIcon code={selectedCountry.code} />
+            <span>{selectedCountry.label}</span>
+            <span className="ml-[10px] text-[15px]">
               {isCountryOpen ? "⌃" : "⌄"}
             </span>
           </button>
 
           {/* DROPDOWN MENU */}
           {isCountryOpen && (
-            <div className="absolute right-[-10px] top-[34px] z-[1000] max-h-[360px] w-[280px] overflow-y-auto rounded-[14px] bg-white py-[10px] text-black shadow-[0_4px_15px_rgba(0,0,0,0.25)]">
-              {countries.map((country, index) => (
-                <div
-                  className="flex h-[50px] cursor-pointer items-center gap-[12px] px-4 hover:bg-[#f5f5f5]"
-                  key={country.name}
-                >
-                  <span className="text-[20px]">
-                    {country.flag}
-                  </span>
-
-                  <span>{country.name}</span>
-
-                  {index === 0 && (
-                    <span className="ml-auto text-[18px]">✓</span>
-                  )}
-                </div>
-              ))}
+            <div
+              className="absolute right-[-10px] top-[34px] z-[1100] max-h-[360px] w-[280px] overflow-y-auto rounded-[14px] border border-black/5 bg-white py-[10px] text-black shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+              role="listbox"
+            >
+              {countries.map((country) => {
+                const isSelected = country.code === selectedCountry.code;
+                return (
+                  <button
+                    type="button"
+                    key={country.code}
+                    onClick={() => handleSelectCountry(country)}
+                    role="option"
+                    aria-selected={isSelected}
+                    className={`flex h-[50px] w-full cursor-pointer items-center gap-[12px] border-0 bg-transparent px-4 text-left font-[inherit] hover:bg-[#f5f5f5] ${
+                      isSelected ? "bg-[#f5f5f5]" : ""
+                    }`}
+                  >
+                    <FlagIcon code={country.code} />
+                    <span>{country.name}</span>
+                    {isSelected && (
+                      <span className="ml-auto text-[18px]">✓</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import Home from "./components/Home";
 import ScrollToTop from "./components/ScrollToTop";
 
+
 import Beauty from "./pages/Beauty";
 import Cart from "./pages/Cart";
 import Fashion from "./pages/Fashion";

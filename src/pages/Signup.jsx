@@ -698,6 +698,14 @@ export default function Signup({ onClose, onLogin }) {
 
 
         alert("Account created successfully!");
+
+        navigate("/login", {
+            replace: true,
+            state: {
+                from:
+                    location.state?.from || "/"
+            }
+        });
     };
 
 

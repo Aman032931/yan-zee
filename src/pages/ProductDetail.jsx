@@ -5,6 +5,7 @@ import {
   Check,
   ChevronRight,
   Heart,
+  MapPin,
   Minus,
   Plus,
   ShieldCheck,
@@ -46,6 +47,8 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [added, setAdded] = useState(false);
+  const [pincode, setPincode] = useState("");
+  const [deliveryEstimate, setDeliveryEstimate] = useState(null);
 
   const product = products.find((item) => String(item.id) === String(id));
 
@@ -71,6 +74,14 @@ export default function ProductDetail() {
     }, quantity);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1800);
+  };
+
+  const checkDelivery = () => {
+    if (!/^\d{5}$/.test(pincode.trim())) {
+      setDeliveryEstimate({ valid: false });
+      return;
+    }
+    setDeliveryEstimate({ valid: true });
   };
 
   const toggleProductWishlist = () => {
@@ -165,6 +176,44 @@ export default function ProductDetail() {
                 <Check className="h-4 w-4" /> In stock
               </div>
               <p className="mt-1 text-xs text-gray-500">Ready to ship from Yanzee.</p>
+            </div>
+
+            {/* Delivery check */}
+            <div className="mt-6">
+              <label htmlFor="pincode" className="mb-2 flex items-center gap-1.5 text-sm font-semibold">
+                <MapPin className="h-4 w-4" /> Check delivery
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="pincode"
+                  value={pincode}
+                  onChange={(e) => {
+                    setPincode(e.target.value);
+                    setDeliveryEstimate(null);
+                  }}
+                  onKeyDown={(e) => e.key === "Enter" && checkDelivery()}
+                  placeholder="Enter pincode"
+                  className="h-11 w-40 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-black"
+                />
+                <button
+                  type="button"
+                  onClick={checkDelivery}
+                  className="h-11 rounded-md border border-gray-300 px-4 text-sm font-semibold hover:border-black"
+                >
+                  Check
+                </button>
+              </div>
+              {deliveryEstimate?.valid && (
+                <p className="mt-2 text-xs font-medium text-green-700">
+                  Delivery available — usually arrives in 3-5 business days.
+                </p>
+              )}
+              {deliveryEstimate?.valid === false && (
+                <p className="mt-2 text-xs font-medium text-red-600">Please enter a valid 5-digit pincode.</p>
+              )}
+              <p className="mt-2 text-[11px] text-gray-400">
+                Delivery estimation isn&apos;t connected to a real logistics service yet.
+              </p>
             </div>
 
             {/* Fashion-friendly selectors. They remain optional for generic products. */}

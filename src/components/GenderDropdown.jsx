@@ -51,7 +51,7 @@ const GenderDropdown = React.forwardRef(({
             onClick={() => onSelectGender("Men")}
           />
 
-          <div className="yz-gender__kids-group">
+          <div className="yz-gender__kids-group relative">
             <div className="mt-1 flex border-t border-[#e5e5e5] pt-1">
               <button
                 type="button"
@@ -75,7 +75,7 @@ const GenderDropdown = React.forwardRef(({
                   stroke="currentColor"
                   strokeWidth="1.5"
                   aria-hidden="true"
-                  className="transition-transform duration-200 aria-expanded:rotate-180"
+                  className="-rotate-90 transition-transform duration-200 aria-expanded:rotate-0"
                 >
                   <path d="M3 4.5L6 7.5L9 4.5" />
                 </svg>
@@ -83,16 +83,17 @@ const GenderDropdown = React.forwardRef(({
             </div>
 
             {isKidsOpen && (
-              <div className="pl-2">
+              <div
+                className="absolute left-[calc(100%+8px)] top-0 z-[110] min-w-[160px] rounded-[8px] border border-[#e5e5e5] bg-white py-2 shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-[768px]:left-0 max-[768px]:top-[calc(100%+4px)] max-[768px]:w-full"
+                role="listbox"
+              >
                 <GenderOption
                   label="Boy"
-                  isSub={true}
                   isSelected={selectedGender === "Boy"}
                   onClick={() => onSelectGender("Boy")}
                 />
                 <GenderOption
                   label="Girl"
-                  isSub={true}
                   isSelected={selectedGender === "Girl"}
                   onClick={() => onSelectGender("Girl")}
                 />

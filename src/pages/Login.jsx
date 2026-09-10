@@ -65,6 +65,13 @@ function Login() {
         setTimeout(() => {
             setIsLoading(false);
         }, 1000);
+        navigate("/login", {
+            replace: true,
+            state: {
+                from:
+                    location.state?.from || "/"
+            }
+        })
     };
 
     return (
