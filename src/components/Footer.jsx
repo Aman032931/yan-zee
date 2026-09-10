@@ -92,7 +92,7 @@ const Footer = () => {
       </section>
 
       {/* ================= MAIN FOOTER ================= */}
-      <div className="mx-auto max-w-[1300px] px-[8%] pb-[10px] pt-[50px]">
+      <div className="mx-auto max-w-[1300px] px-[8%] pb-[40px] pt-[50px]">
         {/* FOOTER COLUMNS */}
         <nav className="grid grid-cols-6 gap-[30px] max-[1024px]:grid-cols-3 max-[1024px]:gap-[25px] max-[600px]:grid-cols-2 max-[600px]:gap-[20px]">
           {/* ABOUT US */}
@@ -428,7 +428,7 @@ const Footer = () => {
 
       {/* ================= SOCIAL MEDIA ================= */}
       <section className="border-y border-[#2a2a2a]">
-        <div className="mx-auto flex max-w-[1300px] items-center gap-[30px] px-[8%] py-[20px] max-[768px]:flex-col max-[768px]:gap-[15px] max-[768px]:text-center">
+        <div className="mx-auto flex max-w-[1300px] items-center gap-[30px] px-[8%] py-[30px] max-[768px]:flex-col max-[768px]:gap-[15px] max-[768px]:text-center">
           <h3 className="m-0 text-[13px] font-semibold tracking-[0.8px]">
             FOLLOW US
           </h3>
@@ -466,7 +466,7 @@ const Footer = () => {
 
       {/* ================= BOTTOM BAR ================= */}
       <div className="border-b border-[#2a2a2a] bg-black">
-        <div className="mx-auto flex max-w-325 flex-wrap items-center justify-between gap-5 px-[8%] py-5.5 max-[768px]:flex-col max-[768px]:gap-3.75 max-[768px]:text-center">
+        <div className="mx-auto flex max-w-325 flex-wrap items-center justify-between gap-5 px-[8%] py-7 max-[768px]:flex-col max-[768px]:gap-3.75 max-[768px]:text-center">
           {/* BRAND */}
           <a
             href="/"

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
-export default function RecommendedSection({ onSelectProduct }) {
+export default function RecommendedSection() {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,13 +32,10 @@ export default function RecommendedSection({ onSelectProduct }) {
   if (loading) {
     return (
       <section className="w-full bg-white py-6 px-4 my-6 rounded-xl border border-gray-100 shadow-sm animate-pulse">
-        {/* Header Skeleton */}
         <div className="mb-4 px-2 space-y-2">
           <div className="w-48 h-5 bg-gray-200 rounded"></div>
           <div className="w-64 h-3 bg-gray-200 rounded"></div>
         </div>
-
-        {/* Carousel Card Skeletons */}
         <div className="flex gap-4 overflow-hidden pb-3 pt-1">
           {[...Array(6)].map((_, i) => (
             <div
@@ -72,9 +70,9 @@ export default function RecommendedSection({ onSelectProduct }) {
 
       <div className="flex gap-4 overflow-x-auto pb-3 pt-1 scrollbar-thin scrollbar-thumb-gray-200">
         {recommendations.map((item) => (
-          <div
+          <Link
             key={item.id}
-            onClick={() => onSelectProduct && onSelectProduct(item)}
+            to={`/product/${item.id}`}
             className="min-w-[180px] max-w-[180px] sm:min-w-[200px] sm:max-w-[200px] bg-white border border-gray-100 rounded-lg p-3 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group"
           >
             <div className="relative w-full h-32 bg-gray-50 rounded-md overflow-hidden flex items-center justify-center p-2 mb-2">
@@ -101,11 +99,11 @@ export default function RecommendedSection({ onSelectProduct }) {
               <span className="text-xs font-bold text-gray-900">
                 Nrs {item.price.toLocaleString()}
               </span>
-              <button className="text-[10px] bg-gray-900 text-white px-2 py-1 rounded hover:bg-black transition">
+              <span className="text-[10px] bg-gray-900 text-white px-2 py-1 rounded group-hover:bg-black transition">
                 View
-              </button>
+              </span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </section>

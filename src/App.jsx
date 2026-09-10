@@ -25,6 +25,7 @@ import SellerLayout from "./components/seller/SellerLayout";
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import SellerProducts from "./pages/seller/SellerProducts";
 import ProductDetail from "./pages/ProductDetail";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   const location = useLocation();
@@ -66,12 +67,14 @@ function App() {
 
   return (
     <GenderProvider>
+      <ScrollToTop />
       {!isDashboardRoute && <Announcement />}
       {!isDashboardRoute && <Header />}
 
       <main className={isDashboardRoute ? "" : "min-h-[30vh]"}>{routeElements}</main>
 
       {!isDashboardRoute && <Footer />}
+      
     </GenderProvider>
   );
 }
