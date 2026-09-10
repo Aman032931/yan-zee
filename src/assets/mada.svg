@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32" role="img" aria-label="Mada">
+  <rect width="48" height="32" rx="4" fill="#fff"/>
+  <rect x="0.5" y="0.5" width="47" height="31" rx="3.5" fill="none" stroke="#e5e5e5"/>
+  <rect x="4" y="8" width="40" height="16" rx="3" fill="#84BD00"/>
+  <text x="24" y="19.5" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="800" text-anchor="middle">mada</text>
+</svg>
