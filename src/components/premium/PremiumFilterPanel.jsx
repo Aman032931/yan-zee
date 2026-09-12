@@ -1,5 +1,7 @@
-export default function PremiumFilterPanel({ maxPrice, setMaxPrice, onlyNewArrivals, setOnlyNewArrivals, onClearFilters }) {
-  const activeFilterCount = (onlyNewArrivals ? 1 : 0) + (maxPrice < 900000 ? 1 : 0);
+import PriceRangeFilter from '../shared/PriceRangeFilter';
+
+export default function PremiumFilterPanel({ priceFilter, setPriceFilter, onlyNewArrivals, setOnlyNewArrivals, onClearFilters }) {
+  const activeFilterCount = (onlyNewArrivals ? 1 : 0) + (priceFilter ? 1 : 0);
 
   return (
     <div className="bg-white rounded-lg border border-gray-100 p-4 shadow-sm space-y-4">
@@ -26,16 +28,7 @@ export default function PremiumFilterPanel({ maxPrice, setMaxPrice, onlyNewArriv
 
       <div>
         <h4 className="text-xs font-semibold text-gray-800 mb-2">Price</h4>
-        <input
-          type="range" min="500" max="900000" step="5000"
-          value={maxPrice}
-          onChange={(e) => setMaxPrice(Number(e.target.value))}
-          className="w-full accent-red-600 cursor-pointer"
-        />
-        <div className="flex justify-between text-[11px] text-gray-500 mt-1">
-          <span>Nrs 500</span>
-          <span className="font-semibold text-gray-800">Up to Nrs {maxPrice.toLocaleString()}</span>
-        </div>
+        <PriceRangeFilter priceFilter={priceFilter} setPriceFilter={setPriceFilter} />
       </div>
     </div>
   );

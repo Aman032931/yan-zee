@@ -1,12 +1,13 @@
 import { useState } from 'react';
+import PriceRangeFilter from '../shared/PriceRangeFilter';
 
 export default function FilterPanel({
   selectedCategory,
   onSelectCategory,
   selectedBrand,
   onSelectBrand,
-  maxPrice,
-  setMaxPrice,
+  priceFilter,
+  setPriceFilter,
   onlyNewArrivals,
   setOnlyNewArrivals,
   onClearFilters,
@@ -23,28 +24,14 @@ export default function FilterPanel({
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const categories = [
-    "All Departments",
-    "Fashion",
-    "Sports",
-    "Beauty",
-    "Outlet",
-    "Kids",
-    "Premium",
-  ];
-
-  const brands = [
-    "All Brands",
-    "MEN'S CLOTHING",
-    "WOMEN'S CLOTHING",
-    "JEWELERY",
-    "ELECTRONICS",
-  ];
+  const categories = ["All Departments", "Fashion", "Sports", "Beauty", "Outlet", "Kids", "Premium"];
+  const brands = ["All Brands", "MEN'S CLOTHING", "WOMEN'S CLOTHING", "JEWELERY", "ELECTRONICS"];
 
   const activeFilterCount =
     (selectedCategory !== "all" && selectedCategory !== "All Departments" ? 1 : 0) +
     (selectedBrand !== "All Brands" ? 1 : 0) +
-    (onlyNewArrivals ? 1 : 0);
+    (onlyNewArrivals ? 1 : 0) +
+    (priceFilter ? 1 : 0);
 
   return (
     <div className="bg-white rounded-lg border border-gray-100 p-4 shadow-sm space-y-4">
@@ -83,9 +70,7 @@ export default function FilterPanel({
           <span className="flex items-center gap-1.5">
             Brand
             {selectedBrand !== "All Brands" && (
-              <span className="bg-gray-200 text-gray-700 text-[10px] rounded-full px-1.5 py-0.2">
-                1
-              </span>
+              <span className="bg-gray-200 text-gray-700 text-[10px] rounded-full px-1.5 py-0.2">1</span>
             )}
           </span>
           <span>{openSections.brand ? "▲" : "▼"}</span>
@@ -100,9 +85,7 @@ export default function FilterPanel({
                   key={brand}
                   onClick={() => onSelectBrand(brand)}
                   className={`flex items-center justify-between text-xs py-1 px-2 rounded cursor-pointer transition ${
-                    isSelected
-                      ? "text-gray-900 font-bold bg-gray-50"
-                      : "text-gray-600 hover:text-gray-900"
+                    isSelected ? "text-gray-900 font-bold bg-gray-50" : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
                   <span className="capitalize">{brand.toLowerCase()}</span>
@@ -123,9 +106,7 @@ export default function FilterPanel({
           <span className="flex items-center gap-1.5">
             Category
             {selectedCategory !== "all" && selectedCategory !== "All Departments" && (
-              <span className="bg-gray-200 text-gray-700 text-[10px] rounded-full px-1.5 py-0.2">
-                1
-              </span>
+              <span className="bg-gray-200 text-gray-700 text-[10px] rounded-full px-1.5 py-0.2">1</span>
             )}
           </span>
           <span>{openSections.category ? "▲" : "▼"}</span>
@@ -137,15 +118,12 @@ export default function FilterPanel({
               const isSelected =
                 selectedCategory.toLowerCase() === cat.toLowerCase() ||
                 (cat === "All Departments" && selectedCategory === "all");
-
               return (
                 <div
                   key={cat}
                   onClick={() => onSelectCategory(cat === "All Departments" ? "all" : cat)}
                   className={`flex items-center justify-between text-xs py-1 px-2 rounded cursor-pointer transition ${
-                    isSelected
-                      ? "text-gray-900 font-bold bg-gray-50"
-                      : "text-gray-600 hover:text-gray-900"
+                    isSelected ? "text-gray-900 font-bold bg-gray-50" : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
                   <span>{cat}</span>
@@ -157,33 +135,24 @@ export default function FilterPanel({
         )}
       </div>
 
-      {/* Price Range Slider Section */}
+      {/* Price Section — delegates to shared PriceRangeFilter */}
       <div className="border-b border-gray-100 pb-3">
         <button
           onClick={() => toggleSection("price")}
           className="w-full flex justify-between items-center text-xs font-semibold text-gray-800 py-1 cursor-pointer"
         >
-          <span>Price</span>
+          <span className="flex items-center gap-1.5">
+            Price
+            {priceFilter && (
+              <span className="bg-gray-200 text-gray-700 text-[10px] rounded-full px-1.5 py-0.2">1</span>
+            )}
+          </span>
           <span>{openSections.price ? "▲" : "▼"}</span>
         </button>
 
         {openSections.price && (
-          <div className="mt-2 px-1">
-            <input
-              type="range"
-              min="500"
-              max="150000"
-              step="1000"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(Number(e.target.value))}
-              className="w-full accent-black cursor-pointer"
-            />
-            <div className="flex justify-between text-[11px] text-gray-500 mt-1">
-              <span>Nrs 500</span>
-              <span className="font-semibold text-gray-800">
-                Up to Nrs {maxPrice.toLocaleString()}
-              </span>
-            </div>
+          <div className="mt-3">
+            <PriceRangeFilter priceFilter={priceFilter} setPriceFilter={setPriceFilter} />
           </div>
         )}
       </div>

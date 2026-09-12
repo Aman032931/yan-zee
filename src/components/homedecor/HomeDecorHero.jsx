@@ -1,6 +1,6 @@
 export default function HomeDecorHero() {
   return (
-    <div className="relative w-full h-[420px] rounded-lg overflow-hidden mb-8">
+    <div className="relative w-full h-175 overflow-hidden">
       <img src="https://picsum.photos/id/1080/1600/700" alt="Home Decor & Appliances" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-0 bg-black/40" />
       <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-14 max-w-xl">

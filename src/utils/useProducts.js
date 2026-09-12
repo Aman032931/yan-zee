@@ -1,7 +1,7 @@
 // src/utils/useProducts.js
 import { useState, useEffect } from "react";
 
-const FAKE_API_URL = 'https://fakestoreapi.com/products'; 
+const FAKE_API_URL = "https://fakestoreapi.com/products";
 
 export function useProducts(category) {
   const [products, setProducts] = useState([]);
@@ -13,8 +13,8 @@ export function useProducts(category) {
       .then((res) => res.json())
       .then((data) => {
         const items = category
-          ? data.products.filter((p) => p.category === category)
-          : data.products;
+          ? data.filter((p) => p.category === category)
+          : data;
         setProducts(items);
       })
       .catch(setError)

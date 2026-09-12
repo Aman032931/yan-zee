@@ -1,6 +1,6 @@
 export default function OutletHero() {
   return (
-    <div className="relative w-full h-[420px] rounded-lg overflow-hidden mb-8">
+    <div className="relative w-full h-175overflow-hidden">
       <img
         src="https://picsum.photos/id/1040/1600/700"
         alt="Outlet Deals"
