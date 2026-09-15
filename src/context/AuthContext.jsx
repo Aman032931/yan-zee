@@ -1,7 +1,6 @@
-import { createContext, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import mockUsers from '../data/mockUsers';
-
-export const AuthContext = createContext(null);
+import { AuthContext } from './authContext';
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(() => {
@@ -17,8 +16,6 @@ export function AuthProvider({ children }) {
     }
   }, [currentUser]);
 
-  // Swap this function's internals for a real API call later —
-  // callers (Login.jsx) don't need to change.
   const login = (email, password) => {
     const match = mockUsers.find((u) => u.email === email && u.password === password);
     if (!match) return { success: false, error: "Invalid email or password" };
