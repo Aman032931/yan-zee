@@ -14,28 +14,37 @@ const MobileSidebar = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-2000 flex">
+      
+      {/* Background */}
       <div
         className="absolute inset-0 bg-[rgba(0,0,0,0.5)]"
         onClick={onClose}
       ></div>
+
+      {/* Sidebar */}
       <div className="relative z-1 h-full w-75 max-w-[80%] animate-slide-in overflow-y-auto bg-white p-5">
+        
+        {/* Close Button */}
         <button
           className="mb-5 cursor-pointer border-0 bg-transparent p-2 text-[24px] text-[#333]"
           onClick={onClose}
         >
           ✕
         </button>
-        <nav className="flex flex-col gap-2">
+
+        {/* Navigation */}
+        <nav className="flex flex-col">
           {navLinks.map((link) => (
             <a
               key={link.label}
               href={link.href}
-              className="rounded-sm px-4 py-3 text-[16px] text-[#333] no-underline transition-colors duration-200 hover: mg-text-red "
+              className="border-b border-[#ddd] px-4 py-4 text-[16px] text-[#0c0c0c] no-underline transition-colors duration-200 hover:text-red-500"
             >
               {link.label}
             </a>
           ))}
         </nav>
+
       </div>
     </div>
   );

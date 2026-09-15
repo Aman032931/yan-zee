@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-
+import React from "react";
 import Announcement from "./components/Announcement";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -19,11 +19,22 @@ import ProductDetail from "./pages/ProductDetail";
 function App() {
     const location = useLocation();
     const navigate = useNavigate();
+    const authRef = React.useRef(null);
 
     const isLogin = location.pathname === "/login";
     const isSignup = location.pathname === "/signup";
 
     const isAuthPopup = isLogin || isSignup;
+      React.useEffect(() =>{
+        const handleClickOutside = (event) => {
+            if (authRef.current && !authRef.current.contains(event.target)) {
+                closePopup();
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+        console.log("Auth popup is open:", isAuthPopup);
+    })
 
 
     /*
@@ -32,10 +43,13 @@ function App() {
      */
     const returnTo = location.state?.from || "/";
 
+    const backgroundPath = isAuthPopup ? returnTo : location.pathname;
+
 
     const closePopup = () => {
         navigate(returnTo);
     };
+
 
 
     return (
@@ -53,64 +67,56 @@ function App() {
 
                 {/* HOME */}
 
-                {!isAuthPopup &&
-                    location.pathname === "/" && (
+                {backgroundPath === "/" && (
                         <Home />
                     )}
 
 
                 {/* ALL */}
 
-                {!isAuthPopup &&
-                    location.pathname === "/all" && (
+                {backgroundPath === "/all" && (
                         <Home />
                     )}
 
 
                 {/* FASHION */}
 
-                {!isAuthPopup &&
-                    location.pathname === "/fashion" && (
+                {backgroundPath === "/fashion" && (
                         <Fashion />
                     )}
 
 
                 {/* BEAUTY */}
 
-                {!isAuthPopup &&
-                    location.pathname === "/beauty" && (
+                {backgroundPath === "/beauty" && (
                         <Beauty />
                     )}
 
 
                 {/* SPORTS */}
 
-                {!isAuthPopup &&
-                    location.pathname === "/sports" && (
+                {backgroundPath === "/sports" && (
                         <Sports />
                     )}
 
 
                 {/* CART */}
 
-                {!isAuthPopup &&
-                    location.pathname === "/cart" && (
+                {backgroundPath === "/cart" && (
                         <Cart />
                     )}
 
 
                 {/* WISHLIST */}
 
-                {!isAuthPopup &&
-                    location.pathname === "/wishlist" && (
+                {backgroundPath === "/wishlist" && (
                         <Wishlist />
                     )}
 
 
                 {/* PRODUCT */}
 
-                {!isAuthPopup &&
-                    location.pathname.startsWith("/product/") && (
+                {backgroundPath.startsWith("/product/") && (
                         <ProductDetail />
                     )}
 
@@ -128,22 +134,12 @@ function App() {
 
                 <div
                     className="auth-modal-layer"
-
-                    onMouseDown={(e) => {
-
-                        /*
-                         * Close if clicking outside
-                         * the popup
-                         */
-
-                        if (e.target === e.currentTarget) {
-                            closePopup();
-                        }
-
-                    }}
                 >
 
-                    <div className="auth-modal-wrapper">
+                    <div
+                        className="auth-modal-wrapper"
+                        ref={authRef}
+                    >
 
                         {/* CLOSE */}
 

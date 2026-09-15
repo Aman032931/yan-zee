@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 
 const navLinks = [
-  { label: "Yanzee", href: "/all" },
+  { label: "YanZee", href: "/all" },
   { label: "Fashion", href: "/fashion" },
   { label: "Beauty", href: "/beauty" },
   { label: "Sports", href: "/sports" },

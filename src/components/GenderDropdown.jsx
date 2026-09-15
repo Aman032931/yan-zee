@@ -1,128 +1,90 @@
-import React from "react";
+import { ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-const GenderDropdown = React.forwardRef(({ 
-  isOpen, 
-  isKidsOpen, 
-  selectedGender, 
-  onToggle, 
-  onToggleKids, 
-  onSelectGender 
-}, ref) => {
+const GenderDropdown = ({ selectedGender, onSelectGender }) => {
   return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        className="flex cursor-pointer items-center gap-[6px] rounded-[4px] border-none bg-transparent px-3 py-2 text-[14px] font-medium text-black transition-colors duration-200 hover:bg-[#f5f5f5]"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        aria-haspopup="listbox"
-        aria-label="Shop by category"
-      >
+    <DropdownMenu>
+      <DropdownMenuTrigger className="group flex cursor-pointer items-center gap-[6px] rounded-[4px] border-none bg-transparent px-3 py-2 text-[14px] font-medium text-black outline-none transition-colors duration-200 hover:bg-[#f5f5f5] data-[state=open]:bg-[#f5f5f5]">
         <span className="max-[768px]:hidden">{selectedGender}</span>
-        <svg
-          width="10"
-          height="10"
-          viewBox="0 0 12 12"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-          className="transition-transform duration-200 aria-expanded:rotate-180"
+        <ChevronDown className="size-[10px] transition-transform duration-200 group-data-[state=open]:rotate-180" />
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent
+        align="start"
+        sideOffset={8}
+        className="min-w-[180px] rounded-[8px] border-[#e5e5e5] p-0 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-[768px]:min-w-[160px]"
+      >
+        <DropdownMenuItem
+          onSelect={() => onSelectGender("Women")}
+          className={`cursor-pointer rounded-none px-4 py-[10px] text-[14px] text-[#333] focus:bg-[#f5f5f5] focus:text-[#333] ${
+            selectedGender === "Women" ? "bg-[#f0f0f0] font-semibold text-black" : ""
+          }`}
         >
-          <path d="M3 4.5L6 7.5L9 4.5" />
-        </svg>
-      </button>
+          Women
+        </DropdownMenuItem>
 
-      {isOpen && (
-        <div
-          className="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[180px] rounded-[8px] border border-[#e5e5e5] bg-white py-2 shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-[768px]:left-[-70px] max-[768px]:min-w-[160px]"
-          role="listbox"
+        <DropdownMenuItem
+          onSelect={() => onSelectGender("Men")}
+          className={`cursor-pointer rounded-none px-4 py-[10px] text-[14px] text-[#333] focus:bg-[#f5f5f5] focus:text-[#333] ${
+            selectedGender === "Men" ? "bg-[#f0f0f0] font-semibold text-black" : ""
+          }`}
         >
-          <GenderOption
-            label="Women"
-            isSelected={selectedGender === "Women"}
-            onClick={() => onSelectGender("Women")}
-          />
-          <GenderOption
-            label="Men"
-            isSelected={selectedGender === "Men"}
-            onClick={() => onSelectGender("Men")}
-          />
+          Men
+        </DropdownMenuItem>
 
-          <div className="yz-gender__kids-group relative">
-            <div className="mt-1 flex border-t border-[#e5e5e5] pt-1">
-              <button
-                type="button"
-                className="flex-1 cursor-pointer border-0 bg-transparent px-4 py-[10px] text-left text-[14px] text-[#333] transition-colors duration-150 hover:bg-[#f5f5f5]"
-                onClick={() => onSelectGender("Kids")}
-              >
-                Kids
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer border-0 bg-transparent px-4 py-[10px] text-[#666] transition-colors duration-150 hover:bg-[#f5f5f5]"
-                onClick={onToggleKids}
-                aria-expanded={isKidsOpen}
-                aria-label="Kids"
-              >
-                <svg
-                  width="10"
-                  height="10"
-                  viewBox="0 0 12 12"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  aria-hidden="true"
-                  className="-rotate-90 transition-transform duration-200 aria-expanded:rotate-0"
-                >
-                  <path d="M3 4.5L6 7.5L9 4.5" />
-                </svg>
-              </button>
-            </div>
+        {/* KIDS — shadcn/Radix sub dropdown, opens sideways */}
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger
+            className={`mt-1 cursor-pointer rounded-none border-t border-[#e5e5e5] px-4 py-[10px] pt-[10px] text-[14px] text-[#333] focus:bg-[#f5f5f5] focus:text-[#333] data-[state=open]:bg-[#f5f5f5] ${
+              selectedGender === "Kids" || selectedGender === "Boy" || selectedGender === "Girl"
+                ? "font-semibold text-black"
+                : ""
+            }`}
+          >
+            Kids
+          </DropdownMenuSubTrigger>
 
-            {isKidsOpen && (
-              <div
-                className="absolute left-[calc(100%+8px)] top-0 z-[110] min-w-[160px] rounded-[8px] border border-[#e5e5e5] bg-white py-2 shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-[768px]:left-0 max-[768px]:top-[calc(100%+4px)] max-[768px]:w-full"
-                role="listbox"
-              >
-                <GenderOption
-                  label="Boy"
-                  isSelected={selectedGender === "Boy"}
-                  onClick={() => onSelectGender("Boy")}
-                />
-                <GenderOption
-                  label="Girl"
-                  isSelected={selectedGender === "Girl"}
-                  onClick={() => onSelectGender("Girl")}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-});
-
-// Sub-component for gender options
-const GenderOption = ({ label, isSelected, onClick, isSub = false }) => {
-  return (
-    <button
-      type="button"
-      role="option"
-      className={`flex w-full cursor-pointer items-center justify-between border-0 bg-transparent px-4 py-[10px] text-left text-[14px] text-[#333] transition-colors duration-150 hover:bg-[#f5f5f5] ${
-        isSelected ? "bg-[#f0f0f0] font-semibold text-black" : ""
-      } ${isSub ? "pl-8 text-[13px]" : ""}`}
-      onClick={onClick}
-      aria-selected={isSelected}
-    >
-      {label}
-    </button>
+          <DropdownMenuSubContent
+            sideOffset={8}
+            className="min-w-[160px] rounded-[8px] border-[#e5e5e5] p-0 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+          >
+            <DropdownMenuItem
+              onSelect={() => onSelectGender("Kids")}
+              className={`cursor-pointer rounded-none px-4 py-[10px] text-[14px] text-[#333] focus:bg-[#f5f5f5] focus:text-[#333] ${
+                selectedGender === "Kids" ? "bg-[#f0f0f0] font-semibold text-black" : ""
+              }`}
+            >
+              All Kids
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => onSelectGender("Boy")}
+              className={`cursor-pointer rounded-none px-4 py-[10px] text-[14px] text-[#333] focus:bg-[#f5f5f5] focus:text-[#333] ${
+                selectedGender === "Boy" ? "bg-[#f0f0f0] font-semibold text-black" : ""
+              }`}
+            >
+              Boy
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => onSelectGender("Girl")}
+              className={`cursor-pointer rounded-none px-4 py-[10px] text-[14px] text-[#333] focus:bg-[#f5f5f5] focus:text-[#333] ${
+                selectedGender === "Girl" ? "bg-[#f0f0f0] font-semibold text-black" : ""
+              }`}
+            >
+              Girl
+            </DropdownMenuItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
-
-GenderDropdown.displayName = "GenderDropdown";
 
 export default GenderDropdown;

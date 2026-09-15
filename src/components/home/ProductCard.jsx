@@ -32,7 +32,7 @@ export default function ProductCard({ product }) {
   };
 
   return (
-    <div className="w-full min-w-0 bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition duration-200 flex flex-col overflow-hidden relative group">
+    <div className="w-full min-w-0 bg-white rounded-lg border border-gray-100 shadow-full hover:shadow-full transition duration-200 flex flex-col overflow-hidden relative group">
       {/* Top Badge */}
       {product?.badge && (
         <span className="absolute top-2 left-2 z-10 text-[10px] font-bold uppercase bg-orange-600 text-white px-2 py-0.5 rounded">

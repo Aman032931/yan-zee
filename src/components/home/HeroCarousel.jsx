@@ -16,7 +16,7 @@ const slides = [
     title: "Made by Nepali, Made in Nepal",
     subtitle: "Nepali crafted products",
     buttonText: "Shop Now",
-    buttonLink: "https://www.yan-zee.com/fashion/category/made-in-nepal",
+    buttonLink: "/all",
     image: "https://res.cloudinary.com/dgzackqok/image/upload/v1781633967/yanzee-store/local/admin/ewlsoudvclra7j0oa7xt.png",
     objectPosition: "77% 29%",
     objectPositionMobile: "77% 15%",

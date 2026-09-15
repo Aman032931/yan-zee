@@ -24,7 +24,7 @@ export default function Cart() {
         <div className="flex min-h-[500px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 px-6 text-center">
           <div className="grid h-16 w-16 place-items-center rounded-full bg-white shadow-sm"><ShoppingBag className="h-7 w-7" /></div>
           <h1 className="mt-5 text-2xl font-semibold">Your bag is empty</h1>
-          <p className="mt-2 max-w-md text-sm text-gray-500">Discover new styles and home essentials from the Yanzee collection.</p>
+          <p className="mt-2 max-w-md text-sm text-gray-500">Discover new styles and home essentials from the YanZee collection.</p>
           <Link to="/all" className="mt-6 inline-flex items-center gap-2 rounded-md bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800">Continue Shopping</Link>
         </div>
       </div>
