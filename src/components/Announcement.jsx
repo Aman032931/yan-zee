@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect} from "react";
-
+import { useState, useRef, useEffect } from "react";
+import '../styles/country.css';
 const countries = [
   { code: "US", label: "USA", name: "United States" },
   { code: "SA", label: "SA", name: "Saudi Arabia" },
@@ -27,8 +27,8 @@ function Announcement() {
   const [current, setCurrent] = useState(0);
   const [isCountryOpen, setIsCountryOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
+
   const countryRef = useRef(null);
-  // const location = useLocation();
 
   const announcements = [
     "Made in NEPAL, Made by NEPALI Products",
@@ -48,15 +48,25 @@ function Announcement() {
     );
   };
 
-  // Close the country dropdown when clicking anywhere outside of it
+  // Close country dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (countryRef.current && !countryRef.current.contains(event.target)) {
+      if (
+        countryRef.current &&
+        !countryRef.current.contains(event.target)
+      ) {
         setIsCountryOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+    };
   }, []);
 
   const handleSelectCountry = (country) => {
@@ -66,89 +76,222 @@ function Announcement() {
 
   return (
     <div className="flex h-[55px] items-center justify-between border-b-[3px] border-red-600 bg-black px-[68px] font-serif text-[14px] text-white">
-      {/* LEFT */}
+
+      {/* =====================================================
+          LEFT
+      ===================================================== */}
+
       <div className="flex w-[250px] items-center justify-between">
-        <a href="/">
+
+        <a
+          href="/"
+          className="no-underline text-white"
+        >
           <span className="text-[16px] font-bold italic">
             YanZee
           </span>
         </a>
 
         <button
+          type="button"
           onClick={previousAnnouncement}
-          className="cursor-pointer border-0 bg-transparent text-[18px] text-white"
+          className="cursor-pointer border-0 bg-transparent p-0 text-[18px] text-white transition-opacity duration-200 hover:opacity-60"
         >
           ‹
         </button>
+
       </div>
 
-      {/* CENTER */}
+
+      {/* =====================================================
+          CENTER
+      ===================================================== */}
+
       <div className="flex-1 text-center font-medium">
         {announcements[current]}
       </div>
 
-      {/* RIGHT */}
+
+      {/* =====================================================
+          RIGHT
+      ===================================================== */}
+
       <div className="flex w-[300px] items-center justify-end gap-[18px]">
+
+        {/* NEXT ANNOUNCEMENT */}
+
         <button
+          type="button"
           onClick={nextAnnouncement}
-          className="cursor-pointer border-0 bg-transparent text-[18px] text-white"
+          className="cursor-pointer border-0 bg-transparent p-0 text-[18px] text-white transition-opacity duration-200 hover:opacity-60"
         >
           ›
         </button>
 
-        {/* COUNTRY DROPDOWN */}
-        <div className="relative" ref={countryRef}>
+
+        {/* =====================================================
+            COUNTRY DROPDOWN
+        ===================================================== */}
+
+        <div
+          className="relative"
+          ref={countryRef}
+        >
+
+          {/* SELECTED COUNTRY */}
+
           <button
             type="button"
-            className="flex cursor-pointer items-center gap-2 border-0 bg-transparent font-[inherit] text-[14px] text-white"
-            onClick={() => setIsCountryOpen((prev) => !prev)}
+            onClick={() =>
+              setIsCountryOpen((prev) => !prev)
+            }
+            className="flex cursor-pointer items-center gap-[9px] border-0 bg-transparent px-[5px] py-[7px] font-[inherit] text-[14px] text-white transition-opacity duration-200 hover:opacity-80"
             aria-expanded={isCountryOpen}
             aria-haspopup="listbox"
           >
-            <FlagIcon code={selectedCountry.code} />
-            <span>{selectedCountry.label}</span>
-            <span className="ml-[10px] text-[15px]">
-              {isCountryOpen ? "⌃" : "⌄"}
+
+            <FlagIcon
+              code={selectedCountry.code}
+              className="shrink-0"
+            />
+
+            <span className="whitespace-nowrap">
+              {selectedCountry.label}
             </span>
+
+            <span
+            className={`ml-[7px] h-[8px] w-[8px] rotate-45 border-b-[1.5px] border-r-[1.5px] border-white transition-transform duration-200 ${
+              isCountryOpen
+                ? "translate-y-0.5 rotate-225"
+                : "-translate-y-0.5"
+            }`}
+          />
+
           </button>
 
-          {/* DROPDOWN MENU */}
+
+          {/* =====================================================
+              DROPDOWN MENU
+          ===================================================== */}
+
           {isCountryOpen && (
             <div
-              className="absolute right-[-10px] top-[34px] z-[1100] max-h-[360px] w-[280px] overflow-y-auto rounded-[14px] border border-black/5 bg-white py-[10px] text-black shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+              className="absolute right-[-10px] top-[42px] z-[1100] w-[290px] overflow-hidden rounded-[14px] border border-[#e5e5e5] bg-white text-black shadow-[0_12px_35px_rgba(0,0,0,0.22)]"
               role="listbox"
             >
-              {countries.map((country) => {
-                const isSelected = country.code === selectedCountry.code;
-                return (
-                  <button
-                    type="button"
-                    key={country.code}
-                    onClick={() => handleSelectCountry(country)}
-                    role="option"
-                    aria-selected={isSelected}
-                    className={`flex h-[50px] w-full cursor-pointer items-center gap-[12px] border-0 bg-transparent px-4 text-left font-[inherit] hover:bg-[#f5f5f5] ${
-                      isSelected ? "bg-[#f5f5f5]" : ""
-                    }`}
-                  >
-                    <FlagIcon code={country.code} />
-                    <span>{country.name}</span>
-                    {isSelected && (
-                      <span className="ml-auto text-[18px]">✓</span>
-                    )}
-                  </button>
-                );
-              })}
+
+              {/* COUNTRY LIST */}
+
+              <div className="max-h-[350px] overflow-y-auto country-scrollbar">
+
+                {countries.map((country, index) => {
+                  const isSelected =
+                    country.code === selectedCountry.code;
+
+                  const isLast =
+                    index === countries.length - 1;
+
+                  return (
+                    <button
+                      type="button"
+                      key={country.code}
+                      onClick={() =>
+                        handleSelectCountry(country)
+                      }
+                      role="option"
+                      aria-selected={isSelected}
+                      className={`
+                        flex
+                        h-[62px]
+                        w-full
+                        cursor-pointer
+                        items-center
+                        gap-[16px]
+                        border-0
+                        px-[20px]
+                        text-left
+                        font-[inherit]
+                        transition-colors
+                        duration-150
+
+                        ${
+                          !isLast
+                            ? "border-b border-[#eeeeee]"
+                            : ""
+                        }
+
+                        ${
+                          isSelected
+                            ? "bg-[#fafafa]"
+                            : "bg-white hover:bg-[#f6f6f6]"
+                        }
+                      `}
+                    >
+
+                      {/* FLAG */}
+
+                      <span className="flex w-[24px] shrink-0 items-center justify-center">
+                        <FlagIcon
+                          code={country.code}
+                        />
+                      </span>
+
+
+                      {/* COUNTRY NAME */}
+
+                      <span
+                        className={`
+                          flex-1
+                          text-[15px]
+                          ${
+                            isSelected
+                              ? "font-medium text-[#111]"
+                              : "font-normal text-[#222]"
+                          }
+                        `}
+                      >
+                        {country.name}
+                      </span>
+
+
+                      {/* CHECKMARK */}
+
+                      {isSelected && (
+                        <span className="flex h-[22px] w-[22px] items-center justify-center text-[18px] font-semibold text-black">
+                          ✓
+                        </span>
+                      )}
+
+                    </button>
+                  );
+                })}
+
+              </div>
+
             </div>
           )}
+
         </div>
 
-        {/* LANGUAGE */}
+
+        {/* =====================================================
+            LANGUAGE
+        ===================================================== */}
+
         <div className="flex cursor-pointer items-center gap-[7px] border-l border-[#555] pl-[15px]">
-          <span>◎</span>
-          <span>English</span>
+
+          <span className="text-[16px]">
+            ◎
+          </span>
+
+          <span>
+            English
+          </span>
+
         </div>
+
       </div>
+
     </div>
   );
 }

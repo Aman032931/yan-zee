@@ -1,0 +1,16 @@
+.country-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.country-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.country-scrollbar::-webkit-scrollbar-thumb {
+  background: #b8b8b8;
+  border-radius: 10px;
+}
+
+.country-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}

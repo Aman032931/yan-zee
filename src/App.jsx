@@ -9,6 +9,7 @@ import ScrollToTop from "./components/ScrollToTop";
 
 import Beauty from "./pages/Beauty";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 import Fashion from "./pages/Fashion";
 import Sports from "./pages/Sports";
 import Wishlist from "./pages/Wishlist";
@@ -104,6 +105,13 @@ function App() {
 
                 {backgroundPath === "/cart" && (
                         <Cart />
+                    )}
+
+
+                {/* CHECKOUT */}
+
+                {backgroundPath === "/checkout" && (
+                        <Checkout />
                     )}
 
 
