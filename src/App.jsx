@@ -149,18 +149,6 @@ function App() {
                         ref={authRef}
                     >
 
-                        {/* CLOSE */}
-
-                        <button
-                            type="button"
-                            className="auth-close"
-                            onClick={closePopup}
-                            aria-label="Close"
-                        >
-                            ×
-                        </button>
-
-
                         {/* LOGIN */}
 
                         {isLogin && (
