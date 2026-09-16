@@ -110,7 +110,7 @@ export default function ProductDetail() {
       <nav className="text-xs text-gray-500 mb-6 flex flex-wrap items-center gap-1">
         <Link to="/" className="hover:text-gray-800 transition">Home</Link>
         <span>/</span>
-        <Link to="/all" className="hover:text-gray-800 transition">{categoryLabel}</Link>
+        <Link to="/home" className="hover:text-gray-800 transition">{categoryLabel}</Link>
         <span>/</span>
         <span className="text-gray-800 font-medium truncate max-w-xs">{product.title}</span>
       </nav>

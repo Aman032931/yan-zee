@@ -2,7 +2,7 @@ const MobileSidebar = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const navLinks = [
-    { label: "Yanzee", href: "/all" },
+    { label: "Yanzee", href: "/home" },
     { label: "Fashion", href: "/fashion" },
     { label: "Beauty", href: "/beauty" },
     { label: "Sports", href: "/sports" },

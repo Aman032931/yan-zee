@@ -25,7 +25,7 @@ export default function Cart() {
           <div className="grid h-16 w-16 place-items-center rounded-full bg-white shadow-sm"><ShoppingBag className="h-7 w-7" /></div>
           <h1 className="mt-5 text-2xl font-semibold">Your bag is empty</h1>
           <p className="mt-2 max-w-md text-sm text-gray-500">Discover new styles and home essentials from the YanZee collection.</p>
-          <Link to="/all" className="mt-6 inline-flex items-center gap-2 rounded-md bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800">Continue Shopping</Link>
+          <Link to="/home" className="mt-6 inline-flex items-center gap-2 rounded-md bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800">Continue Shopping</Link>
         </div>
       </div>
     );
@@ -39,7 +39,7 @@ export default function Cart() {
             <h1 className="text-3xl font-semibold tracking-tight text-gray-950">Shopping Bag</h1>
             <p className="mt-1 text-sm text-gray-500">{cart.length} product{cart.length !== 1 ? "s" : ""} · {totalItems} item{totalItems !== 1 ? "s" : ""}</p>
           </div>
-          <Link to="/all" className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-black"><ArrowLeft className="h-4 w-4" /> Continue shopping</Link>
+          <Link to="/home" className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-black"><ArrowLeft className="h-4 w-4" /> Continue shopping</Link>
         </div>
 
         <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_370px]">

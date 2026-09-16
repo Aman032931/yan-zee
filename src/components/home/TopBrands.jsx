@@ -50,7 +50,7 @@ const TopBrands = () => {
                 key={brand.name + "-" + index}
                 className="flex min-w-[80px] shrink-0 flex-col items-center px-4 py-2 text-[#333] no-underline transition-transform duration-200 hover:scale-[1.08]"
                 aria-label={brand.name}
-                href={"/all?category=" + encodeURIComponent(brand.category)}
+                href={"/home?category=" + encodeURIComponent(brand.category)}
               >
                 <div className="flex h-[70px] w-[70px] items-center justify-center overflow-hidden rounded-full border border-[#eee] bg-[#f5f5f5] max-[768px]:h-[55px] max-[768px]:w-[55px] max-[480px]:h-[45px] max-[480px]:w-[45px]">
                   {brand.image ? (

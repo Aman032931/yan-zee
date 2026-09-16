@@ -153,7 +153,7 @@ export default function ProductCard({
           ) : (
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-bold text-gray-900">
-                Nrs {product?.price ? product.price.toLocaleString() : '0'}
+                Nrs {product?.price ?   product.price.toLocaleString() : '0'}
               </span>
               <button
                 type="button"
