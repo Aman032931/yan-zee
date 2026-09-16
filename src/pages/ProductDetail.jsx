@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 const CATEGORY_LABELS = {
   "men's clothing": "Men's Clothing",
@@ -14,6 +16,8 @@ const SIZES = ["S", "M", "L", "XL", "XXL"];
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -77,8 +81,18 @@ export default function ProductDetail() {
 
   const isClothing = CLOTHING_CATEGORIES.includes(product.category);
   const categoryLabel = CATEGORY_LABELS[product.category] || product.category;
+  const wishlisted = isWishlisted(product.id);
+
+  const handleAddToCart = () => {
+    addToCart({ ...product, size: selectedSize });
+  };
+
+  const handleWishlistToggle = () => {
+    toggleWishlist(product);
+  };
 
   const handleBuyNow = () => {
+    addToCart({ ...product, size: selectedSize });
     navigate('/cart', {
       state: {
         buyNowItem: {
@@ -103,8 +117,24 @@ export default function ProductDetail() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* Image */}
-        <div className="bg-gray-50 rounded-lg flex items-center justify-center p-8 h-96">
+        <div className="bg-gray-50 rounded-lg flex items-center justify-center p-8 h-96 relative">
           <img src={product.image} alt={product.title} className="max-h-full max-w-full object-contain" />
+
+          {/* Wishlist Button */}
+          <button
+            type="button"
+            onClick={handleWishlistToggle}
+            className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-full text-gray-600 hover:text-red-500 transition cursor-pointer"
+            aria-label="Add to wishlist"
+          >
+            <svg
+              className={`w-5 h-5 ${wishlisted ? 'fill-red-500 text-red-500' : 'fill-none stroke-current'}`}
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
         </div>
 
         {/* Details */}
@@ -149,7 +179,10 @@ export default function ProductDetail() {
           )}
 
           <div className="flex gap-3 mb-6">
-            <button className="flex-1 bg-black text-white text-sm font-semibold py-3 rounded hover:bg-gray-800 transition cursor-pointer">
+            <button
+              onClick={handleAddToCart}
+              className="flex-1 bg-black text-white text-sm font-semibold py-3 rounded hover:bg-gray-800 transition cursor-pointer"
+            >
               Add to Cart
             </button>
             <button

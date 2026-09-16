@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import BeautyHero from '../components/beauty/BeautyHero';
 import BeautyCategoryTabs from '../components/beauty/BeautyCategoryTabs';
 import BeautyFilterPanel from '../components/beauty/BeautyFilterPanel';
-import BeautyProductCard from '../components/beauty/BeautyProductCard';
+import ProductCard from '../components/shared/ProductCard';
 import ProductSkeleton from '../components/ProductSkeleton';
 import { useBeautyProducts } from '../utils/useBeautyProducts';
 import { useGender } from '../context/useGender';
@@ -119,7 +119,7 @@ export default function Beauty() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                   {visibleProducts.map((product) => (
-                    <BeautyProductCard key={product.id} product={product} />
+                    <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
 

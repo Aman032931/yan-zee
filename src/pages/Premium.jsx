@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import PremiumHero from '../components/premium/PremiumHero';
 import PremiumCategoryTabs from '../components/premium/PremiumCategoryTabs';
 import PremiumFilterPanel from '../components/premium/PremiumFilterPanel';
-import PremiumProductCard from '../components/premium/PremiumProductCard';
+import ProductCard from '../components/shared/ProductCard';
 import ProductSkeleton from '../components/ProductSkeleton';
 import { usePremiumProducts } from '../utils/usePremiumProducts';
 import { useGender } from '../context/useGender';
@@ -83,7 +83,7 @@ export default function Premium() {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {visibleProducts.map((product) => <PremiumProductCard key={product.id} product={product} />)}
+                  {visibleProducts.map((product) => <ProductCard key={product.id} product={product} />)}
                 </div>
                 {visibleCount < filteredProducts.length && (
                   <div className="mt-10 text-center">

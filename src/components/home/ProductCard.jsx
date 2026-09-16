@@ -1,13 +1,22 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
 
 export default function ProductCard({ product }) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const { addToCart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const wishlisted = isWishlisted(product.id);
 
   const handleWishlistToggle = (e) => {
-     e.preventDefault();
+    e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted((prev) => !prev);
+    toggleWishlist(product);
+  };
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product);
   };
 
   return (
@@ -15,7 +24,7 @@ export default function ProductCard({ product }) {
       to={`/product/${product.id}`}
       className="w-full min-w-0 bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition duration-200 flex flex-col overflow-hidden relative group"
     >
-   
+
       {/* Top Badge */}
       {product?.badge && (
         <span className="absolute top-2 left-2 z-10 text-[10px] font-bold uppercase bg-orange-600 text-white px-2 py-0.5 rounded">
@@ -32,7 +41,7 @@ export default function ProductCard({ product }) {
       >
         <svg
           className={`w-4 h-4 ${
-            isWishlisted ? 'fill-red-500 text-red-500' : 'fill-none stroke-current'
+            wishlisted ? 'fill-red-500 text-red-500' : 'fill-none stroke-current'
           }`}
           viewBox="0 0 24 24"
           strokeWidth="2"
@@ -67,11 +76,18 @@ export default function ProductCard({ product }) {
           </div>
         </div>
 
-        {/* Price Tag */}
-        <div className="mt-2">
+        {/* Price Tag + Add to Cart */}
+        <div className="mt-2 flex items-center justify-between gap-2">
           <span className="text-sm font-bold text-gray-900">
             Nrs {product?.price ? product.price.toLocaleString() : '0'}
           </span>
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className="bg-black text-white text-[11px] font-semibold px-3 py-1.5 rounded hover:bg-gray-800 transition cursor-pointer whitespace-nowrap"
+          >
+            Add to cart
+          </button>
         </div>
       </div>
     </Link>
