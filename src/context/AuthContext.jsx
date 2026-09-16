@@ -1,0 +1,34 @@
+import { useState, useEffect } from 'react';
+import mockUsers from '../data/mockUsers';
+import { AuthContext } from './authContext';
+
+export function AuthProvider({ children }) {
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('yanzee_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('yanzee_user', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('yanzee_user');
+    }
+  }, [currentUser]);
+
+  const login = (email, password) => {
+    const match = mockUsers.find((u) => u.email === email && u.password === password);
+    if (!match) return { success: false, error: "Invalid email or password" };
+    const { password: _pw, ...userWithoutPassword } = match;
+    setCurrentUser(userWithoutPassword);
+    return { success: true, user: userWithoutPassword };
+  };
+
+  const logout = () => setCurrentUser(null);
+
+  return (
+    <AuthContext.Provider value={{ currentUser, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}

@@ -1,21 +1,18 @@
-# React + TypeScript + Vite + shadcn/ui
+# React + Vite
 
-This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Adding components
+Currently, two official plugins are available:
 
-To add components to your app, run the following command:
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses Oxc.
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses SWC.
 
-```bash
-npx shadcn@latest add button
-```
+## React Compiler
 
-This will place the ui components in the `src/components` directory.
+The React Compiler is not enabled on this template because of its impact on development and build performance.
 
-## Using components
+To add it, see the React Compiler documentation.
 
-To use the components in your app, import them as follows:
+## Project
 
-```tsx
-import { Button } from "@/components/ui/button"
-```
+YanZee is an ecommerce website built with React and Vite.

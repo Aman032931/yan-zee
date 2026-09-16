@@ -1,0 +1,153 @@
+import { useState, useRef, useEffect } from 'react';
+
+export default function SuggestionSection() {
+  const [formData, setFormData] = useState({
+    category: 'Feature Request',
+    suggestion: '',
+    email: '',
+  });
+
+  const [status, setStatus] = useState({
+    loading: false,
+    success: false,
+    error: '',
+  });
+
+  const abortControllerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.suggestion.trim()) {
+      setStatus({ loading: false, success: false, error: 'Please provide a suggestion.' });
+      return;
+    }
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    setStatus({ loading: true, success: false, error: '' });
+
+    try {
+      const response = await fetch('/api/suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit. Please try again later.');
+      }
+
+      setStatus({ loading: false, success: true, error: '' });
+      setFormData({ category: 'Feature Request', suggestion: '', email: '' });
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      setStatus({
+        loading: false,
+        success: false,
+        error: err.message || 'An unexpected error occurred.',
+      });
+    }
+  };
+
+  return (
+    <section className="max-w-md mx-auto my-8 p-6 bg-white rounded-lg shadow-md text-slate-800">
+      <h2 className="text-xl font-bold mb-4">Send Us Your Suggestions</h2>
+
+      {status.success ? (
+        <div className="p-4 bg-green-100 text-green-900 rounded-md space-y-3">
+          <p className="text-sm font-medium">Thank you! Your feedback has been received.</p>
+          <button
+            type="button"
+            onClick={() => setStatus((prev) => ({ ...prev, success: false }))}
+            className="text-xs text-green-800 underline hover:text-green-950 font-semibold cursor-pointer"
+          >
+            Send another suggestion
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {status.error && (
+            <div className="p-3 bg-red-100 text-red-900 rounded-md text-sm font-medium">
+              {status.error}
+            </div>
+          )}
+
+          <div className="flex flex-col text-left">
+            <label htmlFor="category" className="text-sm font-semibold mb-1">
+              Category
+            </label>
+            <select
+              id="category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full p-2 border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="Feature Request">Feature Request</option>
+              <option value="Bug Report">Bug Report</option>
+              <option value="General Feedback">General Feedback</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col text-left">
+            <label htmlFor="suggestion" className="text-sm font-semibold mb-1">
+              Suggestion *
+            </label>
+            <textarea
+              id="suggestion"
+              name="suggestion"
+              rows="4"
+              value={formData.suggestion}
+              onChange={handleChange}
+              placeholder="What can we improve?"
+              required
+              className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="flex flex-col text-left">
+            <label htmlFor="email" className="text-sm font-semibold mb-1">
+              Email (Optional)
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="name@example.com"
+              className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={status.loading}
+            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white font-semibold rounded-md transition duration-200 cursor-pointer disabled:cursor-not-allowed"
+          >
+            {status.loading ? 'Submitting...' : 'Submit Suggestion'}
+          </button>
+        </form>
+      )}
+    </section>
+  );
+}

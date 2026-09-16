@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect } from "react";
 
 const ProductContext = createContext();
 
@@ -34,5 +34,3 @@ export default function ProductProvider({ children }) {
   );
 }
 
-
-export const useProductContext = () => useContext(ProductContext);
