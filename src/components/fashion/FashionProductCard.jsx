@@ -5,7 +5,7 @@ export default function FashionProductCard({ product }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   const handleWishlistToggle = (e) => {
-    e.preventDefualt();
+    e.preventDefault(); // ✅ fixed typo (was preventDefualt)
     e.stopPropagation();
     setIsWishlisted((prev) => !prev);
   };
@@ -58,13 +58,27 @@ export default function FashionProductCard({ product }) {
           </div>
         </div>
 
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="text-sm font-bold text-gray-900">
+        <div className="mt-2">
+          <span className="text-sm font-bold text-gray-900 block">
             Nrs {product.price.toLocaleString()}
           </span>
-          <button className="bg-black text-white text-[11px] font-semibold px-3 py-1.5 rounded hover:bg-gray-800 transition cursor-pointer whitespace-nowrap">
-            Add to cart
-          </button>
+          {product.mrp && (
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[11px] text-gray-400 line-through">
+                Nrs {product.mrp.toLocaleString()}
+              </span>
+              {product.discountPercent > 0 && (
+                <span className="text-[11px] font-semibold text-orange-600">
+                  {product.discountPercent}% OFF
+                </span>
+              )}
+            </div>
+          )}
+          <div className="mt-2 flex items-center justify-end">
+            <button className="bg-black text-white text-[11px] font-semibold px-3 py-1.5 rounded hover:bg-gray-800 transition cursor-pointer whitespace-nowrap">
+              Add to cart
+            </button>
+          </div>
         </div>
       </div>
     </Link>

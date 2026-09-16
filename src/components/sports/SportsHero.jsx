@@ -1,6 +1,6 @@
 export default function SportsHero() {
   return (
-    <div className="relative w-full h-[420px] rounded-lg overflow-hidden mb-8">
+    <div className="relative w-full h-175 overflow-hidden">
       <img
         src="https://picsum.photos/id/1058/1600/700"
         alt="Sports & Fitness"

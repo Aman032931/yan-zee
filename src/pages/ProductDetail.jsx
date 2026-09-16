@@ -18,8 +18,6 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [selectedSize, setSelectedSize] = useState(null);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [pincode, setPincode] = useState('');
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -79,6 +77,18 @@ export default function ProductDetail() {
 
   const isClothing = CLOTHING_CATEGORIES.includes(product.category);
   const categoryLabel = CATEGORY_LABELS[product.category] || product.category;
+
+  const handleBuyNow = () => {
+    navigate('/cart', {
+      state: {
+        buyNowItem: {
+          ...product,
+          size: selectedSize,
+          quantity: 1,
+        },
+      },
+    });
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
@@ -143,31 +153,11 @@ export default function ProductDetail() {
               Add to Cart
             </button>
             <button
-              onClick={() => setIsWishlisted((prev) => !prev)}
-              className={`flex-1 border text-sm font-semibold py-3 rounded transition cursor-pointer flex items-center justify-center gap-2 ${
-                isWishlisted ? 'border-red-500 text-red-500' : 'border-gray-300 text-gray-700 hover:border-gray-500'
-              }`}
+              onClick={handleBuyNow}
+              className="flex-1 border border-black text-black text-sm font-semibold py-3 rounded hover:bg-black hover:text-white transition cursor-pointer"
             >
-              <span>{isWishlisted ? '♥' : '♡'}</span> Wishlist
+              Buy Now
             </button>
-          </div>
-
-          <div className="border-t border-gray-100 pt-5 mb-6">
-            <p className="text-sm font-semibold text-gray-800 mb-2">Delivery Options</p>
-            <div className="flex gap-2">
-              <input
-                value={pincode}
-                onChange={(e) => setPincode(e.target.value)}
-                placeholder="Enter pincode"
-                className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-black"
-              />
-              <button className="text-sm font-semibold text-blue-600 hover:underline cursor-pointer px-2">
-                Check
-              </button>
-            </div>
-            <p className="text-[11px] text-gray-400 mt-2">
-              Delivery estimation isn't connected to a real logistics service yet.
-            </p>
           </div>
 
           <div className="border-t border-gray-100 pt-5">

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 const slides = [
   {
@@ -6,7 +7,7 @@ const slides = [
     title: "DeliveryPartner",
     subtitle: "Timely Products Delivery with Pathao",
     buttonText: "Delivery Partner",
-    buttonLink: "/categories",
+    buttonLink: "/cart",
     image: "https://res.cloudinary.com/dgzackqok/image/upload/v1781505460/yanzee-store/local/admin/ytvcbq14abw0efr7hsbg.jpg",
     objectPosition: "20% 0%",
     objectPositionMobile: "20% 0%",
@@ -16,7 +17,7 @@ const slides = [
     title: "Made by Nepali, Made in Nepal",
     subtitle: "Nepali crafted products",
     buttonText: "Shop Now",
-    buttonLink: "https://www.yan-zee.com/fashion/category/made-in-nepal",
+    buttonLink: "/fashion",
     image: "https://res.cloudinary.com/dgzackqok/image/upload/v1781633967/yanzee-store/local/admin/ewlsoudvclra7j0oa7xt.png",
     objectPosition: "77% 29%",
     objectPositionMobile: "77% 15%",
@@ -47,7 +48,10 @@ const HeroCarousel = () => {
   };
 
   return (
-    <section className="relative w-full overflow-hidden bg-black" aria-label="Featured offers">
+    <section
+      className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden bg-black"
+      aria-label="Featured offers"
+    >
       <div className="relative h-[420px] w-full max-[768px]:h-[280px] max-[480px]:h-[200px]">
         {slides.map((slide, index) => (
           <article
@@ -103,12 +107,12 @@ const HeroCarousel = () => {
                 <p className="m-0 mb-[20px] text-[16px] text-[rgba(255,255,255,0.9)] max-[480px]:mb-[12px] max-[480px]:text-[13px]">
                   {slide.subtitle}
                 </p>
-                <a
+                <Link
                   className="inline-block rounded-[4px] bg-white px-8 py-3 text-[14px] font-semibold text-black no-underline transition-colors duration-200 hover:bg-[#eee] max-[480px]:px-5 max-[480px]:py-2 max-[480px]:text-[12px]"
-                  href={slide.buttonLink}
+                  to={slide.buttonLink}
                 >
                   {slide.buttonText}
-                </a>
+                </Link>
               </div>
             </div>
           </article>

@@ -25,6 +25,8 @@ import SellerLayout from "./components/seller/SellerLayout";
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import SellerProducts from "./pages/seller/SellerProducts";
 import ProductDetail from "./pages/ProductDetail";
+import ScrollToTop from "./components/ScrollToTop";
+import NotFound from "./pages/NotFound";
 
 function App() {
   const location = useLocation();
@@ -51,6 +53,7 @@ function App() {
         { path: "products", element: <AdminProducts /> },
         { path: "orders", element: <AdminOrders /> },
         { path: "users", element: <AdminUsers /> },
+        { path: "*", element: <NotFound/> },
       ],
     },
     {
@@ -59,19 +62,23 @@ function App() {
       children: [
         { index: true, element: <SellerDashboard /> },
         { path: "products", element: <SellerProducts /> },
+        { path: "*", element: <NotFound/>},
       ],
     },
     { path: "/product/:id", element: <ProductDetail /> },
+    { path: "*", element: <NotFound/>}
   ]);
 
   return (
     <GenderProvider>
+      <ScrollToTop />
       {!isDashboardRoute && <Announcement />}
       {!isDashboardRoute && <Header />}
 
       <main className={isDashboardRoute ? "" : "min-h-[30vh]"}>{routeElements}</main>
 
       {!isDashboardRoute && <Footer />}
+      
     </GenderProvider>
   );
 }
