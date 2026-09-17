@@ -2,26 +2,33 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 
-/**
- * Shared product card used across all category pages.
- *
- * Visual differences between the old per-category cards are controlled
- * via props instead of separate files:
- *   badgeColor     - tailwind bg-* class used when product.badge isn't "NEW"
- *                     (default: bg-red-600). A "NEW" badge always renders black,
- *                     matching the old Kids/HomeDecor behavior.
- *   imageHeight    - tailwind h-* class for the image container (default: h-56)
- *   imageFit       - 'contain' (padded, letterboxed) | 'cover' (fills, cropped)
- *                     (default: 'contain')
- *   subtitleField  - 'brand' | 'category' (default: 'category')
- *   ratingStyle    - 'single' (★ + number) | 'stars' (repeated ★/☆) (default: 'single')
- *   showDiscount   - show MRP + discount% under the price, if product.mrp exists
- *                     (default: false)
- */
+function StarRow({ rating = 0 }) {
+  const rounded = Math.round(rating);
+
+  return (
+    <div className="mt-1 flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <svg
+          key={i}
+          viewBox="0 0 24 24"
+          className="h-3 w-3"
+          fill={i <= rounded ? '#f59e0b' : '#e5e7eb'}
+          aria-hidden="true"
+        >
+          <path d="M12 2l2.9 6.3 6.6.8-4.9 4.6 1.3 6.5L12 17l-5.9 3.2 1.3-6.5L2.5 9.1l6.6-.8L12 2z" />
+        </svg>
+      ))}
+      {rating ? (
+        <span className="ml-1 text-[11px] text-gray-400">{rating}</span>
+      ) : null}
+    </div>
+  );
+}
+
 export default function ProductCard({
   product,
   badgeColor = 'bg-red-600',
-  imageHeight = 'h-56',
+  imageHeight = '',
   imageFit = 'contain',
   subtitleField = 'category',
   ratingStyle = 'single',
@@ -46,32 +53,46 @@ export default function ProductCard({
   const subtitle =
     subtitleField === 'brand' ? product?.brand || 'GENERIC' : product?.category;
 
-  const resolvedBadgeColor = product?.badge === 'NEW' ? 'bg-black' : badgeColor;
+  const resolvedBadgeColor =
+    product?.badge === 'NEW' ? 'bg-emerald-500' : badgeColor;
+
+  const imageBox = imageHeight
+    ? `relative w-full ${imageHeight} overflow-hidden`
+    : 'relative w-full aspect-[4/5] overflow-hidden';
 
   return (
     <Link
       to={`/product/${product.id}`}
-      className="w-full min-w-0 bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition duration-200 flex flex-col overflow-hidden relative group"
+      className="group relative flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all duration-300 hover:border-gray-200 hover:shadow-lg"
     >
-      {/* Top Badge */}
-      {product?.badge && (
-        <span
-          className={`absolute top-2 left-2 z-10 text-[10px] font-bold uppercase ${resolvedBadgeColor} text-white px-2 py-0.5 rounded`}
-        >
-          {product.badge}
-        </span>
-      )}
+      {/* ===== Badges (top-left stack) ===== */}
+      <div className="absolute left-2 top-2 z-20 flex flex-col items-start gap-1">
+        {product?.badge && (
+          <span
+            className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase text-white ${resolvedBadgeColor}`}
+          >
+            {product.badge}
+          </span>
+        )}
+        {showDiscount && product?.discountPercent > 0 && (
+          <span className="rounded bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+            -{product.discountPercent}%
+          </span>
+        )}
+      </div>
 
-      {/* Wishlist Button */}
+      {/* ===== Wishlist ===== */}
       <button
         type="button"
         onClick={handleWishlistToggle}
-        className="absolute top-2 right-2 z-10 p-1.5 bg-white/80 backdrop-blur-sm rounded-full text-gray-600 hover:text-red-500 transition cursor-pointer"
+        className="absolute right-2 top-2 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 hover:scale-110"
         aria-label="Add to wishlist"
       >
         <svg
-          className={`w-4 h-4 ${
-            wishlisted ? 'fill-red-500 text-red-500' : 'fill-none stroke-current'
+          className={`h-4 w-4 ${
+            wishlisted
+              ? 'fill-red-600 text-red-600'
+              : 'fill-none stroke-gray-400'
           }`}
           viewBox="0 0 24 24"
           strokeWidth="2"
@@ -80,89 +101,72 @@ export default function ProductCard({
         </svg>
       </button>
 
-      {/* Product Image */}
-      {imageFit === 'cover' ? (
-        <div className={`w-full ${imageHeight} bg-gray-50 overflow-hidden`}>
-          <img
-            src={product?.image}
-            alt={product?.title || 'Product'}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        </div>
-      ) : (
-        <div className={`w-full ${imageHeight} bg-gray-50 flex items-center justify-center p-4 overflow-hidden`}>
-          <img
-            src={product?.image}
-            alt={product?.title || 'Product'}
-            className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
-          />
-        </div>
-      )}
+      {/*
+        ===== Image + overlay =====
+        This wrapper MUST keep `relative overflow-hidden` (built into
+        `imageBox` above) — it's the anchor for the Add to Cart bar
+        and the clip boundary that stops it from pushing card content
+        down, which was the bug in your screenshot.
+      */}
+      <div className={`bg-gray-50 ${imageBox}`}>
+        <img
+          src={product?.image}
+          alt={product?.title || 'Product'}
+          className={`h-full w-full transition-transform duration-500 group-hover:scale-105 ${
+            imageFit === 'cover' ? 'object-cover' : 'object-contain p-4'
+          }`}
+        />
 
-      {/* Product Details */}
-      <div className="p-3 flex flex-col flex-grow justify-between">
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          className="absolute inset-x-0 bottom-0 z-10 translate-y-0 cursor-pointer border-0 bg-black py-2.5 text-[11px] font-bold uppercase tracking-widest text-white transition-transform duration-300 md:translate-y-full md:group-hover:translate-y-0 hover:bg-red-600"
+        >
+          Add to cart
+        </button>
+      </div>
+
+      {/* ===== Info ===== */}
+      <div className="flex flex-grow flex-col justify-between p-3">
         <div>
-          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider block truncate">
+          <span className="block truncate text-[10px] font-semibold uppercase tracking-widest text-red-600">
             {subtitle}
           </span>
-          <h4 className="text-xs font-semibold text-gray-800 line-clamp-2 mt-1 min-h-[32px]">
+
+          <h4 className="mt-1 line-clamp-2 min-h-[36px] text-sm font-medium text-gray-800">
             {product?.title}
           </h4>
 
-          {/* Rating */}
           {ratingStyle === 'stars' ? (
-            <div className="flex items-center gap-1 mt-1 text-yellow-400 text-xs">
-              {'★'.repeat(product?.rating || 4)}
-              {'☆'.repeat(5 - (product?.rating || 4))}
-            </div>
+            <StarRow rating={product?.rating} />
           ) : (
-            <div className="flex items-center gap-1 mt-1 text-xs">
-              <span className="text-yellow-400">★</span>
-              <span className="text-gray-600">{product?.rating}</span>
+            <div className="mt-1 flex items-center gap-1 text-xs">
+              <svg viewBox="0 0 24 24" className="h-3 w-3" fill="#f59e0b">
+                <path d="M12 2l2.9 6.3 6.6.8-4.9 4.6 1.3 6.5L12 17l-5.9 3.2 1.3-6.5L2.5 9.1l6.6-.8L12 2z" />
+              </svg>
+              <span className="text-[11px] text-gray-400">
+                {product?.rating}
+              </span>
             </div>
           )}
         </div>
 
-        {/* Price + Add to Cart */}
-        <div className="mt-2">
-          {showDiscount && product?.mrp ? (
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className="text-sm font-bold text-gray-900">
+            Nrs {product?.price ? product.price.toLocaleString() : '0'}
+          </span>
+
+          {showDiscount && product?.mrp && (
             <>
-              <span className="text-sm font-bold text-gray-900 block">
-                Nrs {product.price.toLocaleString()}
+              <span className="text-[11px] text-gray-400 line-through">
+                Nrs {product.mrp.toLocaleString()}
               </span>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[11px] text-gray-400 line-through">
-                  Nrs {product.mrp.toLocaleString()}
+              {product.discountPercent > 0 && (
+                <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600">
+                  {product.discountPercent}% OFF
                 </span>
-                {product.discountPercent > 0 && (
-                  <span className="text-[11px] font-semibold text-orange-600">
-                    {product.discountPercent}% OFF
-                  </span>
-                )}
-              </div>
-              <div className="mt-2 flex items-center justify-end">
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  className="bg-black text-white text-[11px] font-semibold px-3 py-1.5 rounded hover:bg-gray-800 transition cursor-pointer whitespace-nowrap"
-                >
-                  Add to cart
-                </button>
-              </div>
+              )}
             </>
-          ) : (
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-bold text-gray-900">
-                Nrs {product?.price ?   product.price.toLocaleString() : '0'}
-              </span>
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                className="bg-black text-white text-[11px] font-semibold px-3 py-1.5 rounded hover:bg-gray-800 transition cursor-pointer whitespace-nowrap"
-              >
-                Add to cart
-              </button>
-            </div>
           )}
         </div>
       </div>
