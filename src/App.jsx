@@ -37,6 +37,8 @@ import SellerLayout from "./components/seller/SellerLayout"
 import SellerDashboard from "./pages/seller/SellerDashboard"
 import SellerProducts from "./pages/seller/SellerProducts"
 
+import { ToastProvider } from "./context/ToastContext"
+import Toast from "./components/Toast"
 
 function App() {
   const location = useLocation()
@@ -221,6 +223,7 @@ function App() {
 
   return (
     <GenderProvider>
+      <ToastProvider>
       <ScrollToTop />
 
       {!isDashboardRoute && <Announcement />}
@@ -245,6 +248,9 @@ function App() {
           </div>
         </div>
       )}
+      
+        <Toast />
+      </ToastProvider>
     </GenderProvider>
   )
 }

@@ -4,6 +4,7 @@ import { Heart, ShoppingCart, Check, Zap } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import IconButton from "../components/shared/IconButton";
+import { useToast } from "../context/ToastContext";
 
 const CATEGORY_LABELS = {
   "men's clothing": "Men's Clothing",
@@ -21,6 +22,7 @@ export default function ProductDetail() {
 
   const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
+  const { showToast } = useToast();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -142,6 +144,7 @@ export default function ProductDetail() {
       ...cartProduct,
       ...(isClothing && { size: selectedSize }),
     });
+    showToast("Added to cart");
   };
 
   const handleBuyNow = () => {
@@ -163,7 +166,9 @@ export default function ProductDetail() {
   };
 
   const handleWishlist = () => {
+    const wasWishlisted = wishlisted;
     toggleWishlist(product);
+    showToast(wasWishlisted ? "Removed from wishlist" : "Added to wishlist");
   };
 
   return (

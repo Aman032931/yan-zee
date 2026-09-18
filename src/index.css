@@ -248,3 +248,31 @@
 .scroll-hide::-webkit-scrollbar {
   display: none;
 }
+
+/*theme for toast*/
+@theme {
+  --animate-slide-in: slideIn 0.3s ease;
+  --animate-brand-marquee: brandMarquee 126s linear infinite;
+  --animate-cat-marquee: marqueeScroll 40s linear infinite;
+  --animate-toast-in: toastIn 0.25s ease-out forwards;
+
+  @keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+
+  @keyframes brandMarquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @keyframes marqueeScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-33.33%); }
+  }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translate(-50%, 10px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+}

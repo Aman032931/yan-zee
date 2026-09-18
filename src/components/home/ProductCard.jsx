@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
+import { useToast } from "../../context/ToastContext";
 
 function StarRow({ rating = 0 }) {
   const rounded = Math.round(rating);
@@ -28,6 +29,7 @@ function StarRow({ rating = 0 }) {
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
+  const { showToast } = useToast();
 
   const wishlisted = isWishlisted(product.id);
 
@@ -44,13 +46,16 @@ export default function ProductCard({ product }) {
   const handleWishlistToggle = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    const wasWishlisted = wishlisted;
     toggleWishlist(cartPayload);
+    showToast(wasWishlisted ? "Removed from wishlist" : "Added to wishlist");
   };
 
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart(cartPayload);
+    showToast("Added to cart"); 
   };
 
   return (
