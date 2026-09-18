@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
-import {formatNPR} from "../utils/formatNPR";
+import { formatNPR } from "../utils/formatNPR";
+
 export default function Cart() {
   const {
     cart,
@@ -32,12 +33,18 @@ export default function Cart() {
     removeFromCart(item.id);
   };
 
+  // Calculate total savings using the current product structure
   const totalSavingsNPR = cart.reduce((sum, item) => {
-  if (Number.isFinite(item.mrp) && item.mrp > item.priceNPR) {
-    return sum + (item.mrp - item.priceNPR) * item.quantity;
-  }
-  return sum;
-}, 0);
+    const price = Number(item.price ?? item.priceNPR ?? 0);
+    const mrp = Number(item.mrp ?? 0);
+    const quantity = Number(item.quantity ?? 1);
+
+    if (Number.isFinite(mrp) && mrp > price) {
+      return sum + (mrp - price) * quantity;
+    }
+
+    return sum;
+  }, 0);
 
   if (cart.length === 0) {
     return (
@@ -94,156 +101,166 @@ export default function Cart() {
 
         <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_370px]">
           <div className="space-y-4">
-            {cart.map((item) => (
-              <article
-                key={item.id}
-                className="rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 sm:p-5"
-              >
-                <div className="flex gap-4 sm:gap-5">
-                  <Link
-                    to={`/product/${item.id}`}
-                    className="h-28 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-50 sm:h-36 sm:w-32"
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="h-full w-full object-contain p-3 transition duration-300 hover:scale-105"
-                    />
-                  </Link>
+            {cart.map((item) => {
+              const price = Number(item.price ?? item.priceNPR ?? 0);
+              const quantity = Number(item.quantity ?? 1);
+              const mrp = Number(item.mrp ?? 0);
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <Link
-                          to={`/product/${item.id}`}
-                          className="line-clamp-2 text-sm font-semibold text-gray-900 hover:underline sm:text-base"
-                        >
-                          {item.name}
-                        </Link>
+              const discount =
+                Number.isFinite(item.discountPercent) &&
+                item.discountPercent > 0
+                  ? item.discountPercent
+                  : mrp > price
+                    ? Math.round(((mrp - price) / mrp) * 100)
+                    : 0;
 
-                      <div className="mt-1 flex flex-wrap items-baseline gap-2">
-                        <span className="text-sm font-semibold text-gray-900">
-                          Rs. {formatNPR(item.priceNPR)}
-                        </span>
+              return (
+                <article
+                  key={item.id}
+                  className="rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 sm:p-5"
+                >
+                  <div className="flex gap-4 sm:gap-5">
+                    <Link
+                      to={`/product/${item.id}`}
+                      className="h-28 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-50 sm:h-36 sm:w-32"
+                    >
+                      <img
+                        src={item.image}
+                        alt={item.name || item.title || "Product"}
+                        className="h-full w-full object-contain p-3 transition duration-300 hover:scale-105"
+                      />
+                    </Link>
 
-                        {Number.isFinite(item.mrp) && item.mrp > item.priceNPR && (
-                          <>
-                            <span className="text-xs text-gray-400 line-through">
-                              Rs. {formatNPR(item.mrp)}
-                            </span>
-                            <span className="text-xs font-semibold text-orange-600">
-                              {Number.isFinite(item.discountPercent) && item.discountPercent > 0
-                                ? item.discountPercent
-                                : Math.round(((item.mrp - item.priceNPR) / item.mrp) * 100)}
-                              % OFF
-                            </span>
-                          </>
-                        )}
-                      </div>
-
-                        {item.size && (
-                          <p className="mt-1 text-xs text-gray-500">
-                            Size: {item.size}
-                          </p>
-                        )}
-
-                        {item.color && (
-                          <p className="text-xs text-gray-500">
-                            Color: {item.color}
-                          </p>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => removeFromCart(item.id)}
-                        className="shrink-0 text-gray-400 hover:text-red-500"
-                        aria-label={`Remove ${item.name}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
-                      <div>
-                        <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                          Quantity
-                        </span>
-
-                        <div className="flex h-9 w-fit items-center rounded-md border border-gray-300">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateQuantity(
-                                item.id,
-                                item.quantity - 1
-                              )
-                            }
-                            className="grid h-full w-9 place-items-center hover:bg-gray-50"
-                            aria-label="Decrease quantity"
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <Link
+                            to={`/product/${item.id}`}
+                            className="line-clamp-2 text-sm font-semibold text-gray-900 hover:underline sm:text-base"
                           >
-                            <Minus className="h-3.5 w-3.5" />
-                          </button>
+                            {item.name || item.title}
+                          </Link>
 
-                          <span className="w-9 text-center text-sm font-medium">
-                            {item.quantity}
+                          <div className="mt-1 flex flex-wrap items-baseline gap-2">
+                            <span className="text-sm font-semibold text-gray-900">
+                              Rs. {formatNPR(price)}
+                            </span>
+
+                            {Number.isFinite(mrp) && mrp > price && (
+                              <>
+                                <span className="text-xs text-gray-400 line-through">
+                                  Rs. {formatNPR(mrp)}
+                                </span>
+
+                                <span className="text-xs font-semibold text-orange-600">
+                                  {discount}% OFF
+                                </span>
+                              </>
+                            )}
+                          </div>
+
+                          {item.size && (
+                            <p className="mt-1 text-xs text-gray-500">
+                              Size: {item.size}
+                            </p>
+                          )}
+
+                          {item.color && (
+                            <p className="text-xs text-gray-500">
+                              Color: {item.color}
+                            </p>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => removeFromCart(item.id)}
+                          className="shrink-0 text-gray-400 hover:text-red-500"
+                          aria-label={`Remove ${
+                            item.name || item.title || "product"
+                          }`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
+                        <div>
+                          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                            Quantity
                           </span>
 
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateQuantity(
-                                item.id,
-                                item.quantity + 1
-                              )
-                            }
-                            disabled={item.quantity >= item.stock}
-                            className="grid h-full w-9 place-items-center hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30"
-                            aria-label="Increase quantity"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="flex h-9 w-fit items-center rounded-md border border-gray-300">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateQuantity(
+                                  item.id,
+                                  quantity - 1
+                                )
+                              }
+                              className="grid h-full w-9 place-items-center hover:bg-gray-50"
+                              aria-label="Decrease quantity"
+                            >
+                              <Minus className="h-3.5 w-3.5" />
+                            </button>
+
+                            <span className="w-9 text-center text-sm font-medium">
+                              {quantity}
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateQuantity(
+                                  item.id,
+                                  quantity + 1
+                                )
+                              }
+                              disabled={quantity >= (item.stock ?? 999)}
+                              className="grid h-full w-9 place-items-center hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30"
+                              aria-label="Increase quantity"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                            Item total
+                          </span>
+
+                          <span className="text-base font-semibold">
+                            Rs.{" "}
+                            {formatNPR(price * quantity)}
+                          </span>
                         </div>
                       </div>
 
-                      <div className="text-right">
-                        <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                          Item total
-                        </span>
+                      <div className="mt-4 flex gap-4 text-xs text-gray-500">
+                        <button
+                          type="button"
+                          onClick={() => handleSaveForLater(item)}
+                          className="inline-flex items-center gap-1 hover:text-black"
+                        >
+                          <Heart className="h-3.5 w-3.5" />
+                          Save for later
+                        </button>
 
-                        <span className="text-base font-semibold">
-                          Rs.{" "}
-                          {formatNPR(
-                            item.priceNPR * item.quantity
-                          )}
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeFromCart(item.id)}
+                          className="hover:text-red-600"
+                        >
+                          Remove
+                        </button>
                       </div>
                     </div>
-
-                    <div className="mt-4 flex gap-4 text-xs text-gray-500">
-                      {/* SAVE FOR LATER */}
-                      <button
-                        type="button"
-                        onClick={() => handleSaveForLater(item)}
-                        className="inline-flex items-center gap-1 hover:text-black"
-                      >
-                        <Heart className="h-3.5 w-3.5" />
-                        Save for later
-                      </button>
-
-                      {/* REMOVE */}
-                      <button
-                        type="button"
-                        onClick={() => removeFromCart(item.id)}
-                        className="hover:text-red-600"
-                      >
-                        Remove
-                      </button>
-                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
 
             <button
               type="button"
@@ -275,7 +292,6 @@ export default function Cart() {
                   <span className="text-gray-500">
                     Shipping
                   </span>
-                  
 
                   <span
                     className={`font-medium ${

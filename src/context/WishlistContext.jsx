@@ -15,31 +15,56 @@ export function WishlistProvider({ children }) {
     });
   }, [wishlist]);
 
+  const normalizeProduct = (product) => {
+    const price = Number(product.price ?? product.priceNPR ?? 0);
+
+    return {
+      ...product,
+
+      // Keep both fields so old and new parts of the project work
+      price,
+      priceNPR: price,
+
+      name: product.name || product.title || "Untitled product",
+
+      stock: Number.isFinite(product.stock)
+        ? product.stock
+        : 50,
+    };
+  };
+
   const isWishlisted = (productId) =>
     wishlist.some((item) => item.id === productId);
 
   const addToWishlist = (product) => {
+    const normalizedProduct = normalizeProduct(product);
+
     setWishlist((prev) =>
-      prev.some((item) => item.id === product.id)
+      prev.some((item) => item.id === normalizedProduct.id)
         ? prev
-        : [...prev, product]
+        : [...prev, normalizedProduct]
     );
   };
 
   // Save an item from Cart to Wishlist
-  // while remembering the quantity it had in the Cart.
   const saveForLater = (product) => {
+    const normalizedProduct = normalizeProduct(product);
+
     setWishlist((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const existing = prev.find(
+        (item) => item.id === normalizedProduct.id
+      );
 
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id
+          item.id === normalizedProduct.id
             ? {
                 ...item,
-                ...product,
+                ...normalizedProduct,
                 savedQuantity:
-                  product.quantity ?? item.savedQuantity ?? 1,
+                  product.quantity ??
+                  item.savedQuantity ??
+                  1,
               }
             : item
         );
@@ -48,7 +73,7 @@ export function WishlistProvider({ children }) {
       return [
         ...prev,
         {
-          ...product,
+          ...normalizedProduct,
           savedQuantity: product.quantity ?? 1,
         },
       ];
@@ -62,10 +87,12 @@ export function WishlistProvider({ children }) {
   };
 
   const toggleWishlist = (product) => {
+    const normalizedProduct = normalizeProduct(product);
+
     setWishlist((prev) =>
-      prev.some((item) => item.id === product.id)
-        ? prev.filter((item) => item.id !== product.id)
-        : [...prev, product]
+      prev.some((item) => item.id === normalizedProduct.id)
+        ? prev.filter((item) => item.id !== normalizedProduct.id)
+        : [...prev, normalizedProduct]
     );
   };
 
