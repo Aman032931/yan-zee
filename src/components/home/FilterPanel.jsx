@@ -1,6 +1,44 @@
 import { useState } from 'react';
 import PriceRangeFilter from '../shared/PriceRangeFilter';
 
+function SectionHeader({ label, count, open, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full cursor-pointer items-center justify-between py-1 text-xs font-semibold text-gray-800"
+    >
+      <span className="flex items-center gap-1.5">
+        {label}
+        {count > 0 && (
+          <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-red-600">
+            {count}
+          </span>
+        )}
+      </span>
+      <span className="text-[9px] text-gray-400">{open ? '▲' : '▼'}</span>
+    </button>
+  );
+}
+
+function ToggleSwitch({ on, onChange }) {
+  return (
+    <button
+      onClick={onChange}
+      role="switch"
+      aria-checked={on}
+      className={`relative h-5 w-10 cursor-pointer rounded-full transition-colors duration-200 ${
+        on ? 'bg-red-600' : 'bg-gray-200'
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${
+          on ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      />
+    </button>
+  );
+}
+
 export default function FilterPanel({
   selectedCategory,
   onSelectCategory,
@@ -13,170 +51,290 @@ export default function FilterPanel({
   onClearFilters,
 }) {
   const [openSections, setOpenSections] = useState({
+    newArrivals: true,
     category: true,
-    brand: false,
-    price: false,
+    brand: true,
+    price: true,
     deals: false,
     delivery: false,
   });
+
+  const [brandQuery, setBrandQuery] = useState('');
+  const [deals, setDeals] = useState([]);
+  const [delivery, setDelivery] = useState([]);
 
   const toggleSection = (section) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const categories = ["All Departments", "Fashion", "Sports", "Beauty", "Outlet", "Kids", "Premium"];
-  const brands = ["All Brands", "MEN'S CLOTHING", "WOMEN'S CLOTHING", "JEWELERY", "ELECTRONICS"];
+  const toggleInList = (list, setList, value) => {
+    setList(
+      list.includes(value) ? list.filter((v) => v !== value) : [...list, value],
+    );
+  };
+
+  const categories = [
+    'All Departments',
+    'Fashion',
+    'Sports',
+    'Beauty',
+    'Outlet',
+    'Kids',
+    'Premium',
+  ];
+  const brands = [
+    'All Brands',
+    "MEN'S CLOTHING",
+    "WOMEN'S CLOTHING",
+    'JEWELERY',
+    'ELECTRONICS',
+  ];
+
+  const visibleBrands = brands.filter((b) =>
+    b.toLowerCase().includes(brandQuery.toLowerCase()),
+  );
 
   const activeFilterCount =
-    (selectedCategory !== "all" && selectedCategory !== "All Departments" ? 1 : 0) +
-    (selectedBrand !== "All Brands" ? 1 : 0) +
+    (selectedCategory !== 'all' && selectedCategory !== 'All Departments'
+      ? 1
+      : 0) +
+    (selectedBrand !== 'All Brands' ? 1 : 0) +
     (onlyNewArrivals ? 1 : 0) +
     (priceFilter ? 1 : 0);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-100 p-4 shadow-sm space-y-4">
-      {/* Header */}
-      <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-        <h3 className="font-bold text-gray-900 text-sm">All Filters</h3>
+    <div className="sticky top-20 rounded-2xl border border-gray-100 bg-white p-5">
+      {/* ===== Header ===== */}
+      <div className="mb-5 flex items-center justify-between">
+        <h3 className="text-[15px] font-bold text-gray-900">All Filters</h3>
         {activeFilterCount > 0 && (
           <button
             onClick={onClearFilters}
-            className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition cursor-pointer"
+            className="cursor-pointer text-xs font-semibold text-red-600 hover:text-red-700"
           >
             Clear all
           </button>
         )}
       </div>
 
-      {/* New Arrivals Toggle Switch */}
-      <div className="flex items-center justify-between py-2 border-b border-gray-100">
-        <span className="text-xs font-medium text-gray-700">New Arrivals</span>
+      {/* ===== New Arrivals ===== */}
+      <div className="border-t border-gray-100 py-4 first:border-t-0 first:pt-0">
         <button
-          onClick={() => setOnlyNewArrivals(!onlyNewArrivals)}
-          className={`w-9 h-5 flex items-center rounded-full p-1 transition-colors duration-200 cursor-pointer ${
-            onlyNewArrivals ? "bg-black justify-end" : "bg-gray-200 justify-start"
-          }`}
+          onClick={() => toggleSection('newArrivals')}
+          className="flex w-full cursor-pointer items-center justify-between text-[13px] font-semibold text-gray-900"
         >
-          <div className="w-3.5 h-3.5 bg-white rounded-full shadow-md" />
+          New Arrivals
+          <span className="text-[9px] text-gray-400">
+            {openSections.newArrivals ? '▲' : '▼'}
+          </span>
         </button>
+
+        {openSections.newArrivals && (
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-xs text-gray-500">New arrivals only</span>
+            <ToggleSwitch
+              on={onlyNewArrivals}
+              onChange={() => setOnlyNewArrivals(!onlyNewArrivals)}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Brand Section */}
-      <div className="border-b border-gray-100 pb-3">
+      {/* ===== Brand ===== */}
+      <div className="border-t border-gray-100 py-4">
         <button
-          onClick={() => toggleSection("brand")}
-          className="w-full flex justify-between items-center text-xs font-semibold text-gray-800 py-1 cursor-pointer"
+          onClick={() => toggleSection('brand')}
+          className="flex w-full cursor-pointer items-center justify-between text-[13px] font-semibold text-gray-900"
         >
           <span className="flex items-center gap-1.5">
             Brand
-            {selectedBrand !== "All Brands" && (
-              <span className="bg-gray-200 text-gray-700 text-[10px] rounded-full px-1.5 py-0.2">1</span>
+            {selectedBrand !== 'All Brands' && (
+              <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-red-600">
+                1
+              </span>
             )}
           </span>
-          <span>{openSections.brand ? "▲" : "▼"}</span>
+          <span className="text-[9px] text-gray-400">
+            {openSections.brand ? '▲' : '▼'}
+          </span>
         </button>
 
         {openSections.brand && (
-          <div className="mt-2 space-y-1.5 pl-1 max-h-48 overflow-y-auto">
-            {brands.map((brand) => {
-              const isSelected = selectedBrand.toLowerCase() === brand.toLowerCase();
-              return (
-                <div
-                  key={brand}
-                  onClick={() => onSelectBrand(brand)}
-                  className={`flex items-center justify-between text-xs py-1 px-2 rounded cursor-pointer transition ${
-                    isSelected ? "text-gray-900 font-bold bg-gray-50" : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  <span className="capitalize">{brand.toLowerCase()}</span>
-                  {isSelected && <span>✓</span>}
-                </div>
-              );
-            })}
+          <div className="mt-3">
+            <input
+              type="text"
+              value={brandQuery}
+              onChange={(e) => setBrandQuery(e.target.value)}
+              placeholder="Search brands..."
+              className="mb-3 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700 outline-none placeholder:text-gray-400 focus:border-red-600/40 focus:bg-white"
+            />
+
+            <div className="scroll-hide max-h-40 space-y-2.5 overflow-y-auto">
+              {visibleBrands.map((brand) => {
+                const isSelected =
+                  selectedBrand.toLowerCase() === brand.toLowerCase();
+                return (
+                  <label
+                    key={brand}
+                    className={`flex cursor-pointer items-center gap-2.5 text-[13px] capitalize ${
+                      isSelected
+                        ? 'font-semibold text-gray-900'
+                        : 'font-normal text-gray-500 hover:text-gray-800'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="brand"
+                      checked={isSelected}
+                      onChange={() => onSelectBrand(brand)}
+                      className="h-3.5 w-3.5 accent-red-600"
+                    />
+                    {brand.toLowerCase()}
+                  </label>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Category Section */}
-      <div className="border-b border-gray-100 pb-3">
+      {/* ===== Category ===== */}
+      <div className="border-t border-gray-100 py-4">
         <button
-          onClick={() => toggleSection("category")}
-          className="w-full flex justify-between items-center text-xs font-semibold text-gray-800 py-1 cursor-pointer"
+          onClick={() => toggleSection('category')}
+          className="flex w-full cursor-pointer items-center justify-between text-[13px] font-semibold text-gray-900"
         >
           <span className="flex items-center gap-1.5">
             Category
-            {selectedCategory !== "all" && selectedCategory !== "All Departments" && (
-              <span className="bg-gray-200 text-gray-700 text-[10px] rounded-full px-1.5 py-0.2">1</span>
-            )}
+            {selectedCategory !== 'all' &&
+              selectedCategory !== 'All Departments' && (
+                <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-red-600">
+                  1
+                </span>
+              )}
           </span>
-          <span>{openSections.category ? "▲" : "▼"}</span>
+          <span className="text-[9px] text-gray-400">
+            {openSections.category ? '▲' : '▼'}
+          </span>
         </button>
 
         {openSections.category && (
-          <div className="mt-2 space-y-1.5 pl-1 max-h-48 overflow-y-auto">
+          <div className="scroll-hide mt-3 max-h-44 space-y-1 overflow-y-auto">
             {categories.map((cat) => {
               const isSelected =
                 selectedCategory.toLowerCase() === cat.toLowerCase() ||
-                (cat === "All Departments" && selectedCategory === "all");
+                (cat === 'All Departments' && selectedCategory === 'all');
               return (
-                <div
+                <button
                   key={cat}
-                  onClick={() => onSelectCategory(cat === "All Departments" ? "all" : cat)}
-                  className={`flex items-center justify-between text-xs py-1 px-2 rounded cursor-pointer transition ${
-                    isSelected ? "text-gray-900 font-bold bg-gray-50" : "text-gray-600 hover:text-gray-900"
+                  onClick={() =>
+                    onSelectCategory(cat === 'All Departments' ? 'all' : cat)
+                  }
+                  className={`block w-full cursor-pointer rounded-lg px-2.5 py-2 text-left text-[13px] uppercase tracking-wide ${
+                    isSelected
+                      ? 'bg-red-50 font-semibold text-red-600'
+                      : 'font-normal text-gray-500 hover:bg-gray-50 hover:text-gray-800'
                   }`}
                 >
-                  <span>{cat}</span>
-                  {isSelected && <span>✓</span>}
-                </div>
+                  {cat}
+                </button>
               );
             })}
           </div>
         )}
       </div>
 
-      {/* Price Section — delegates to shared PriceRangeFilter */}
-      <div className="border-b border-gray-100 pb-3">
-        <button
-          onClick={() => toggleSection("price")}
-          className="w-full flex justify-between items-center text-xs font-semibold text-gray-800 py-1 cursor-pointer"
-        >
-          <span className="flex items-center gap-1.5">
-            Price
-            {priceFilter && (
-              <span className="bg-gray-200 text-gray-700 text-[10px] rounded-full px-1.5 py-0.2">1</span>
-            )}
-          </span>
-          <span>{openSections.price ? "▲" : "▼"}</span>
-        </button>
+      {/* =========================================================
+          ===== Price — this MUST be PriceRangeFilter, not an
+          ===== inline reimplementation. This is what gives you
+          ===== the drag slider + custom range (image 3), instead
+          ===== of a plain Min/Max box with a red Apply button.
+          ========================================================= */}
+      <div className="border-t border-gray-100 py-4">
+        <SectionHeader
+          label="Price"
+          count={priceFilter ? 1 : 0}
+          open={openSections.price}
+          onClick={() => toggleSection('price')}
+        />
 
         {openSections.price && (
           <div className="mt-3">
-            <PriceRangeFilter priceFilter={priceFilter} setPriceFilter={setPriceFilter} />
+            <PriceRangeFilter
+              priceFilter={priceFilter}
+              setPriceFilter={setPriceFilter}
+            />
+          </div>
+        )}
+      </div>
+      {/* ========================================================= */}
+
+      {/* ===== Deals (display only) ===== */}
+      <div className="border-t border-gray-100 py-4">
+        <button
+          onClick={() => toggleSection('deals')}
+          className="flex w-full cursor-pointer items-center justify-between text-[13px] font-semibold text-gray-900"
+        >
+          Deals
+          <span className="text-[9px] text-gray-400">
+            {openSections.deals ? '▲' : '▼'}
+          </span>
+        </button>
+
+        {openSections.deals && (
+          <div className="mt-3 space-y-2.5">
+            {['Clearance', 'Flash Sale', 'Bundle Offers', 'Free Shipping'].map(
+              (deal) => (
+                <label
+                  key={deal}
+                  className="flex cursor-pointer items-center gap-2.5 text-[13px] font-normal text-gray-500 hover:text-gray-800"
+                >
+                  <input
+                    type="checkbox"
+                    checked={deals.includes(deal)}
+                    onChange={() => toggleInList(deals, setDeals, deal)}
+                    className="h-3.5 w-3.5 accent-red-600"
+                  />
+                  {deal}
+                </label>
+              ),
+            )}
           </div>
         )}
       </div>
 
-      {/* Deals Section */}
-      <div className="border-b border-gray-100 pb-3">
+      {/* ===== Delivery Type (display only) ===== */}
+      <div className="border-t border-gray-100 pt-4">
         <button
-          onClick={() => toggleSection("deals")}
-          className="w-full flex justify-between items-center text-xs font-semibold text-gray-800 py-1 cursor-pointer"
+          onClick={() => toggleSection('delivery')}
+          className="flex w-full cursor-pointer items-center justify-between text-[13px] font-semibold text-gray-900"
         >
-          <span>Deals</span>
-          <span>{openSections.deals ? "▲" : "▼"}</span>
+          Delivery Type
+          <span className="text-[9px] text-gray-400">
+            {openSections.delivery ? '▲' : '▼'}
+          </span>
         </button>
-      </div>
 
-      {/* Delivery Type Section */}
-      <div>
-        <button
-          onClick={() => toggleSection("delivery")}
-          className="w-full flex justify-between items-center text-xs font-semibold text-gray-800 py-1 cursor-pointer"
-        >
-          <span>Delivery Type</span>
-          <span>{openSections.delivery ? "▲" : "▼"}</span>
-        </button>
+        {openSections.delivery && (
+          <div className="mt-3 space-y-2.5">
+            {['Express Delivery', 'Standard Delivery', 'Pickup Available'].map(
+              (type) => (
+                <label
+                  key={type}
+                  className="flex cursor-pointer items-center gap-2.5 text-[13px] font-normal text-gray-500 hover:text-gray-800"
+                >
+                  <input
+                    type="checkbox"
+                    checked={delivery.includes(type)}
+                    onChange={() => toggleInList(delivery, setDelivery, type)}
+                    className="h-3.5 w-3.5 accent-red-600"
+                  />
+                  {type}
+                </label>
+              ),
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

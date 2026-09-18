@@ -161,8 +161,8 @@ export default function AllShop({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-start">
-        <div>
+      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 ">
+        <div className="items-start">
           <FilterPanel
             selectedCategory={selectedCategory || "all"}
             onSelectCategory={handleCategorySelect}

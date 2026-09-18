@@ -1,6 +1,6 @@
 export default function BeautyHero() {
   return (
-    <div className="relative w-full h-175 overflow-hidden">
+    <div className="relative w-full h-125 overflow-hidden">
       <img
         src="https://picsum.photos/id/1080/1600/700"
         alt="Beauty & Personal Care"

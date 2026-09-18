@@ -1,11 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from "react"; // ✅ add useEffect
 
-const SLIDER_MIN = 300;
+const SLIDER_MIN = 1;
 const SLIDER_MAX = 10000;
 const STEP = 100;
 
 export default function PriceRangeFilter({ priceFilter, setPriceFilter }) {
-  const [sliderMin, setSliderMin] = useState(300);
+  const [sliderMin, setSliderMin] = useState(1);
   const [sliderMax, setSliderMax] = useState(10000);
   const [customMin, setCustomMin] = useState("");
   const [customMax, setCustomMax] = useState("");
@@ -111,7 +111,7 @@ export default function PriceRangeFilter({ priceFilter, setPriceFilter }) {
           className="relative h-1.5 rounded-full bg-gray-200 mt-5 mb-2 select-none"
         >
           <div
-            className="absolute h-1.5 rounded-full bg-black"
+            className="absolute h-1.5 rounded-full bg-red-600"
             style={{
               left: `${valueToPercent(sliderMin)}%`,
               width: `${valueToPercent(sliderMax) - valueToPercent(sliderMin)}%`,
@@ -121,14 +121,14 @@ export default function PriceRangeFilter({ priceFilter, setPriceFilter }) {
             onPointerDown={handlePointerDown("min")}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-black border-2 border-white shadow-md cursor-pointer touch-none"
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border-2 border-red-600 shadow-md cursor-pointer touch-none"
             style={{ left: `${valueToPercent(sliderMin)}%` }}
           />
           <div
             onPointerDown={handlePointerDown("max")}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-black border-2 border-white shadow-md cursor-pointer touch-none"
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full  bg-white border-2 border-red-600 shadow-md cursor-pointer touch-none"
             style={{ left: `${valueToPercent(sliderMax)}%` }}
           />
         </div>
@@ -169,14 +169,14 @@ export default function PriceRangeFilter({ priceFilter, setPriceFilter }) {
         <div className="flex gap-2">
           <button
             onClick={handleApplyCustom}
-            className="flex-1 bg-black text-white text-xs font-semibold py-2 rounded hover:bg-gray-800 transition cursor-pointer"
+            className="flex-1 bg-green-800 text-white text-xs font-semibold py-2 rounded hover:bg-green-600 transition cursor-pointer"
           >
             Apply
           </button>
           {customApplied && (
             <button
               onClick={handleClearCustom}
-              className="flex-1 border border-gray-300 text-gray-700 text-xs font-semibold py-2 rounded hover:bg-gray-50 transition cursor-pointer"
+              className="flex-1 border  bg-red-800 text-white text-xs font-semibold py-2 rounded hover:bg-red-600 transition cursor-pointer"
             >
               Clear
             </button>

@@ -52,7 +52,7 @@ const HeroCarousel = () => {
       className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden bg-black"
       aria-label="Featured offers"
     >
-      <div className="relative h-[420px] w-full max-[768px]:h-[280px] max-[480px]:h-[200px]">
+      <div className="relative h-125 w-full max-[768px]:h-[280px] max-[480px]:h-[200px]">
         {slides.map((slide, index) => (
           <article
             key={slide.id}

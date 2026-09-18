@@ -75,7 +75,7 @@ function Announcement() {
   };
 
   return (
-    <div className="flex h-[55px] items-center justify-between border-b-[3px] border-red-600 bg-black px-[68px] font-serif text-[14px] text-white">
+    <div className="flex h-[55px] items-center justify-between border-b-[3px] border-yz-bg bg-black px-[68px] font-serif text-[14px] text-white">
 
       {/* =====================================================
           LEFT

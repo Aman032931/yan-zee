@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import FashionHero from '../components/fashion/FashionHero';
 import CategoryTabs from '../components/fashion/CategoryTabs';
-import FashionFilterPanel from '../components/fashion/FashionFilterPanel';
+import FilterPanel from "../components/shared/FilterPanel";
 import ProductCard from '../components/shared/ProductCard';
 import ProductSkeleton from '../components/ProductSkeleton';
 import ActivePriceChip from '../components/shared/ActivePriceChip';
@@ -70,9 +70,9 @@ export default function Fashion() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-start">
-          <div>
-            <FashionFilterPanel
+        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 ">
+          <div className="items-start">
+            <FilterPanel
               priceFilter={priceFilter}
               setPriceFilter={setPriceFilter}
               onlyNewArrivals={onlyNewArrivals}
