@@ -7,7 +7,7 @@ const brandColors = {
   vans: "#e74c3c",
   xoxo: "#8e44ad",
   xti: "#2c3e50",
-};
+}
 
 const brands = [
   {
@@ -16,25 +16,65 @@ const brands = [
       "https://res.cloudinary.com/dgzackqok/image/upload/v1781456164/yanzee-store/local/admin/viirn4yr0r2egei7t1cn.jpg",
     category: "all",
   },
-  { name: "Blank NYC", isWordmark: true, wordmarkClass: "blank-nyc", category: "men's clothing" },
-  { name: "ETRO", isWordmark: true, wordmarkClass: "etro", category: "women's clothing" },
-  { name: "JASON WU", isWordmark: true, wordmarkClass: "jason-wu", category: "women's clothing" },
-  { name: "Pull & Bear", isWordmark: true, wordmarkClass: "pull-bear", category: "men's clothing" },
-  { name: "Revolution", isWordmark: true, wordmarkClass: "revolution", category: "women's clothing" },
-  { name: "VANS", isWordmark: true, wordmarkClass: "vans", category: "men's clothing" },
-  { name: "XOXO", isWordmark: true, wordmarkClass: "xoxo", category: "women's clothing" },
-  { name: "XTI", isWordmark: true, wordmarkClass: "xti", category: "men's clothing" },
-];
+  {
+    name: "Blank NYC",
+    isWordmark: true,
+    wordmarkClass: "blank-nyc",
+    category: "men's clothing",
+  },
+  {
+    name: "ETRO",
+    isWordmark: true,
+    wordmarkClass: "etro",
+    category: "women's clothing",
+  },
+  {
+    name: "JASON WU",
+    isWordmark: true,
+    wordmarkClass: "jason-wu",
+    category: "women's clothing",
+  },
+  {
+    name: "Pull & Bear",
+    isWordmark: true,
+    wordmarkClass: "pull-bear",
+    category: "men's clothing",
+  },
+  {
+    name: "Revolution",
+    isWordmark: true,
+    wordmarkClass: "revolution",
+    category: "women's clothing",
+  },
+  {
+    name: "VANS",
+    isWordmark: true,
+    wordmarkClass: "vans",
+    category: "men's clothing",
+  },
+  {
+    name: "XOXO",
+    isWordmark: true,
+    wordmarkClass: "xoxo",
+    category: "women's clothing",
+  },
+  {
+    name: "XTI",
+    isWordmark: true,
+    wordmarkClass: "xti",
+    category: "men's clothing",
+  },
+]
 
 const TopBrands = () => {
-  const allBrands = [...brands, ...brands, ...brands];
+  const allBrands = [...brands, ...brands, ...brands]
 
   return (
     <section
-      className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-[20px]"
+      className="relative right-1/2 left-1/2 mr-[-50vw] ml-[-50vw] w-screen bg-white py-5 mb-[20px]"
       aria-label="Featured brands"
     >
-      <section className="bg-white px-[8%] py-[20px] max-[768px]:px-[4%] max-[768px]:py-4">
+      <section className="bg-white px-[8%] max-[768px]:px-[4%] max-[768px]:py-4">
         <div className="mb-[20px]">
           <h2 className="text-center text-[22px] font-bold text-[#1a1a1a]">
             Top Brands
@@ -63,7 +103,7 @@ const TopBrands = () => {
                     />
                   ) : (
                     <span
-                      className="p-1 text-center text-[12px] font-bold leading-[1.2] max-[768px]:text-[10px] max-[480px]:text-[8px]"
+                      className="p-1 text-center text-[12px] leading-[1.2] font-bold max-[768px]:text-[10px] max-[480px]:text-[8px]"
                       style={{ color: brandColors[brand.wordmarkClass] }}
                     >
                       {brand.name}
@@ -81,7 +121,7 @@ const TopBrands = () => {
         </div>
       </section>
     </section>
-  );
-};
+  )
+}
 
-export default TopBrands;
+export default TopBrands

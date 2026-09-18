@@ -2,12 +2,34 @@ import { Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 
+function StarRow({ rating = 0 }) {
+  const rounded = Math.round(rating);
+
+  return (
+    <div className="mt-1 flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <svg
+          key={i}
+          viewBox="0 0 24 24"
+          className="h-3 w-3"
+          fill={i <= rounded ? "#f59e0b" : "#e5e7eb"}
+          aria-hidden="true"
+        >
+          <path d="M12 2l2.9 6.3 6.6.8-4.9 4.6 1.3 6.5L12 17l-5.9 3.2 1.3-6.5L2.5 9.1l6.6-.8L12 2z" />
+        </svg>
+      ))}
+      {rating ? (
+        <span className="ml-1 text-[11px] text-gray-400">{rating}</span>
+      ) : null}
+    </div>
+  );
+}
+
 export default function ProductCard({ product }) {
-  const { addToCart, isInCart } = useCart();
+  const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
 
   const wishlisted = isWishlisted(product.id);
-  const inCart = isInCart(product.id);
 
   const cartPayload = {
     ...product,
@@ -21,16 +43,13 @@ export default function ProductCard({ product }) {
 
   const handleWishlistToggle = (e) => {
     e.preventDefault();
-    e.preventDefault();
     e.stopPropagation();
-
     toggleWishlist(cartPayload);
   };
 
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-
     addToCart(cartPayload);
   };
 
@@ -39,12 +58,24 @@ export default function ProductCard({ product }) {
       to={`/product/${product.id}`}
       className="group relative flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all duration-300 hover:border-gray-200 hover:shadow-lg"
     >
-      {/* Top Badge */}
-      {product?.badge && (
-        <span className="absolute top-2 left-2 z-10 text-[10px] font-bold uppercase bg-orange-600 text-white px-2 py-0.5 rounded">
-          {product.badge}
-        </span>
-      )}
+      {/* ===== Badges (top-left stack) ===== */}
+      <div className="absolute left-2 top-2 z-20 flex flex-col items-start gap-1">
+        {product?.badge && (
+          <span className="rounded bg-orange-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+            {product.badge}
+          </span>
+        )}
+        {product?.isNew && (
+          <span className="rounded bg-emerald-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+            New
+          </span>
+        )}
+        {product?.discountPercent > 0 && (
+          <span className="rounded bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+            -{product.discountPercent}%
+          </span>
+        )}
+      </div>
 
       {/* ===== Wishlist ===== */}
       <button
@@ -54,10 +85,10 @@ export default function ProductCard({ product }) {
         aria-label="Add to wishlist"
       >
         <svg
-          className={`w-4 h-4 ${
+          className={`h-4 w-4 ${
             wishlisted
-              ? "fill-red-500 text-red-500"
-              : "fill-none stroke-current"
+              ? "fill-red-600 text-red-600"
+              : "fill-none stroke-gray-400"
           }`}
           viewBox="0 0 24 24"
           strokeWidth="2"
@@ -68,41 +99,49 @@ export default function ProductCard({ product }) {
 
       {/*
         ===== Image + overlay =====
-        This wrapper MUST keep `relative overflow-hidden` — it is the
-        positioning context the Add to Cart bar anchors to, and the
-        clip boundary that keeps the bar from pushing card content down.
+        This wrapper MUST keep `relative overflow-hidden` — it's the
+        anchor for the Add to Cart bar and the clip boundary that
+        stops it pushing card content down.
       */}
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-gray-50">
         <img
           src={product?.image}
           alt={product?.title || product?.name || "Product"}
-          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+          className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
         />
+
+        {/*
+          Add to Cart bar — always reads "Add to cart," matching
+          shared/ProductCard.jsx. No inCart/"Added to Cart" swap —
+          that was the bug: on this card it was flipping permanently
+          on click instead of staying a stateless action button.
+        */}
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          className="absolute inset-x-0 bottom-0 z-10 translate-y-0 cursor-pointer border-0 bg-black py-2.5 text-[11px] font-bold uppercase tracking-widest text-white transition-transform duration-300 md:translate-y-full md:group-hover:translate-y-0 hover:bg-red-600"
+        >
+          Add to cart
+        </button>
       </div>
 
       {/* ===== Info ===== */}
       <div className="flex flex-grow flex-col justify-between p-3">
         <div>
-          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider block truncate">
+          <span className="block truncate text-[10px] font-semibold uppercase tracking-widest text-red-600">
             {product?.brand || "GENERIC"}
           </span>
 
-          <h4 className="text-xs font-semibold text-gray-800 line-clamp-2 mt-1 min-h-[32px]">
+          <h4 className="mt-1 line-clamp-2 min-h-[36px] text-sm font-medium text-gray-800">
             {product?.title || product?.name}
           </h4>
 
-          {/* Star Rating */}
-          <div className="flex items-center gap-1 mt-1 text-yellow-400 text-xs">
-            {"★".repeat(product?.rating || 4)}
-            {"☆".repeat(5 - (product?.rating || 4))}
-          </div>
+          <StarRow rating={product?.rating} />
         </div>
 
-        {/* Price */}
-        <div className="mt-2">
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <span className="text-sm font-bold text-gray-900">
-            Nrs{" "}
-            {(product?.priceNPR ?? product?.price ?? 0).toLocaleString()}
+            Nrs {(product?.priceNPR ?? product?.price ?? 0).toLocaleString()}
           </span>
 
           {product?.mrp && (
@@ -118,19 +157,6 @@ export default function ProductCard({ product }) {
             </>
           )}
         </div>
-
-        {/* Add to Cart */}
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          className={`mt-3 w-full rounded-md px-3 py-2 text-xs font-semibold transition ${
-            inCart
-              ? "bg-gray-200 text-gray-700"
-              : "bg-black text-white hover:bg-gray-800"
-          }`}
-        >
-          {inCart ? "Added to Cart" : "Add to Cart"}
-        </button>
       </div>
     </Link>
   );

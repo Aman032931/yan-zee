@@ -28,6 +28,8 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     setLoading(true);
     setNotFound(false);
     setSelectedSize(null);
@@ -37,10 +39,11 @@ export default function ProductDetail() {
         if (!res.ok) {
           throw new Error("Product not found");
         }
-
         return res.json();
       })
       .then((item) => {
+        if (cancelled) return;
+
         if (!item || !item.id) {
           setNotFound(true);
           return;
@@ -69,11 +72,19 @@ export default function ProductDetail() {
         });
       })
       .catch(() => {
-        setNotFound(true);
+        if (!cancelled) {
+          setNotFound(true);
+        }
       })
       .finally(() => {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (loading) {
@@ -93,7 +104,7 @@ export default function ProductDetail() {
 
         <button
           onClick={() => navigate(-1)}
-          className="mt-4 text-sm font-semibold text-blue-600 hover:underline cursor-pointer"
+          className="mt-4 cursor-pointer text-sm font-semibold text-red-600 hover:underline"
         >
           ← Go back
         </button>
@@ -170,7 +181,7 @@ export default function ProductDetail() {
         <span>/</span>
 
         <Link
-          to="/all"
+          to="/home"
           className="hover:text-gray-800 transition"
         >
           {categoryLabel}
@@ -186,12 +197,26 @@ export default function ProductDetail() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
         {/* ================= IMAGE ================= */}
-        <div className="bg-gray-50 rounded-lg flex items-center justify-center p-8 h-96">
+        <div className="relative bg-gray-50 rounded-lg flex items-center justify-center p-8 h-96">
           <img
             src={product.image}
             alt={product.title}
             className="max-h-full max-w-full object-contain"
           />
+
+          {/* Wishlist heart — overlaid on the photo, top-right */}
+          <button
+            type="button"
+            onClick={handleWishlist}
+            className="absolute right-4 top-4 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 hover:scale-110"
+            aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          >
+            <Heart
+              className={`h-4 w-4 ${
+                wishlisted ? "fill-red-600 text-red-600" : "fill-none text-gray-400"
+              }`}
+            />
+          </button>
         </div>
 
         {/* ================= DETAILS ================= */}
@@ -206,7 +231,7 @@ export default function ProductDetail() {
           </h1>
 
           {/* Rating */}
-          <div className="inline-flex items-center gap-1 bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded mb-4">
+          <div className="inline-flex items-center gap-1 bg-emerald-600 text-white text-xs font-semibold px-2 py-1 rounded mb-4">
             {product.rating}
             <span>★</span>
 
@@ -225,7 +250,7 @@ export default function ProductDetail() {
               MRP Nrs {product.mrp.toLocaleString()}
             </span>
 
-            <span className="text-sm font-semibold text-orange-600">
+            <span className="text-sm font-semibold text-emerald-600">
               ({product.discountPercent}% OFF)
             </span>
           </div>
@@ -249,7 +274,7 @@ export default function ProductDetail() {
                     onClick={() => setSelectedSize(size)}
                     className={`w-11 h-11 rounded-full border text-xs font-semibold transition cursor-pointer ${
                       selectedSize === size
-                        ? "border-black bg-black text-white"
+                        ? "border-red-600 bg-red-600 text-white"
                         : "border-gray-300 text-gray-700 hover:border-gray-500"
                     }`}
                   >
@@ -266,7 +291,7 @@ export default function ProductDetail() {
           )}
 
           {/* ================= ACTION BUTTONS ================= */}
-          <div className="flex gap-3 mb-3">
+          <div className="flex gap-3">
 
             {/* ADD TO CART */}
             <IconButton
@@ -291,22 +316,6 @@ export default function ProductDetail() {
             </IconButton>
 
           </div>
-
-          {/* WISHLIST */}
-          <button
-            type="button"
-            onClick={handleWishlist}
-            className={`w-full flex items-center justify-center gap-2 border rounded text-sm font-semibold py-3 px-4 transition cursor-pointer ${
-              wishlisted
-                ? "border-red-500 bg-red-50 text-red-600 hover:bg-red-100"
-                : "border-gray-300 bg-white text-gray-700 hover:border-black hover:text-black"
-            }`}
-          >
-            <Heart
-              className={`w-4 h-4 shrink-0 ${wishlisted ? "fill-red-500" : ""}`}
-            />
-            {wishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-          </button>
 
           {/* Description */}
           <div className="border-t border-gray-100 pt-5 mt-6">

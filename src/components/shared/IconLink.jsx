@@ -27,7 +27,7 @@ const ICON_SIZES = {
  * <Link> for navigation actions ("Continue Shopping", "Proceed
  * to Checkout", "Explore Products", etc).
  *
- * <IconLink to="/all" icon={ShoppingBag}>Continue Shopping</IconLink>
+ * <IconLink to="/home" icon={ShoppingBag}>Continue Shopping</IconLink>
  *
  * `ref` is accepted as a plain prop (React 19+) — no forwardRef
  * wrapper needed.

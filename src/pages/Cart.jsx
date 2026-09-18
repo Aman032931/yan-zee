@@ -64,7 +64,7 @@ export default function Cart() {
           </p>
 
           <Link
-            to="/all"
+            to="/home"
             className="mt-6 inline-flex items-center gap-2 rounded-md bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800"
           >
             Continue Shopping
@@ -91,7 +91,7 @@ export default function Cart() {
           </div>
 
           <Link
-            to="/all"
+            to="/home"
             className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-black"
           >
             <ArrowLeft className="h-4 w-4" />
