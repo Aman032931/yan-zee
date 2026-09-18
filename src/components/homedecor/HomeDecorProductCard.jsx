@@ -1,14 +1,25 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 
 export default function HomeDecorProductCard({ product }) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const { toggleWishlist, isWishlisted } = useWishlist();
+  const { addToCart , isInCart} = useCart();
+
+  const wishlisted = isWishlisted(product.id);
+  const inCart = isInCart(product.id);
 
   const handleWishlistToggle = (e) => {
     e.preventDefualt();
     e.stopPropagation();
-    setIsWishlisted((prev) => !prev);
+    toggleWishlist(product);
   };
+
+  const handleAddToCart =(e)=>{
+    e.preventDefualt();
+    e.stopPropagation();
+    addToCart(product);
+  }
 
   return (
     <Link
@@ -34,7 +45,7 @@ export default function HomeDecorProductCard({ product }) {
         aria-label="Add to wishlist"
       >
         <svg
-          className={`w-4 h-4 ${isWishlisted ? "fill-red-500 text-red-500" : "fill-none stroke-current"}`}
+          className={`w-4 h-4 ${wishlisted ? "fill-red-500 text-red-500" : "fill-none stroke-current"}`}
           viewBox="0 0 24 24"
           strokeWidth="2"
         >
@@ -68,8 +79,14 @@ export default function HomeDecorProductCard({ product }) {
           <span className="text-sm font-bold text-gray-900">
             Nrs {product.price.toLocaleString()}
           </span>
-          <button className="bg-black text-white text-[11px] font-semibold px-3 py-1.5 rounded hover:bg-gray-800 transition cursor-pointer whitespace-nowrap">
-            Add to cart
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className={`text-[11px] font-semibold px-3 py-1.5 rounded transition cursor-pointer whitespace-nowrap ${
+              inCart ? "bg-gray-200 text-gray-700" : "bg-black text-white hover:bg-gray-800"
+            }`}
+          >
+            {inCart ? "Added" : "Add to cart"}
           </button>
         </div>
       </div>

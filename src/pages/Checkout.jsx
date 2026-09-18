@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 import { useCart } from "../context/CartContext";
-import { formatNPR } from "./Cart";
+import { formatNPR } from "../utils/formatNPR";
 
 import {
   countryHasDistricts,
@@ -658,7 +658,9 @@ export default function Checkout() {
                       Items ({totalItems})
                     </p>
                     <div className="space-y-3">
-                      {cart.map((item) => (
+                    {cart.map((item) => {
+                      const hasDiscount = Number.isFinite(item.mrp) && item.mrp > item.priceNPR;
+                      return (
                         <div key={item.id} className="flex items-center gap-3">
                           <div className="h-14 w-12 flex-shrink-0 overflow-hidden rounded-md bg-gray-50">
                             <img
@@ -673,11 +675,26 @@ export default function Checkout() {
                             </p>
                             <p className="text-xs text-gray-500">Qty {item.quantity}</p>
                           </div>
-                          <span className="text-sm font-medium text-gray-900">
-                            Rs. {formatNPR(item.priceNPR * item.quantity)}
-                          </span>
+                          <div className="text-right">
+                            <span className="block text-sm font-medium text-gray-900">
+                              Rs. {formatNPR(item.priceNPR * item.quantity)}
+                            </span>
+                            {hasDiscount && (
+                              <span className="flex items-center justify-end gap-1.5 text-[11px]">
+                                <span className="text-gray-400 line-through">
+                                  Rs. {formatNPR(item.mrp * item.quantity)}
+                                </span>
+                                {Number.isFinite(item.discountPercent) && item.discountPercent > 0 && (
+                                  <span className="font-semibold text-orange-600">
+                                    {item.discountPercent}% OFF
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      ))}
+                      );
+                    })}
                     </div>
                   </div>
                 </div>
@@ -723,26 +740,43 @@ export default function Checkout() {
               <h2 className="text-lg font-semibold">Order summary</h2>
 
               <div className="mt-5 max-h-64 space-y-3 overflow-y-auto pr-1">
-                {cart.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3">
-                    <div className="relative h-14 w-12 flex-shrink-0 overflow-hidden rounded-md bg-gray-50">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="h-full w-full object-contain p-1"
-                      />
-                      <span className="absolute -top-1.5 -right-1.5 grid h-5 w-5 place-items-center rounded-full bg-gray-900 text-[10px] font-semibold text-white">
-                        {item.quantity}
+                {cart.map((item) => {
+                  const hasDiscount = Number.isFinite(item.mrp) && item.mrp > item.priceNPR;
+                  return (
+                    <div key={item.id} className="flex items-center gap-3">
+                      <div className="h-14 w-12 flex-shrink-0 overflow-hidden rounded-md bg-gray-50">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="h-full w-full object-contain p-1"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-gray-900">
+                          {item.name}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-gray-500">
+                          Qty {item.quantity} · Rs. {formatNPR(item.priceNPR)} each
+                        </p>
+                        {hasDiscount && (
+                          <p className="mt-0.5 flex items-center gap-1.5 text-[11px]">
+                            <span className="text-gray-400 line-through">
+                              Rs. {formatNPR(item.mrp * item.quantity)}
+                            </span>
+                            {Number.isFinite(item.discountPercent) && item.discountPercent > 0 && (
+                              <span className="font-semibold text-orange-600">
+                                {item.discountPercent}% OFF
+                              </span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                      <span className="whitespace-nowrap text-xs font-medium text-gray-700">
+                        Rs. {formatNPR(item.priceNPR * item.quantity)}
                       </span>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-medium text-gray-900">{item.name}</p>
-                    </div>
-                    <span className="text-xs font-medium text-gray-700">
-                      Rs. {formatNPR(item.priceNPR * item.quantity)}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="mt-5 flex gap-2">

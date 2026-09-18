@@ -10,17 +10,55 @@ export function WishlistProvider({ children }) {
   });
 
   useEffect(() => {
-    Cookies.set("yanzee_wishlist", JSON.stringify(wishlist), { expires: 30 });
+    Cookies.set("yanzee_wishlist", JSON.stringify(wishlist), {
+      expires: 30,
+    });
   }, [wishlist]);
 
-  const isWishlisted = (productId) => wishlist.some((item) => item.id === productId);
+  const isWishlisted = (productId) =>
+    wishlist.some((item) => item.id === productId);
 
   const addToWishlist = (product) => {
-    setWishlist((prev) => (prev.some((item) => item.id === product.id) ? prev : [...prev, product]));
+    setWishlist((prev) =>
+      prev.some((item) => item.id === product.id)
+        ? prev
+        : [...prev, product]
+    );
+  };
+
+  // Save an item from Cart to Wishlist
+  // while remembering the quantity it had in the Cart.
+  const saveForLater = (product) => {
+    setWishlist((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
+
+      if (existing) {
+        return prev.map((item) =>
+          item.id === product.id
+            ? {
+                ...item,
+                ...product,
+                savedQuantity:
+                  product.quantity ?? item.savedQuantity ?? 1,
+              }
+            : item
+        );
+      }
+
+      return [
+        ...prev,
+        {
+          ...product,
+          savedQuantity: product.quantity ?? 1,
+        },
+      ];
+    });
   };
 
   const removeFromWishlist = (productId) => {
-    setWishlist((prev) => prev.filter((item) => item.id !== productId));
+    setWishlist((prev) =>
+      prev.filter((item) => item.id !== productId)
+    );
   };
 
   const toggleWishlist = (product) => {
@@ -39,6 +77,7 @@ export function WishlistProvider({ children }) {
         wishlist,
         isWishlisted,
         addToWishlist,
+        saveForLater,
         removeFromWishlist,
         toggleWishlist,
         clearWishlist,
