@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import HomeDecorHero from '../components/homedecor/HomeDecorHero';
 import HomeDecorCategoryTabs from '../components/homedecor/HomeDecorCategoryTabs';
 import HomeDecorFilterPanel from '../components/homedecor/HomeDecorFilterPanel';
-import HomeDecorProductCard from '../components/homedecor/HomeDecorProductCard';
+import ProductCard from '../components/shared/ProductCard';
 import ProductSkeleton from '../components/ProductSkeleton';
 import { useHomeDecorProducts } from '../utils/useHomeDecorProducts';
 
@@ -98,7 +98,7 @@ export default function HomeDecor() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredProducts.map((product) => (
-                  <HomeDecorProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id} product={product} imageFit="cover" />
                 ))}
               </div>
             )}

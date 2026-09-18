@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import SportsHero from '../components/sports/SportsHero';
 import SportsCategoryTabs from '../components/sports/SportsCategoryTabs';
 import SportsFilterPanel from '../components/sports/SportsFilterPanel';
-import SportsProductCard from '../components/sports/SportsProductCard';
+import ProductCard from '../components/shared/ProductCard';
 import ProductSkeleton from '../components/ProductSkeleton';
 import { useSportsProducts } from '../utils/useSportsProducts';
 
@@ -113,7 +113,7 @@ export default function Sports() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                   {visibleProducts.map((product) => (
-                    <SportsProductCard key={product.id} product={product} />
+                    <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
 

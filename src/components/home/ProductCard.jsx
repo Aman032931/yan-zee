@@ -21,6 +21,7 @@ export default function ProductCard({ product }) {
 
   const handleWishlistToggle = (e) => {
     e.preventDefault();
+    e.preventDefault();
     e.stopPropagation();
 
     toggleWishlist(cartPayload);
@@ -36,7 +37,7 @@ export default function ProductCard({ product }) {
   return (
     <Link
       to={`/product/${product.id}`}
-      className="w-full min-w-0 bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition duration-200 flex flex-col overflow-hidden relative group"
+      className="group relative flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all duration-300 hover:border-gray-200 hover:shadow-lg"
     >
       {/* Top Badge */}
       {product?.badge && (
@@ -45,11 +46,11 @@ export default function ProductCard({ product }) {
         </span>
       )}
 
-      {/* Wishlist Button */}
+      {/* ===== Wishlist ===== */}
       <button
         type="button"
         onClick={handleWishlistToggle}
-        className="absolute top-2 right-2 z-10 p-1.5 bg-white/80 backdrop-blur-sm rounded-full text-gray-600 hover:text-red-500 transition cursor-pointer"
+        className="absolute right-2 top-2 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 hover:scale-110"
         aria-label="Add to wishlist"
       >
         <svg
@@ -65,8 +66,13 @@ export default function ProductCard({ product }) {
         </svg>
       </button>
 
-      {/* Product Image */}
-      <div className="w-full h-48 bg-gray-50 flex items-center justify-center p-4 overflow-hidden">
+      {/*
+        ===== Image + overlay =====
+        This wrapper MUST keep `relative overflow-hidden` — it is the
+        positioning context the Add to Cart bar anchors to, and the
+        clip boundary that keeps the bar from pushing card content down.
+      */}
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-gray-50">
         <img
           src={product?.image}
           alt={product?.title || product?.name || "Product"}
@@ -74,8 +80,8 @@ export default function ProductCard({ product }) {
         />
       </div>
 
-      {/* Product Details */}
-      <div className="p-3 flex flex-col flex-grow justify-between">
+      {/* ===== Info ===== */}
+      <div className="flex flex-grow flex-col justify-between p-3">
         <div>
           <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider block truncate">
             {product?.brand || "GENERIC"}
@@ -98,6 +104,19 @@ export default function ProductCard({ product }) {
             Nrs{" "}
             {(product?.priceNPR ?? product?.price ?? 0).toLocaleString()}
           </span>
+
+          {product?.mrp && (
+            <>
+              <span className="text-[11px] text-gray-400 line-through">
+                Nrs {product.mrp.toLocaleString()}
+              </span>
+              {product.discountPercent > 0 && (
+                <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600">
+                  {product.discountPercent}% OFF
+                </span>
+              )}
+            </>
+          )}
         </div>
 
         {/* Add to Cart */}

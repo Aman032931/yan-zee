@@ -21,7 +21,7 @@ export function CartProvider({ children }) {
 
       if (existing) {
         if (existing.quantity >= maxStock) {
-          alert(`You've reached the maximum available stock (${maxStock}) for ${product.name}.`);
+          alert(`You've reached the maximum available stock (${maxStock}) for ${product.title}.`);
           return prev;
         }
         return prev.map((item) =>
@@ -45,7 +45,7 @@ export function CartProvider({ children }) {
         if (item.id === productId) {
           const maxStock = item.stock ?? 999;
           if (newQuantity > maxStock) {
-            alert(`Sorry, we only have ${maxStock} units of ${item.name} available.`);
+            alert(`Sorry, we only have ${maxStock} units of ${item.title} available.`);
             return { ...item, quantity: maxStock };
           }
           return { ...item, quantity: newQuantity };
@@ -64,7 +64,7 @@ export function CartProvider({ children }) {
   const clearCart = () => setCart([]);
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotalNPR = cart.reduce((sum, item) => sum + item.priceNPR * item.quantity, 0);
+  const subtotalNPR = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   // Free shipping over Rs 3000, otherwise a flat Rs 200
   const FREE_SHIPPING_THRESHOLD = 3000;

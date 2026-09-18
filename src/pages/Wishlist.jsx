@@ -65,7 +65,7 @@ export default function Wishlist() {
             Tap the heart icon on any product to save it here for later.
           </p>
           <Link
-            to="/all"
+            to="/home"
             className="mt-6 inline-block rounded-md bg-gray-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black"
           >
             Explore Products

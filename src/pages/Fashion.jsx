@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import FashionHero from '../components/fashion/FashionHero';
 import CategoryTabs from '../components/fashion/CategoryTabs';
 import FashionFilterPanel from '../components/fashion/FashionFilterPanel';
-import FashionProductCard from '../components/fashion/FashionProductCard';
+import ProductCard from '../components/shared/ProductCard';
 import ProductSkeleton from '../components/ProductSkeleton';
 import ActivePriceChip from '../components/shared/ActivePriceChip';
 import { useFashionProducts } from '../utils/useFashionProducts';
@@ -102,7 +102,7 @@ export default function Fashion() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                   {visibleProducts.map((product) => (
-                    <FashionProductCard key={product.id} product={product} />
+                    <ProductCard key={product.id} product={product} badgeColor="bg-orange-600" showDiscount />
                   ))}
                 </div>
 

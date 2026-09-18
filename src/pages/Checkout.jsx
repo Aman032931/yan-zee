@@ -236,7 +236,7 @@ export default function Checkout() {
             Add something to your bag before checking out.
           </p>
           <Link
-            to="/all"
+            to="/home"
             className="mt-6 inline-flex items-center gap-2 rounded-md bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800"
           >
             Continue Shopping
@@ -292,14 +292,14 @@ export default function Checkout() {
 
         <div className="mt-8 flex w-full gap-3">
           <Link
-            to="/all"
+            to="/home"
             className="flex h-12 flex-1 items-center justify-center rounded-md border border-gray-300 text-sm font-semibold text-gray-800 hover:bg-gray-50"
           >
             Continue Shopping
           </Link>
           <button
             type="button"
-            onClick={() => navigate("/all")}
+            onClick={() => navigate("/home")}
             className="flex h-12 flex-1 items-center justify-center rounded-md bg-black text-sm font-semibold text-white hover:bg-gray-800"
           >
             Back to Home

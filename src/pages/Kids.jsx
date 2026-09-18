@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import KidsHero from '../components/kids/KidsHero';
 import KidsCategoryTabs from '../components/kids/KidsCategoryTabs';
 import KidsFilterPanel from '../components/kids/KidsFilterPanel';
-import KidsProductCard from '../components/kids/KidsProductCard';
+import ProductCard from '../components/shared/ProductCard';
 import ProductSkeleton from '../components/ProductSkeleton';
 import { useKidsProducts } from '../utils/useKidsProducts';
 
@@ -98,7 +98,7 @@ export default function Kids() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredProducts.map((product) => (
-                  <KidsProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id} product={product} imageFit="cover" />
                 ))}
               </div>
             )}

@@ -102,7 +102,7 @@ function App() {
             element: <Home />,
         },
         {
-            path: "/all",
+            path: "/home",
             element: <Home />,
         },
         {
