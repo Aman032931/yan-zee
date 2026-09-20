@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Heart, ShoppingCart, Trash2, X, Zap } from "lucide-react";
+import { Heart, ShoppingCart, Trash2, X, ShoppingBag} from "lucide-react";
 import { useWishlist } from "../context/WishlistContext";
 import { useCart } from "../context/CartContext";
 import { formatNPR } from "../utils/formatNPR";
 import RecommendedSection from "../components/home/RecommendedSection";
 import { Button } from "@/components/ui/button";
+import PageNavigation from "../components/shared/PageNavigation";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -185,6 +186,7 @@ export default function Wishlist() {
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-8">
+      <PageNavigation/>
       {/* Header */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 pb-4">
         <div>
@@ -428,9 +430,11 @@ export default function Wishlist() {
                       addToCart(buildCartItem(item))
                     }
                   >
+                     <ShoppingCart/>
                     {inCart
                       ? "In Cart"
                       : "Add to Cart"}
+                    
                   </Button>
 
                   <Button
@@ -441,7 +445,7 @@ export default function Wishlist() {
                       handleBuyNow(item)
                     }
                   >
-                    <Zap />
+                    <ShoppingBag />
                     Buy Now
                   </Button>
                 </div>
