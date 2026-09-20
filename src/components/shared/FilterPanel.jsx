@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PriceRangeFilter from "./PriceRangeFilter";
+import { DEALS, DELIVERY_TYPES } from "../../utils/dealDeliveryFilters";
 
 /**
  * Shared filter panel used by every category page except Home
@@ -16,8 +17,10 @@ import PriceRangeFilter from "./PriceRangeFilter";
  * `onlyNewArrivals` prop slot at the call site, and overrides
  * toggleLabel/toggleSubLabel so the UI reads correctly.
  *
- * Deals and Delivery Type below are display-only, same as on Home —
- * they toggle visually but aren't wired into any product filtering yet.
+ * Deals and Delivery Type: if the page passes deals/setDeals/delivery/
+ * setDelivery, those are used (and the page filters products with
+ * filterByDealsAndDelivery). Otherwise the panel keeps its own local
+ * state so the checkboxes still work.
  */
 export default function FilterPanel({
   priceFilter,
@@ -27,16 +30,29 @@ export default function FilterPanel({
   toggleLabel = "New Arrivals",
   toggleSubLabel = "New arrivals only",
   onClearFilters,
+  deals: dealsProp,
+  setDeals: setDealsProp,
+  delivery: deliveryProp,
+  setDelivery: setDeliveryProp,
 }) {
-  const activeFilterCount = (onlyNewArrivals ? 1 : 0) + (priceFilter ? 1 : 0);
+  const [localDeals, setLocalDeals] = useState([]);
+  const [localDelivery, setLocalDelivery] = useState([]);
+
+  const deals = dealsProp ?? localDeals;
+  const setDeals = setDealsProp ?? setLocalDeals;
+  const delivery = deliveryProp ?? localDelivery;
+  const setDelivery = setDeliveryProp ?? setLocalDelivery;
 
   const [openSections, setOpenSections] = useState({
     deals: false,
     delivery: false,
   });
 
-  const [deals, setDeals] = useState([]);
-  const [delivery, setDelivery] = useState([]);
+  const activeFilterCount =
+    (onlyNewArrivals ? 1 : 0) +
+    (priceFilter ? 1 : 0) +
+    deals.length +
+    delivery.length;
 
   const toggleSection = (section) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
@@ -48,6 +64,12 @@ export default function FilterPanel({
     );
   };
 
+  const handleClear = () => {
+    setDeals([]);
+    setDelivery([]);
+    onClearFilters?.();
+  };
+
   return (
     <div className="sticky top-20 rounded-2xl border border-gray-100 bg-white p-5">
       {/* ===== Header ===== */}
@@ -55,7 +77,7 @@ export default function FilterPanel({
         <h3 className="text-[15px] font-bold text-gray-900">All Filters</h3>
         {activeFilterCount > 0 && (
           <button
-            onClick={onClearFilters}
+            onClick={handleClear}
             className="cursor-pointer text-xs font-semibold text-red-600 hover:text-red-700"
           >
             Clear all
@@ -102,7 +124,7 @@ export default function FilterPanel({
           ===== End of unchanged Price block =====
           ========================================================= */}
 
-      {/* ===== Deals (display only) ===== */}
+      {/* ===== Deals ===== */}
       <div className="border-t border-gray-100 py-4">
         <button
           onClick={() => toggleSection("deals")}
@@ -116,27 +138,25 @@ export default function FilterPanel({
 
         {openSections.deals && (
           <div className="mt-3 space-y-2.5">
-            {["Clearance", "Flash Sale", "Bundle Offers", "Free Shipping"].map(
-              (deal) => (
-                <label
-                  key={deal}
-                  className="flex cursor-pointer items-center gap-2.5 text-[13px] font-normal text-gray-500 hover:text-gray-800"
-                >
-                  <input
-                    type="checkbox"
-                    checked={deals.includes(deal)}
-                    onChange={() => toggleInList(deals, setDeals, deal)}
-                    className="h-3.5 w-3.5 accent-red-600"
-                  />
-                  {deal}
-                </label>
-              )
-            )}
+            {DEALS.map(({ key, label }) => (
+              <label
+                key={key}
+                className="flex cursor-pointer items-center gap-2.5 text-[13px] font-normal text-gray-500 hover:text-gray-800"
+              >
+                <input
+                  type="checkbox"
+                  checked={deals.includes(key)}
+                  onChange={() => toggleInList(deals, setDeals, key)}
+                  className="h-3.5 w-3.5 accent-red-600"
+                />
+                {label}
+              </label>
+            ))}
           </div>
         )}
       </div>
 
-      {/* ===== Delivery Type (display only) ===== */}
+      {/* ===== Delivery Type ===== */}
       <div className="border-t border-gray-100 pt-4">
         <button
           onClick={() => toggleSection("delivery")}
@@ -150,22 +170,20 @@ export default function FilterPanel({
 
         {openSections.delivery && (
           <div className="mt-3 space-y-2.5">
-            {["Express Delivery", "Standard Delivery", "Pickup Available"].map(
-              (type) => (
-                <label
-                  key={type}
-                  className="flex cursor-pointer items-center gap-2.5 text-[13px] font-normal text-gray-500 hover:text-gray-800"
-                >
-                  <input
-                    type="checkbox"
-                    checked={delivery.includes(type)}
-                    onChange={() => toggleInList(delivery, setDelivery, type)}
-                    className="h-3.5 w-3.5 accent-red-600"
-                  />
-                  {type}
-                </label>
-              )
-            )}
+            {DELIVERY_TYPES.map(({ key, label }) => (
+              <label
+                key={key}
+                className="flex cursor-pointer items-center gap-2.5 text-[13px] font-normal text-gray-500 hover:text-gray-800"
+              >
+                <input
+                  type="checkbox"
+                  checked={delivery.includes(key)}
+                  onChange={() => toggleInList(delivery, setDelivery, key)}
+                  className="h-3.5 w-3.5 accent-red-600"
+                />
+                {label}
+              </label>
+            ))}
           </div>
         )}
       </div>

@@ -6,6 +6,7 @@ import ProductCard from "../components/shared/ProductCard"
 import ProductSkeleton from "../components/ProductSkeleton"
 import { usePremiumProducts } from "../utils/usePremiumProducts"
 import { useGender } from "../context/useGender"
+import { filterByDealsAndDelivery } from "../utils/dealDeliveryFilters" // NEW
 
 export default function Premium() {
   const { products, loading } = usePremiumProducts()
@@ -13,6 +14,8 @@ export default function Premium() {
   const [activeTab, setActiveTab] = useState("All")
   const [priceFilter, setPriceFilterRaw] = useState(null)
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(false)
+  const [deals, setDeals] = useState([]) // NEW
+  const [delivery, setDelivery] = useState([]) // NEW
   const [sortBy, setSortBy] = useState("featured")
   const [visibleCount, setVisibleCount] = useState(8)
 
@@ -21,9 +24,21 @@ export default function Premium() {
     setVisibleCount(8)
   }
 
+  // NEW
+  const handleSetDeals = (next) => {
+    setDeals(next)
+    setVisibleCount(8)
+  }
+  const handleSetDelivery = (next) => {
+    setDelivery(next)
+    setVisibleCount(8)
+  }
+
   const clearFilters = () => {
     setPriceFilterRaw(null)
     setOnlyNewArrivals(false)
+    setDeals([]) // NEW
+    setDelivery([]) // NEW
     setVisibleCount(8)
   }
   const handleTabSelect = (tab) => {
@@ -32,7 +47,7 @@ export default function Premium() {
   }
 
   const filteredProducts = useMemo(() => {
-    return products
+    const base = products
       .filter((p) => activeTab === "All" || p.category === activeTab)
       .filter((p) => matchesGender(p.category))
       .filter(
@@ -41,12 +56,23 @@ export default function Premium() {
           (p.price >= priceFilter.min && p.price <= priceFilter.max)
       )
       .filter((p) => !onlyNewArrivals || p.isNew)
-      .sort((a, b) => {
-        if (sortBy === "price-low") return a.price - b.price
-        if (sortBy === "price-high") return b.price - a.price
-        return 0
-      })
-  }, [products, activeTab, priceFilter, onlyNewArrivals, sortBy, matchesGender])
+
+    // NEW: apply Deals + Delivery Type
+    return filterByDealsAndDelivery(base, deals, delivery).sort((a, b) => {
+      if (sortBy === "price-low") return a.price - b.price
+      if (sortBy === "price-high") return b.price - a.price
+      return 0
+    })
+  }, [
+    products,
+    activeTab,
+    priceFilter,
+    onlyNewArrivals,
+    deals, // NEW
+    delivery, // NEW
+    sortBy,
+    matchesGender,
+  ])
 
   const visibleProducts = filteredProducts.slice(0, visibleCount)
 
@@ -82,6 +108,10 @@ export default function Premium() {
               setPriceFilter={setPriceFilter}
               onlyNewArrivals={onlyNewArrivals}
               setOnlyNewArrivals={setOnlyNewArrivals}
+              deals={deals} // NEW
+              setDeals={handleSetDeals} // NEW
+              delivery={delivery} // NEW
+              setDelivery={handleSetDelivery} // NEW
               onClearFilters={clearFilters}
             />
           </div>

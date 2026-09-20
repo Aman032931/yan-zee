@@ -6,6 +6,7 @@ import RecommendedSection from "./RecommendedSection";
 import ProductSkeleton from "../ProductSkeleton";
 import ActivePriceChip from "../shared/ActivePriceChip";
 import { useGender } from "../../context/useGender";
+import { filterByDealsAndDelivery } from "../../utils/dealDeliveryFilters"; // NEW
 
 export default function AllShop({
   selectedCategory = "all",
@@ -21,6 +22,8 @@ export default function AllShop({
   const [selectedBrand, setSelectedBrand] = useState("All Brands");
   const [priceFilter, setPriceFilterRaw] = useState(null); // { min, max, label } | null
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(false);
+  const [deals, setDeals] = useState([]); // NEW
+  const [delivery, setDelivery] = useState([]); // NEW
   const [sortBy, setSortBy] = useState("featured");
   const [visibleCount, setVisibleCount] = useState(12);
 
@@ -52,6 +55,17 @@ export default function AllShop({
 
   const handleNewArrivalsChange = (isNew) => {
     setOnlyNewArrivals(isNew);
+    setVisibleCount(12);
+  };
+
+  // NEW: reset "See More" whenever a deal/delivery box changes
+  const handleSetDeals = (next) => {
+    setDeals(next);
+    setVisibleCount(12);
+  };
+
+  const handleSetDelivery = (next) => {
+    setDelivery(next);
     setVisibleCount(12);
   };
 
@@ -99,6 +113,8 @@ export default function AllShop({
     setSelectedBrand("All Brands");
     setPriceFilterRaw(null);
     setOnlyNewArrivals(false);
+    setDeals([]); // NEW
+    setDelivery([]); // NEW
     setVisibleCount(12);
   };
 
@@ -109,7 +125,7 @@ export default function AllShop({
     );
   };
 
-  const filteredProducts = products
+  const baseProducts = products
     .filter((p) => isCategoryMatch(p.category, selectedCategory))
     .filter((p) => matchesGender(p.category))
     .filter(
@@ -122,12 +138,18 @@ export default function AllShop({
         !priceFilter ||
         (p.price >= priceFilter.min && p.price <= priceFilter.max),
     )
-    .filter((p) => !onlyNewArrivals || p.isNew)
-    .sort((a, b) => {
-      if (sortBy === "price-low") return a.price - b.price;
-      if (sortBy === "price-high") return b.price - a.price;
-      return 0;
-    });
+    .filter((p) => !onlyNewArrivals || p.isNew);
+
+  // NEW: apply Deals + Delivery Type, then sort
+  const filteredProducts = filterByDealsAndDelivery(
+    baseProducts,
+    deals,
+    delivery,
+  ).sort((a, b) => {
+    if (sortBy === "price-low") return a.price - b.price;
+    if (sortBy === "price-high") return b.price - a.price;
+    return 0;
+  });
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
 
@@ -172,6 +194,10 @@ export default function AllShop({
             setPriceFilter={setPriceFilter}
             onlyNewArrivals={onlyNewArrivals}
             setOnlyNewArrivals={handleNewArrivalsChange}
+            deals={deals} // NEW
+            setDeals={handleSetDeals} // NEW
+            delivery={delivery} // NEW
+            setDelivery={handleSetDelivery} // NEW
             onClearFilters={clearFilters}
           />
         </div>
