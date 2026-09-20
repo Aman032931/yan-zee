@@ -111,7 +111,7 @@ export default function PriceRangeFilter({ priceFilter, setPriceFilter }) {
           className="relative h-1.5 rounded-full bg-gray-200 mt-5 mb-2 select-none"
         >
           <div
-            className="absolute h-1.5 rounded-full bg-red-600"
+            className="absolute h-1.5 rounded-full bg-gray-900"
             style={{
               left: `${valueToPercent(sliderMin)}%`,
               width: `${valueToPercent(sliderMax) - valueToPercent(sliderMin)}%`,
@@ -121,14 +121,14 @@ export default function PriceRangeFilter({ priceFilter, setPriceFilter }) {
             onPointerDown={handlePointerDown("min")}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border-2 border-red-600 shadow-md cursor-pointer touch-none"
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border-2 border-gray-900 shadow-md cursor-pointer touch-none"
             style={{ left: `${valueToPercent(sliderMin)}%` }}
           />
           <div
             onPointerDown={handlePointerDown("max")}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full  bg-white border-2 border-red-600 shadow-md cursor-pointer touch-none"
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full  bg-white border-2 border-gray-900 shadow-md cursor-pointer touch-none"
             style={{ left: `${valueToPercent(sliderMax)}%` }}
           />
         </div>
@@ -169,14 +169,14 @@ export default function PriceRangeFilter({ priceFilter, setPriceFilter }) {
         <div className="flex gap-2">
           <button
             onClick={handleApplyCustom}
-            className="flex-1 bg-green-800 text-white text-xs font-semibold py-2 rounded hover:bg-green-600 transition cursor-pointer"
+            className="flex-1 bg-gray-900 text-white text-xs font-semibold py-2 rounded hover:bg-gray-900 transition cursor-pointer"
           >
             Apply
           </button>
           {customApplied && (
             <button
               onClick={handleClearCustom}
-              className="flex-1 border  bg-red-800 text-white text-xs font-semibold py-2 rounded hover:bg-red-600 transition cursor-pointer"
+              className="flex-1 border  bg-gray-900 text-white text-xs font-semibold py-2 rounded hover:bg-gray-900 transition cursor-pointer"
             >
               Clear
             </button>

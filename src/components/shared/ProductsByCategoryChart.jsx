@@ -17,7 +17,7 @@ export default function ProductsByCategoryChart({ products, title = "Products by
   const data = Object.entries(counts).map(([category, count]) => ({ category, count }));
 
   return (
-    <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-5">
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
       <h3 className="text-sm font-semibold text-gray-800 mb-4">{title}</h3>
       {data.length === 0 ? (
         <p className="text-xs text-gray-400 py-8 text-center">No products to chart yet.</p>

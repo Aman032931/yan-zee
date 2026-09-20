@@ -56,7 +56,7 @@ export default function FilterPanel({
         {activeFilterCount > 0 && (
           <button
             onClick={onClearFilters}
-            className="cursor-pointer text-xs font-semibold text-red-600 hover:text-red-700"
+            className="cursor-pointer text-xs font-semibold text-gray-900 hover:text-gray-100"
           >
             Clear all
           </button>
@@ -76,7 +76,7 @@ export default function FilterPanel({
             role="switch"
             aria-checked={onlyNewArrivals}
             className={`relative h-5 w-10 cursor-pointer rounded-full transition-colors duration-200 ${
-              onlyNewArrivals ? "bg-red-600" : "bg-gray-200"
+              onlyNewArrivals ? "bg-gray-900" : "bg-gray-200"
             }`}
           >
             <span
@@ -126,7 +126,7 @@ export default function FilterPanel({
                     type="checkbox"
                     checked={deals.includes(deal)}
                     onChange={() => toggleInList(deals, setDeals, deal)}
-                    className="h-3.5 w-3.5 accent-red-600"
+                    className="h-3.5 w-3.5 accent-gray-900"
                   />
                   {deal}
                 </label>

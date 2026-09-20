@@ -10,7 +10,7 @@ function SectionHeader({ label, count, open, onClick }) {
       <span className="flex items-center gap-1.5">
         {label}
         {count > 0 && (
-          <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-red-600">
+          <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-grey-900">
             {count}
           </span>
         )}
@@ -27,7 +27,7 @@ function ToggleSwitch({ on, onChange }) {
       role="switch"
       aria-checked={on}
       className={`relative h-5 w-10 cursor-pointer rounded-full transition-colors duration-200 ${
-        on ? 'bg-red-600' : 'bg-gray-200'
+        on ? 'bg-gray-900' : 'bg-gray-200'
       }`}
     >
       <span
@@ -110,7 +110,7 @@ export default function FilterPanel({
         {activeFilterCount > 0 && (
           <button
             onClick={onClearFilters}
-            className="cursor-pointer text-xs font-semibold text-red-600 hover:text-red-700"
+            className="cursor-pointer text-xs font-semibold text-gray-900 hover:text-gray-900"
           >
             Clear all
           </button>
@@ -149,7 +149,7 @@ export default function FilterPanel({
           <span className="flex items-center gap-1.5">
             Brand
             {selectedBrand !== 'All Brands' && (
-              <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-red-600">
+              <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-gray-900">
                 1
               </span>
             )}
@@ -187,7 +187,7 @@ export default function FilterPanel({
                       name="brand"
                       checked={isSelected}
                       onChange={() => onSelectBrand(brand)}
-                      className="h-3.5 w-3.5 accent-red-600"
+                      className="h-3.5 w-3.5 accent-gray-900"
                     />
                     {brand.toLowerCase()}
                   </label>
@@ -208,7 +208,7 @@ export default function FilterPanel({
             Category
             {selectedCategory !== 'all' &&
               selectedCategory !== 'All Departments' && (
-                <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-red-600">
+                <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-gray-900">
                   1
                 </span>
               )}
@@ -232,7 +232,7 @@ export default function FilterPanel({
                   }
                   className={`block w-full cursor-pointer rounded-lg px-2.5 py-2 text-left text-[13px] uppercase tracking-wide ${
                     isSelected
-                      ? 'bg-red-50 font-semibold text-red-600'
+                      ? 'bg-gray-100 font-semibold text-gray-900'
                       : 'font-normal text-gray-500 hover:bg-gray-50 hover:text-gray-800'
                   }`}
                 >
@@ -293,7 +293,7 @@ export default function FilterPanel({
                     type="checkbox"
                     checked={deals.includes(deal)}
                     onChange={() => toggleInList(deals, setDeals, deal)}
-                    className="h-3.5 w-3.5 accent-red-600"
+                    className="h-3.5 w-3.5 accent-gray-900"
                   />
                   {deal}
                 </label>
@@ -327,7 +327,7 @@ export default function FilterPanel({
                     type="checkbox"
                     checked={delivery.includes(type)}
                     onChange={() => toggleInList(delivery, setDelivery, type)}
-                    className="h-3.5 w-3.5 accent-red-600"
+                    className="h-3.5 w-3.5 accent-gray-900"
                   />
                   {type}
                 </label>
