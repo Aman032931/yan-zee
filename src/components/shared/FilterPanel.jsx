@@ -77,13 +77,10 @@ export default function FilterPanel({
         <h3 className="text-[15px] font-bold text-gray-900">All Filters</h3>
         {activeFilterCount > 0 && (
           <button
-<<<<<<< HEAD
+
             onClick={handleClear}
             className="cursor-pointer text-xs font-semibold text-red-600 hover:text-red-700"
-=======
-            onClick={onClearFilters}
-            className="cursor-pointer text-xs font-semibold text-gray-900 hover:text-gray-100"
->>>>>>> c20702e90b680bcd90fbce7fa66d989a576afbe6
+
           >
             Clear all
           </button>
@@ -143,7 +140,7 @@ export default function FilterPanel({
 
         {openSections.deals && (
           <div className="mt-3 space-y-2.5">
-<<<<<<< HEAD
+
             {DEALS.map(({ key, label }) => (
               <label
                 key={key}
@@ -158,24 +155,7 @@ export default function FilterPanel({
                 {label}
               </label>
             ))}
-=======
-            {["Clearance", "Flash Sale", "Bundle Offers", "Free Shipping"].map(
-              (deal) => (
-                <label
-                  key={deal}
-                  className="flex cursor-pointer items-center gap-2.5 text-[13px] font-normal text-gray-500 hover:text-gray-800"
-                >
-                  <input
-                    type="checkbox"
-                    checked={deals.includes(deal)}
-                    onChange={() => toggleInList(deals, setDeals, deal)}
-                    className="h-3.5 w-3.5 accent-gray-900"
-                  />
-                  {deal}
-                </label>
-              )
-            )}
->>>>>>> c20702e90b680bcd90fbce7fa66d989a576afbe6
+
           </div>
         )}
       </div>

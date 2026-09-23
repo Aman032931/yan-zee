@@ -1,55 +1,80 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
 
 const slides = [
   {
     id: 1,
-    title: "DeliveryPartner",
-    subtitle: "Timely Products Delivery with Pathao",
-    buttonText: "Delivery Partner",
+    title: "Elevate Your Everyday",
+    subtitle: "Premium picks for those who want the best",
+    buttonText: "Explore Premium",
+    buttonLink: "/premium",
+    image: "public/assets/1174278_Shopping.jpg",
+    objectPosition: "77% 29%",
+    objectPositionMobile: "77% 15%",
+    
+  },
+  {
+    id: 2,
+    title: "Unbox the Joy",
+    subtitle: "Because every bag brings something you'll love",
+    buttonText: "Start Shopping",
     buttonLink: "/cart",
-    image: "https://res.cloudinary.com/dgzackqok/image/upload/v1781505460/yanzee-store/local/admin/ytvcbq14abw0efr7hsbg.jpg",
+    image:
+      "public/assets/amazed-young-woman-shopaholic-holding-colorful-shopping-bags-look-amused-shop-buying-thi_1258-119761.avif",
     objectPosition: "20% 0%",
     objectPositionMobile: "20% 0%",
   },
   {
-    id: 2,
+    id: 3,
     title: "Made by Nepali, Made in Nepal",
     subtitle: "Nepali crafted products",
-    buttonText: "Shop Now",
+    buttonText: "Shop now",
     buttonLink: "/fashion",
-    image: "https://res.cloudinary.com/dgzackqok/image/upload/v1781633967/yanzee-store/local/admin/ewlsoudvclra7j0oa7xt.png",
+    image:
+      "public/assets/portrat-trendy-feminine-girl-posing-with-shopping-bags-from-store-credit-card-paying-contactl_1258-127340.avif",
     objectPosition: "77% 29%",
     objectPositionMobile: "77% 15%",
     pill: "New Arrivals",
   },
-];
+  {
+    id: 4,
+    title: "Gear Up, Level Up",
+    subtitle: "Performance wear for every game you play",
+    buttonText: "Shop Sports",
+    buttonLink: "/sports",
+    image:
+      "public/assets/01_ZONE_1_ABOUT_US_PAGE_3_HERO_BANNER_desktop_1920x.webp",
+    objectPosition: "77% 29%",
+    objectPositionMobile: "77% 15%",
+    
+  },
+]
 
 const HeroCarousel = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0)
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
+      setCurrentSlide((prev) => (prev + 1) % slides.length)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [])
 
   const goToSlide = (index) => {
-    setCurrentSlide(index);
-  };
+    setCurrentSlide(index)
+  }
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  };
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
+  }
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
-  };
+    setCurrentSlide((prev) => (prev + 1) % slides.length)
+  }
 
   return (
     <section
-      className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden bg-black"
+      className="relative right-1/2 left-1/2 -mr-[50vw] -ml-[50vw] w-screen overflow-hidden bg-black"
       aria-label="Featured offers"
     >
       <div className="relative h-125 w-full max-[768px]:h-[280px] max-[480px]:h-[200px]">
@@ -66,7 +91,8 @@ const HeroCarousel = () => {
                 className="absolute inset-0 h-full w-full"
                 style={{
                   "--yz-banner-object-position": slide.objectPosition,
-                  "--yz-banner-object-position-mobile": slide.objectPositionMobile,
+                  "--yz-banner-object-position-mobile":
+                    slide.objectPositionMobile,
                 }}
               >
                 <img
@@ -78,7 +104,8 @@ const HeroCarousel = () => {
                   src={slide.image}
                   style={{
                     "--yz-banner-object-position": slide.objectPosition,
-                    "--yz-banner-object-position-mobile": slide.objectPositionMobile,
+                    "--yz-banner-object-position-mobile":
+                      slide.objectPositionMobile,
                   }}
                 />
               </div>
@@ -86,7 +113,7 @@ const HeroCarousel = () => {
               <div className="relative z-[1] max-w-[550px] px-[8%] py-[40px] max-[768px]:max-w-[90%] max-[768px]:px-[5%] max-[768px]:py-[20px]">
                 {slide.pill && (
                   <span
-                    className="mb-[12px] inline-block rounded-[20px] bg-[rgba(255,255,255,0.2)] px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.5px] text-white backdrop-blur-[4px]"
+                    className="mb-[12px] inline-block rounded-[20px] bg-[rgba(255,255,255,0.2)] px-4 py-1 text-[11px] font-semibold tracking-[0.5px] text-white uppercase backdrop-blur-[4px]"
                     style={{
                       position: "relative",
                       top: "0px",
@@ -99,7 +126,7 @@ const HeroCarousel = () => {
                   </span>
                 )}
                 <h2
-                  className="m-0 mb-2 font-bold leading-[1.2] text-white max-[768px]:text-[24px] max-[480px]:text-[18px]"
+                  className="m-0 mb-2 leading-[1.2] font-bold text-white max-[768px]:text-[24px] max-[480px]:text-[18px]"
                   style={{ fontSize: "32px", color: "#ffffff" }}
                 >
                   {slide.title}
@@ -121,7 +148,7 @@ const HeroCarousel = () => {
 
       <button
         type="button"
-        className="absolute left-[20px] top-1/2 z-[2] -translate-y-1/2 cursor-pointer rounded-full border-none bg-[rgba(255,255,255,0.2)] px-5 py-4 text-[28px] text-white backdrop-blur-[4px] transition-colors duration-200 hover:bg-[rgba(255,255,255,0.4)] max-[768px]:hidden"
+        className="absolute top-1/2 left-[20px] z-[2] -translate-y-1/2 cursor-pointer rounded-full border-none bg-[rgba(255,255,255,0.2)] px-5 py-4 text-[28px] text-white backdrop-blur-[4px] transition-colors duration-200 hover:bg-[rgba(255,255,255,0.4)] max-[768px]:hidden"
         onClick={prevSlide}
         aria-label="Previous offer"
       >
@@ -129,14 +156,18 @@ const HeroCarousel = () => {
       </button>
       <button
         type="button"
-        className="absolute right-[20px] top-1/2 z-[2] -translate-y-1/2 cursor-pointer rounded-full border-none bg-[rgba(255,255,255,0.2)] px-5 py-4 text-[28px] text-white backdrop-blur-[4px] transition-colors duration-200 hover:bg-[rgba(255,255,255,0.4)] max-[768px]:hidden"
+        className="absolute top-1/2 right-[20px] z-[2] -translate-y-1/2 cursor-pointer rounded-full border-none bg-[rgba(255,255,255,0.2)] px-5 py-4 text-[28px] text-white backdrop-blur-[4px] transition-colors duration-200 hover:bg-[rgba(255,255,255,0.4)] max-[768px]:hidden"
         onClick={nextSlide}
         aria-label="Next offer"
       >
         ›
       </button>
 
-      <div className="absolute bottom-4 left-1/2 z-[2] flex -translate-x-1/2 gap-2" role="tablist" aria-label="Offer navigation">
+      <div
+        className="absolute bottom-4 left-1/2 z-[2] flex -translate-x-1/2 gap-2"
+        role="tablist"
+        aria-label="Offer navigation"
+      >
         {slides.map((slide, index) => (
           <button
             key={slide.id}
@@ -152,7 +183,7 @@ const HeroCarousel = () => {
         ))}
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default HeroCarousel;
+export default HeroCarousel

@@ -169,23 +169,18 @@ export default function PriceRangeFilter({ priceFilter, setPriceFilter }) {
         <div className="flex gap-2">
           <button
             onClick={handleApplyCustom}
-<<<<<<< HEAD
+
             className="flex-1 bg-red-800 text-white text-xs font-semibold py-2 rounded hover:bg-red-600 transition cursor-pointer"
-=======
-            className="flex-1 bg-gray-900 text-white text-xs font-semibold py-2 rounded hover:bg-gray-900 transition cursor-pointer"
->>>>>>> c20702e90b680bcd90fbce7fa66d989a576afbe6
+
           >
             Apply
           </button>
           {customApplied && (
             <button
               onClick={handleClearCustom}
-<<<<<<< HEAD
+
               className="flex-1 border  bg-black text-white text-xs font-semibold py-2 rounded transition cursor-pointer"
-=======
-              className="flex-1 border  bg-gray-900 text-white text-xs font-semibold py-2 rounded hover:bg-gray-900 transition cursor-pointer"
->>>>>>> c20702e90b680bcd90fbce7fa66d989a576afbe6
-            >
+              >
               Clear
             </button>
           )}

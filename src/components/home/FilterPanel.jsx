@@ -11,7 +11,7 @@ function SectionHeader({ label, count, open, onClick }) {
       <span className="flex items-center gap-1.5">
         {label}
         {count > 0 && (
-          <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-grey-900">
+          <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-red-600">
             {count}
           </span>
         )}
@@ -28,11 +28,7 @@ function ToggleSwitch({ on, onChange }) {
       role="switch"
       aria-checked={on}
       className={`relative h-5 w-10 cursor-pointer rounded-full transition-colors duration-200 ${
-<<<<<<< HEAD
         on ? "bg-red-600" : "bg-gray-200"
-=======
-        on ? 'bg-gray-900' : 'bg-gray-200'
->>>>>>> c20702e90b680bcd90fbce7fa66d989a576afbe6
       }`}
     >
       <span
@@ -133,13 +129,8 @@ export default function FilterPanel({
         <h3 className="text-[15px] font-bold text-gray-900">All Filters</h3>
         {activeFilterCount > 0 && (
           <button
-<<<<<<< HEAD
             onClick={handleClear}
             className="cursor-pointer text-xs font-semibold text-red-600 hover:text-red-700"
-=======
-            onClick={onClearFilters}
-            className="cursor-pointer text-xs font-semibold text-gray-900 hover:text-gray-900"
->>>>>>> c20702e90b680bcd90fbce7fa66d989a576afbe6
           >
             Clear all
           </button>
@@ -177,13 +168,8 @@ export default function FilterPanel({
         >
           <span className="flex items-center gap-1.5">
             Brand
-<<<<<<< HEAD
             {selectedBrand !== "All Brands" && (
               <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-red-600">
-=======
-            {selectedBrand !== 'All Brands' && (
-              <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-gray-900">
->>>>>>> c20702e90b680bcd90fbce7fa66d989a576afbe6
                 1
               </span>
             )}
@@ -221,7 +207,7 @@ export default function FilterPanel({
                       name="brand"
                       checked={isSelected}
                       onChange={() => onSelectBrand(brand)}
-                      className="h-3.5 w-3.5 accent-gray-900"
+                      className="h-3.5 w-3.5 accent-red-600"
                     />
                     {brand.toLowerCase()}
                   </label>
@@ -240,15 +226,9 @@ export default function FilterPanel({
         >
           <span className="flex items-center gap-1.5">
             Category
-<<<<<<< HEAD
             {selectedCategory !== "all" &&
               selectedCategory !== "All Departments" && (
                 <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-red-600">
-=======
-            {selectedCategory !== 'all' &&
-              selectedCategory !== 'All Departments' && (
-                <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-gray-900">
->>>>>>> c20702e90b680bcd90fbce7fa66d989a576afbe6
                   1
                 </span>
               )}
@@ -272,13 +252,8 @@ export default function FilterPanel({
                   }
                   className={`block w-full cursor-pointer rounded-lg px-2.5 py-2 text-left text-[13px] tracking-wide uppercase ${
                     isSelected
-<<<<<<< HEAD
                       ? "bg-red-50 font-semibold text-red-600"
                       : "font-normal text-gray-500 hover:bg-gray-50 hover:text-gray-800"
-=======
-                      ? 'bg-gray-100 font-semibold text-gray-900'
-                      : 'font-normal text-gray-500 hover:bg-gray-50 hover:text-gray-800'
->>>>>>> c20702e90b680bcd90fbce7fa66d989a576afbe6
                   }`}
                 >
                   {cat}
@@ -328,7 +303,6 @@ export default function FilterPanel({
 
         {openSections.deals && (
           <div className="mt-3 space-y-2.5">
-<<<<<<< HEAD
             {DEALS.map(({ key, label }) => (
               <label
                 key={key}
@@ -343,24 +317,6 @@ export default function FilterPanel({
                 {label}
               </label>
             ))}
-=======
-            {['Clearance', 'Flash Sale', 'Bundle Offers', 'Free Shipping'].map(
-              (deal) => (
-                <label
-                  key={deal}
-                  className="flex cursor-pointer items-center gap-2.5 text-[13px] font-normal text-gray-500 hover:text-gray-800"
-                >
-                  <input
-                    type="checkbox"
-                    checked={deals.includes(deal)}
-                    onChange={() => toggleInList(deals, setDeals, deal)}
-                    className="h-3.5 w-3.5 accent-gray-900"
-                  />
-                  {deal}
-                </label>
-              ),
-            )}
->>>>>>> c20702e90b680bcd90fbce7fa66d989a576afbe6
           </div>
         )}
       </div>
@@ -379,7 +335,6 @@ export default function FilterPanel({
 
         {openSections.delivery && (
           <div className="mt-3 space-y-2.5">
-<<<<<<< HEAD
             {DELIVERY_TYPES.map(({ key, label }) => (
               <label
                 key={key}
@@ -394,24 +349,6 @@ export default function FilterPanel({
                 {label}
               </label>
             ))}
-=======
-            {['Express Delivery', 'Standard Delivery', 'Pickup Available'].map(
-              (type) => (
-                <label
-                  key={type}
-                  className="flex cursor-pointer items-center gap-2.5 text-[13px] font-normal text-gray-500 hover:text-gray-800"
-                >
-                  <input
-                    type="checkbox"
-                    checked={delivery.includes(type)}
-                    onChange={() => toggleInList(delivery, setDelivery, type)}
-                    className="h-3.5 w-3.5 accent-gray-900"
-                  />
-                  {type}
-                </label>
-              ),
-            )}
->>>>>>> c20702e90b680bcd90fbce7fa66d989a576afbe6
           </div>
         )}
       </div>
