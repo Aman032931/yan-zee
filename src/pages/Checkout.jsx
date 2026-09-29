@@ -13,11 +13,11 @@ import {
   Package,
   ShoppingBag,
   Smartphone,
-  Truck,
 } from "lucide-react";
 
 import { useCart } from "../context/CartContext";
 import { formatNPR } from "../utils/formatNPR";
+import OrderSummary from "../components/shared/OrderSummary";
 
 import {
   countryHasDistricts,
@@ -45,6 +45,9 @@ const PAYMENT_METHODS = [
   { id: "esewa", label: "eSewa", desc: "Pay with your eSewa wallet", icon: Smartphone },
   { id: "khalti", label: "Khalti", desc: "Pay with your Khalti wallet", icon: Smartphone },
 ];
+
+// Promo codes -> fraction off the subtotal
+const PROMO_CODES = { YANZEE10: 0.1 };
 
 // Nepal only for shipping (YanZee currently ships within Nepal)
 const COUNTRY_OPTION = { value: "NP", label: "Nepal" };
@@ -79,6 +82,9 @@ const genOrderNumber = () => {
   return `YNZ-${y}-${rand}`;
 };
 
+// Cart items may carry `price` or `priceNPR` depending on where they were added
+const getPrice = (item) => Number(item.price ?? item.priceNPR ?? 0);
+
 // =====================================================
 // SMALL HELPERS
 // =====================================================
@@ -110,7 +116,6 @@ export default function Checkout() {
     subtotalNPR,
     shippingNPR,
     grandTotalNPR,
-    isFreeShipping,
   } = useCart();
 
   const [step, setStep] = useState("shipping");
@@ -188,14 +193,29 @@ export default function Checkout() {
       card.cvv.trim().length >= 3);
 
   // ---------------- promo ----------------
-  const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
-  const discountNPR = promoApplied ? Math.round(subtotalNPR * 0.1) : 0;
-  const finalTotalNPR = grandTotalNPR - discountNPR;
+  const [appliedCode, setAppliedCode] = useState(null);
 
-  const applyPromo = () => {
-    if (promoCode.trim().toUpperCase() === "YANZEE10") setPromoApplied(true);
+  const discountNPR = appliedCode
+    ? Math.round(subtotalNPR * PROMO_CODES[appliedCode])
+    : 0;
+  const finalTotalNPR = Math.max(0, grandTotalNPR - discountNPR);
+
+  const handleApplyPromo = async (code) => {
+    const normalized = code.trim().toUpperCase();
+
+    if (PROMO_CODES[normalized]) {
+      setAppliedCode(normalized);
+      return { ok: true };
+    }
+
+    return { ok: false, error: "That code isn't valid. Check it and try again." };
   };
+
+  // Normalise items for the summary component
+  const summaryItems = useMemo(
+    () => cart.map((item) => ({ ...item, price: getPrice(item) })),
+    [cart]
+  );
 
   // ---------------- navigation ----------------
   const stepIdx = STEPS.indexOf(step);
@@ -274,7 +294,7 @@ export default function Checkout() {
                   {item.name} <span className="text-gray-400">× {item.quantity}</span>
                 </span>
                 <span className="text-gray-600">
-                  Rs. {formatNPR(item.priceNPR * item.quantity)}
+                  Rs. {formatNPR(getPrice(item) * item.quantity)}
                 </span>
               </div>
             ))}
@@ -658,43 +678,46 @@ export default function Checkout() {
                       Items ({totalItems})
                     </p>
                     <div className="space-y-3">
-                    {cart.map((item) => {
-                      const hasDiscount = Number.isFinite(item.mrp) && item.mrp > item.priceNPR;
-                      return (
-                        <div key={item.id} className="flex items-center gap-3">
-                          <div className="h-14 w-12 flex-shrink-0 overflow-hidden rounded-md bg-gray-50">
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="h-full w-full object-contain p-1"
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-gray-900">
-                              {item.name}
-                            </p>
-                            <p className="text-xs text-gray-500">Qty {item.quantity}</p>
-                          </div>
-                          <div className="text-right">
-                            <span className="block text-sm font-medium text-gray-900">
-                              Rs. {formatNPR(item.priceNPR * item.quantity)}
-                            </span>
-                            {hasDiscount && (
-                              <span className="flex items-center justify-end gap-1.5 text-[11px]">
-                                <span className="text-gray-400 line-through">
-                                  Rs. {formatNPR(item.mrp * item.quantity)}
-                                </span>
-                                {Number.isFinite(item.discountPercent) && item.discountPercent > 0 && (
-                                  <span className="font-semibold text-orange-600">
-                                    {item.discountPercent}% OFF
-                                  </span>
-                                )}
+                      {cart.map((item) => {
+                        const price = getPrice(item);
+                        const mrp = Number(item.mrp ?? 0);
+                        const hasDiscount = Number.isFinite(mrp) && mrp > price;
+                        return (
+                          <div key={item.id} className="flex items-center gap-3">
+                            <div className="h-14 w-12 flex-shrink-0 overflow-hidden rounded-md bg-gray-50">
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="h-full w-full object-contain p-1"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium text-gray-900">
+                                {item.name}
+                              </p>
+                              <p className="text-xs text-gray-500">Qty {item.quantity}</p>
+                            </div>
+                            <div className="text-right">
+                              <span className="block text-sm font-medium text-gray-900">
+                                Rs. {formatNPR(price * item.quantity)}
                               </span>
-                            )}
+                              {hasDiscount && (
+                                <span className="flex items-center justify-end gap-1.5 text-[11px]">
+                                  <span className="text-gray-400 line-through">
+                                    Rs. {formatNPR(mrp * item.quantity)}
+                                  </span>
+                                  {Number.isFinite(item.discountPercent) &&
+                                    item.discountPercent > 0 && (
+                                      <span className="font-semibold text-orange-600">
+                                        {item.discountPercent}% OFF
+                                      </span>
+                                    )}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -735,109 +758,20 @@ export default function Checkout() {
           </div>
 
           {/* ===================== RIGHT: SUMMARY ===================== */}
-          <aside className="lg:sticky lg:top-6">
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
-              <h2 className="text-lg font-semibold">Order summary</h2>
-
-              <div className="mt-5 max-h-64 space-y-3 overflow-y-auto pr-1">
-                {cart.map((item) => {
-                  const hasDiscount = Number.isFinite(item.mrp) && item.mrp > item.priceNPR;
-                  return (
-                    <div key={item.id} className="flex items-center gap-3">
-                      <div className="h-14 w-12 flex-shrink-0 overflow-hidden rounded-md bg-gray-50">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="h-full w-full object-contain p-1"
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium text-gray-900">
-                          {item.name}
-                        </p>
-                        <p className="mt-0.5 text-[11px] text-gray-500">
-                          Qty {item.quantity} · Rs. {formatNPR(item.priceNPR)} each
-                        </p>
-                        {hasDiscount && (
-                          <p className="mt-0.5 flex items-center gap-1.5 text-[11px]">
-                            <span className="text-gray-400 line-through">
-                              Rs. {formatNPR(item.mrp * item.quantity)}
-                            </span>
-                            {Number.isFinite(item.discountPercent) && item.discountPercent > 0 && (
-                              <span className="font-semibold text-orange-600">
-                                {item.discountPercent}% OFF
-                              </span>
-                            )}
-                          </p>
-                        )}
-                      </div>
-                      <span className="whitespace-nowrap text-xs font-medium text-gray-700">
-                        Rs. {formatNPR(item.priceNPR * item.quantity)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-5 flex gap-2">
-                <input
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  placeholder="Promo code"
-                  className="h-10 flex-1 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-gray-900"
-                />
-                <button
-                  type="button"
-                  onClick={applyPromo}
-                  className="rounded-md bg-gray-900 px-4 text-sm font-semibold text-white hover:bg-black"
-                >
-                  Apply
-                </button>
-              </div>
-              {promoApplied && (
-                <p className="mt-2 flex items-center gap-1 text-xs font-medium text-green-600">
-                  <Check className="h-3.5 w-3.5" /> YANZEE10 — 10% discount applied
-                </p>
-              )}
-
-              <div className="my-5 border-t border-gray-200" />
-
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Subtotal</span>
-                  <span className="font-medium">Rs. {formatNPR(subtotalNPR)}</span>
-                </div>
-                {promoApplied && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Discount</span>
-                    <span className="font-medium">−Rs. {formatNPR(discountNPR)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Shipping</span>
-                  <span className={`font-medium ${isFreeShipping ? "text-green-600" : "text-gray-900"}`}>
-                    {shippingNPR === 0 ? "FREE" : `Rs. ${formatNPR(shippingNPR)}`}
-                  </span>
-                </div>
-              </div>
-
-              {!isFreeShipping && (
-                <div className="mt-5 flex items-center gap-2 rounded-lg bg-gray-50 p-3 text-xs leading-5 text-gray-600">
-                  <Truck className="h-4 w-4 flex-shrink-0" />
-                  Add <strong>Rs. {formatNPR(3000 - subtotalNPR)}</strong> more for free shipping.
-                </div>
-              )}
-
-              <div className="my-5 border-t border-gray-200" />
-              <div className="flex items-end justify-between">
-                <span className="text-base font-medium">Total</span>
-                <span className="text-xl font-semibold">Rs. {formatNPR(finalTotalNPR)}</span>
-              </div>
-
-              <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-gray-500">
-                <Lock className="h-3 w-3" /> Secure checkout · Try code YANZEE10
-              </p>
-            </div>
+          {/* On mobile the collapsed summary sits above the form; on desktop it stays on the right */}
+          <aside className="order-first lg:sticky lg:top-6 lg:order-none">
+            <OrderSummary
+              items={summaryItems}
+              subtotalNPR={subtotalNPR}
+              shippingNPR={shippingNPR}
+              discountNPR={discountNPR}
+              totalNPR={finalTotalNPR}
+              appliedCode={appliedCode}
+              suggestedCode="YANZEE10"
+              onApplyPromo={handleApplyPromo}
+              onRemovePromo={() => setAppliedCode(null)}
+              editHref="/cart"
+            />
           </aside>
         </div>
       </div>
