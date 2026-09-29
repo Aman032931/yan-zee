@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 
 const MONTHS = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
 
-// Splits real, live fakestoreapi products into 6 buckets (by product ID) to
+// Splits real, live dummyjson products into 6 buckets (by product ID) to
 // produce a chartable trend shape. This is genuinely dynamic — it recalculates
-// from the live API response — but fakestoreapi has no real order dates, so
+// from the live API response — but dummyjson has no real order dates, so
 // this simulates a monthly split of real catalogue data rather than showing
 // actual historical order/revenue data, which doesn't exist yet.
 export function useDashboardMetrics(scopeFilter = null) {
@@ -12,7 +12,7 @@ export function useDashboardMetrics(scopeFilter = null) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('https://fakestoreapi.com/products')
+    fetch('https://dummyjson.com/products')
       .then((res) => res.json())
       .then((data) => {
         const formatted = data.map((item) => ({

@@ -92,21 +92,53 @@ export default function FilterPanel({
   }
 
   const categories = [
-    "All Departments",
-    "Fashion",
-    "Sports",
-    "Beauty",
-    "Outlet",
-    "Kids",
-    "Premium",
-  ]
-  const brands = [
-    "All Brands",
-    "MEN'S CLOTHING",
-    "WOMEN'S CLOTHING",
-    "JEWELERY",
-    "ELECTRONICS",
-  ]
+  "All Departments",
+  "Beauty",
+  "Fragrances",
+  "Furniture",
+  "Home Decoration",
+  "Kitchen Accessories",
+  "Laptops",
+  "Mens Shirts",
+  "Mens Shoes",
+  "Mens Watches",
+  "Mobile Accessories",
+  "Skin Care",
+  "Smartphones",
+  "Sports Accessories",
+  "Sunglasses",
+  "Tablets",
+  "Tops",
+  "Womens Bags",
+  "Womens Dresses",
+  "Womens Jewellery",
+  "Womens Shoes",
+  "Womens Watches",
+]
+const brands = [
+  "All Brands",
+  "BEAUTY",
+  "FRAGRANCES",
+  "FURNITURE",
+  "HOME-DECORATION",
+  "KITCHEN-ACCESSORIES",
+  "LAPTOPS",
+  "MENS-SHIRTS",
+  "MENS-SHOES",
+  "MENS-WATCHES",
+  "MOBILE-ACCESSORIES",
+  "SKIN-CARE",
+  "SMARTPHONES",
+  "SPORTS-ACCESSORIES",
+  "SUNGLASSES",
+  "TABLETS",
+  "TOPS",
+  "WOMENS-BAGS",
+  "WOMENS-DRESSES",
+  "WOMENS-JEWELLERY",
+  "WOMENS-SHOES",
+  "WOMENS-WATCHES",
+]
 
   const visibleBrands = brands.filter((b) =>
     b.toLowerCase().includes(brandQuery.toLowerCase())

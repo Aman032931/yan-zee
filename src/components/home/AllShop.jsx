@@ -75,13 +75,13 @@ export default function AllShop({
   };
 
   useEffect(() => {
-    fetch("https://fakestoreapi.com/products")
+    fetch("https://dummyjson.com/products?limit=100")
       .then((res) => res.json())
       .then((data) => {
-        const formatted = data.map((item) => {
+        const formatted = data.products.map((item) => {
           const price = Math.round(item.price * 135);
-          // fakestoreapi has no MRP/discount field — this is a placeholder
-          // "original price" (30% higher) purely for layout, not a real discount.
+          // dummyjson has no separate MRP/discount field the way we need —
+          // this is a placeholder "original price" (30% higher) purely for layout.
           const mrp = Math.round(price * 1.3);
           const discountPercent = Math.round(((mrp - price) / mrp) * 100);
 
@@ -93,9 +93,9 @@ export default function AllShop({
             price,
             mrp,
             discountPercent,
-            image: item.image,
-            rating: Math.round(item.rating?.rate || 4),
-            badge: item.rating?.rate > 4.2 ? "TOP SELLING" : null,
+            image: item.thumbnail || item.images?.[0],
+            rating: Math.round(item.rating || 4),
+            badge: item.rating > 4.5 ? "TOP SELLING" : null,
             isNew: item.id <= 5,
           };
         });

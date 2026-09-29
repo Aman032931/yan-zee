@@ -36,7 +36,7 @@ export default function ProductDetail() {
     setNotFound(false);
     setSelectedSize(null);
 
-    fetch(`https://fakestoreapi.com/products/${id}`)
+    fetch(`https://dummyjson.com/products/${id}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error("Product not found");

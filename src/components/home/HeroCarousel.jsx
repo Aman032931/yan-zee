@@ -8,7 +8,7 @@ const slides = [
     subtitle: "Premium picks for those who want the best",
     buttonText: "Explore Premium",
     buttonLink: "/premium",
-    image: "public/assets/1174278_Shopping.jpg",
+    image: "/assets/1174278_Shopping.jpg",
     objectPosition: "77% 29%",
     objectPositionMobile: "77% 15%",
     
@@ -20,7 +20,7 @@ const slides = [
     buttonText: "Start Shopping",
     buttonLink: "/cart",
     image:
-      "public/assets/amazed-young-woman-shopaholic-holding-colorful-shopping-bags-look-amused-shop-buying-thi_1258-119761.avif",
+      "/assets/amazed-young-woman-shopaholic-holding-colorful-shopping-bags-look-amused-shop-buying-thi_1258-119761.avif",
     objectPosition: "20% 0%",
     objectPositionMobile: "20% 0%",
   },
@@ -31,7 +31,7 @@ const slides = [
     buttonText: "Shop now",
     buttonLink: "/fashion",
     image:
-      "public/assets/portrat-trendy-feminine-girl-posing-with-shopping-bags-from-store-credit-card-paying-contactl_1258-127340.avif",
+      "/assets/portrat-trendy-feminine-girl-posing-with-shopping-bags-from-store-credit-card-paying-contactl_1258-127340.avif",
     objectPosition: "77% 29%",
     objectPositionMobile: "77% 15%",
     pill: "New Arrivals",
@@ -43,7 +43,7 @@ const slides = [
     buttonText: "Shop Sports",
     buttonLink: "/sports",
     image:
-      "public/assets/01_ZONE_1_ABOUT_US_PAGE_3_HERO_BANNER_desktop_1920x.webp",
+      "/assets/01_ZONE_1_ABOUT_US_PAGE_3_HERO_BANNER_desktop_1920x.webp",
     objectPosition: "77% 29%",
     objectPositionMobile: "77% 15%",
     

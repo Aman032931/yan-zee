@@ -6,18 +6,19 @@ export function useOutletProducts() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('https://fakestoreapi.com/products')
+    fetch('https://dummyjson.com/products?limit=0')
       .then((res) => res.json())
       .then((data) => {
-        const formatted = data.map((item) => ({
+        const formatted = data.products.map((item) => ({
           id: item.id,
           title: item.title,
-          category: item.category, // "men's clothing" | "women's clothing" | "jewelery" | "electronics"
+          category: item.category,
           price: Math.round(item.price * 135),
-          image: item.image,
-          rating: Math.round(item.rating?.rate || 4),
-          badge: item.rating?.rate > 4.2 ? "TOP SELLING" : null,
-          // fakestoreapi has no sale/discount field — placeholder flag until real backend has one
+          image: item.thumbnail || item.images?.[0],
+          rating: Math.round(item.rating || 4),
+          badge: item.rating > 4.5 ? "TOP SELLING" : null,
+          // dummyjson has no sale/discount flag on the product itself —
+          // placeholder flag until a real backend has one
           isOnSale: item.id % 2 === 0,
         }));
         setProducts(formatted);
