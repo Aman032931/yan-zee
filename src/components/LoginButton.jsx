@@ -12,12 +12,12 @@ const LoginButton = () => {
             state={{
                 from: currentPage
             }}
-            className="flex items-center gap-2 rounded-[4px] px-4 py-2 text-[14px] font-medium text-[#333] no-underline transition-colors duration-200 hover:bg-[#f5f5f5] max-[768px]:p-2"
+            className="flex items-center gap-[6px] rounded-full bg-red-600 px-4 py-[9px] text-[13px] font-semibold uppercase tracking-wide text-white no-underline transition-colors duration-200 hover:bg-red-700"
             aria-label="Login"
         >
             <svg
-                width="18"
-                height="18"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -27,13 +27,10 @@ const LoginButton = () => {
                 aria-hidden="true"
             >
                 <circle cx="12" cy="8" r="4" />
-
                 <path d="M5 20c1.5-3.5 4.5-5 7-5s5.5 1.5 7 5" />
             </svg>
 
-            <span className="max-[768px]:hidden">
-                Login
-            </span>
+            <span>Login</span>
         </Link>
     );
 };

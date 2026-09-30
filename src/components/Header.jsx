@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import MenuButton from "./MenuButton";
 import GenderDropdown from "./GenderDropdown";
 import MainNavigation from "./MainNavigation";
@@ -8,6 +9,7 @@ import LoginButton from "./LoginButton";
 import MobileSidebar from "./MobileSidebar";
 
 const Header = () => {
+  const navigate = useNavigate();
   const [isGenderOpen, setIsGenderOpen] = React.useState(false);
   const [isKidsOpen, setIsKidsOpen] = React.useState(false);
   const [selectedGender, setSelectedGender] = React.useState("Women");
@@ -15,7 +17,6 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
   const genderRef = React.useRef(null);
 
-  // Close gender dropdown when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event) => {
       if (genderRef.current && !genderRef.current.contains(event.target)) {
@@ -37,15 +38,41 @@ const Header = () => {
     setIsKidsOpen(false);
   };
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log("Searching for:", searchQuery);
+    const trimmed = searchQuery.trim();
+    if (!trimmed) return;
+    navigate(`/search?q=${encodeURIComponent(trimmed)}`);
   };
 
   return (
     <header className="sticky top-0 z-[1000] border-b border-[#e5e5e5] bg-white px-[20px] max-[768px]:px-[12px]">
-      <div className="mx-auto flex h-[70px] max-w-[1440px] items-center justify-between gap-[20px] max-[768px]:h-[60px] max-[768px]:gap-[12px]">
-        {/* LEFT SECTION */}
+
+      {/* =====================================================
+          MOBILE — icons row + full-width search below (< sm)
+      ===================================================== */}
+      <div className="flex flex-col gap-3 py-3 sm:hidden">
+        <div className="flex items-center justify-between">
+          <MenuButton isOpen={isSidebarOpen} onClick={toggleSidebar} />
+
+          <div className="flex items-center gap-4">
+            <HeaderIcons />
+            <LoginButton />
+          </div>
+        </div>
+
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          onSubmit={handleSearch}
+        />
+      </div>
+
+      {/* =====================================================
+          DESKTOP — original single row (sm and up)
+      ===================================================== */}
+      <div className="mx-auto hidden h-[70px] max-w-[1440px] items-center justify-between gap-[20px] sm:flex">
         <div className="flex flex-1 items-center gap-[20px]">
           <MenuButton isOpen={isSidebarOpen} onClick={toggleSidebar} />
 
@@ -62,7 +89,6 @@ const Header = () => {
           <MainNavigation />
         </div>
 
-        {/* RIGHT SECTION */}
         <div className="flex shrink-0 items-center gap-[12px]">
           <SearchBar
             value={searchQuery}
@@ -75,7 +101,6 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile Sidebar */}
       <MobileSidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
     </header>
   );

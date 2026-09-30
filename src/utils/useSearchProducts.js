@@ -6,18 +6,18 @@ export function useSearchProducts(query) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('https://dummyjson.com/products')
+    fetch('https://dummyjson.com/products?limit=0')
       .then((res) => res.json())
       .then((data) => {
-        const formatted = data.map((item) => ({
+        const formatted = data.products.map((item) => ({
           id: item.id,
           title: item.title,
           brand: item.category.toUpperCase(),
           category: item.category.toLowerCase(),
           price: Math.round(item.price * 135),
-          image: item.image,
-          rating: Math.round(item.rating?.rate || 4),
-          badge: item.rating?.rate > 4.2 ? "TOP SELLING" : null,
+          image: item.thumbnail || item.images?.[0],
+          rating: Math.round(item.rating || 4),
+          badge: item.rating > 4.5 ? "TOP SELLING" : null,
         }));
         setAllProducts(formatted);
       })

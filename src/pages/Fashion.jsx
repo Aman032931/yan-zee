@@ -110,7 +110,7 @@ export default function Fashion() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[240px_1fr]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr] xl:grid-cols-[320px_1fr]">
           <div className="items-start">
             <FilterPanel
               priceFilter={priceFilter}
@@ -132,7 +132,7 @@ export default function Fashion() {
             />
 
             {loading ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {[...Array(8)].map((_, i) => (
                   <ProductSkeleton key={i} />
                 ))}
@@ -151,7 +151,7 @@ export default function Fashion() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                   {visibleProducts.map((product) => (
                     <ProductCard
                       key={product.id}

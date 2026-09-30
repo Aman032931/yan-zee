@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
-import ProductCard from '../components/home/ProductCard';
+import ProductCard from '../components/shared/ProductCard';
 import ProductSkeleton from '../components/ProductSkeleton';
 import { useSearchProducts } from '../utils/useSearchProducts';
 
