@@ -5,12 +5,15 @@ import FilterPanel from "../components/shared/FilterPanel"
 import ProductCard from "../components/shared/ProductCard"
 import ProductSkeleton from "../components/ProductSkeleton"
 import { useOutletProducts } from "../utils/useOutletProducts"
+import { filterByDealsAndDelivery } from "../utils/dealDeliveryFilters" // NEW
 
 export default function Outlet() {
   const { products, loading } = useOutletProducts()
   const [activeTab, setActiveTab] = useState("All")
   const [priceFilter, setPriceFilterRaw] = useState(null)
   const [onSaleOnly, setOnSaleOnly] = useState(false)
+  const [deals, setDeals] = useState([]) // NEW
+  const [delivery, setDelivery] = useState([]) // NEW
   const [sortBy, setSortBy] = useState("featured")
   const [visibleCount, setVisibleCount] = useState(8)
 
@@ -19,9 +22,21 @@ export default function Outlet() {
     setVisibleCount(8)
   }
 
+  // NEW
+  const handleSetDeals = (next) => {
+    setDeals(next)
+    setVisibleCount(8)
+  }
+  const handleSetDelivery = (next) => {
+    setDelivery(next)
+    setVisibleCount(8)
+  }
+
   const clearFilters = () => {
     setPriceFilterRaw(null)
     setOnSaleOnly(false)
+    setDeals([]) // NEW
+    setDelivery([]) // NEW
     setVisibleCount(8)
   }
 
@@ -31,7 +46,7 @@ export default function Outlet() {
   }
 
   const filteredProducts = useMemo(() => {
-    return products
+    const base = products
       .filter((p) => activeTab === "All" || p.category === activeTab)
       .filter(
         (p) =>
@@ -39,12 +54,14 @@ export default function Outlet() {
           (p.price >= priceFilter.min && p.price <= priceFilter.max)
       )
       .filter((p) => !onSaleOnly || p.isOnSale)
-      .sort((a, b) => {
-        if (sortBy === "price-low") return a.price - b.price
-        if (sortBy === "price-high") return b.price - a.price
-        return 0
-      })
-  }, [products, activeTab, priceFilter, onSaleOnly, sortBy])
+
+    // NEW: apply Deals + Delivery Type
+    return filterByDealsAndDelivery(base, deals, delivery).sort((a, b) => {
+      if (sortBy === "price-low") return a.price - b.price
+      if (sortBy === "price-high") return b.price - a.price
+      return 0
+    })
+  }, [products, activeTab, priceFilter, onSaleOnly, deals, delivery, sortBy]) // NEW: deals, delivery
 
   const visibleProducts = filteredProducts.slice(0, visibleCount)
 
@@ -84,6 +101,10 @@ export default function Outlet() {
               setOnlyNewArrivals={setOnSaleOnly}
               toggleLabel="Deals"
               toggleSubLabel="On sale only"
+              deals={deals} // NEW
+              setDeals={handleSetDeals} // NEW
+              delivery={delivery} // NEW
+              setDelivery={handleSetDelivery} // NEW
               onClearFilters={clearFilters}
             />
           </div>

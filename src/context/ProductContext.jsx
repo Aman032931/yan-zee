@@ -11,7 +11,7 @@ export default function ProductProvider({ children }) {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://fakestoreapi.com/products');
+        const response = await fetch('https://dummyjson.com/products');
         if (!response.ok) {
           throw new Error('Failed to fetch products');
         }

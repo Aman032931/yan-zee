@@ -18,7 +18,7 @@ export default function PremiumHero() {
           Iconic watches, fine jewellery, and designer pieces — authenticity guaranteed.
         </p>
         <button className="bg-red-600 hover:bg-red-700 transition text-white text-sm font-semibold px-6 py-3 rounded-full w-fit cursor-pointer">
-          Explore luxury
+          Sop Premium
         </button>
       </div>
     </div>

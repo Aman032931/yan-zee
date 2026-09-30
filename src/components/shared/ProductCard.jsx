@@ -1,10 +1,10 @@
-import { Link } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
-import { useWishlist } from '../../context/WishlistContext';
-import { useToast } from '../../context/ToastContext';
+import { Link } from "react-router-dom"
+import { useCart } from "../../context/CartContext"
+import { useWishlist } from "../../context/WishlistContext"
+import { useToast } from "../../context/ToastContext"
 
 function StarRow({ rating = 0 }) {
-  const rounded = Math.round(rating);
+  const rounded = Math.round(rating)
 
   return (
     <div className="mt-1 flex items-center gap-0.5">
@@ -13,7 +13,7 @@ function StarRow({ rating = 0 }) {
           key={i}
           viewBox="0 0 24 24"
           className="h-3 w-3"
-          fill={i <= rounded ? '#f59e0b' : '#e5e7eb'}
+          fill={i <= rounded ? "#f59e0b" : "#e5e7eb"}
           aria-hidden="true"
         >
           <path d="M12 2l2.9 6.3 6.6.8-4.9 4.6 1.3 6.5L12 17l-5.9 3.2 1.3-6.5L2.5 9.1l6.6-.8L12 2z" />
@@ -23,47 +23,47 @@ function StarRow({ rating = 0 }) {
         <span className="ml-1 text-[11px] text-gray-400">{rating}</span>
       ) : null}
     </div>
-  );
+  )
 }
 
 export default function ProductCard({
   product,
-  badgeColor = 'bg-red-600',
-  imageHeight = '',
-  imageFit = 'contain',
-  subtitleField = 'category',
-  ratingStyle = 'single',
+  badgeColor = "bg-red-600",
+  imageHeight = "",
+  imageFit = "contain",
+  subtitleField = "category",
+  ratingStyle = "single",
   showDiscount = false,
 }) {
-  const { addToCart } = useCart();
-  const { isWishlisted, toggleWishlist } = useWishlist();
-  const { showToast } = useToast();
-  const wishlisted = isWishlisted(product.id);
+  const { addToCart } = useCart()
+  const { isWishlisted, toggleWishlist } = useWishlist()
+  const { showToast } = useToast()
+  const wishlisted = isWishlisted(product.id)
 
   const handleWishlistToggle = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const wasWishlisted = wishlisted;
-    toggleWishlist(product);
-    showToast(wasWishlisted ? "Removed from wishlist" : "Added to wishlist");
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    const wasWishlisted = wishlisted
+    toggleWishlist(product)
+    showToast(wasWishlisted ? "Removed from wishlist" : "Added to wishlist")
+  }
 
   const handleAddToCart = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addToCart(product);
-    showToast("Added to cart");
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    addToCart(product)
+    showToast("Added to cart")
+  }
 
   const subtitle =
-    subtitleField === 'brand' ? product?.brand || 'GENERIC' : product?.category;
+    subtitleField === "brand" ? product?.brand || "GENERIC" : product?.category
 
   const resolvedBadgeColor =
-    product?.badge === 'NEW' ? 'bg-emerald-500' : badgeColor;
+    product?.badge === "NEW" ? "bg-emerald-500" : badgeColor
 
   const imageBox = imageHeight
     ? `relative w-full ${imageHeight} overflow-hidden`
-    : 'relative w-full aspect-[4/5] overflow-hidden';
+    : "relative w-full aspect-[4/5] overflow-hidden"
 
   return (
     <Link
@@ -71,16 +71,16 @@ export default function ProductCard({
       className="group relative flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all duration-300 hover:border-gray-200 hover:shadow-lg"
     >
       {/* ===== Badges (top-left stack) ===== */}
-      <div className="absolute left-2 top-2 z-20 flex flex-col items-start gap-1">
+      <div className="absolute top-2 left-2 z-20 flex flex-col items-start gap-1">
         {product?.badge && (
           <span
-            className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase text-white ${resolvedBadgeColor}`}
+            className={`rounded px-2 py-0.5 text-[10px] font-bold text-white uppercase ${resolvedBadgeColor}`}
           >
             {product.badge}
           </span>
         )}
         {showDiscount && product?.discountPercent > 0 && (
-          <span className="rounded bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+          <span className="rounded bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white uppercase">
             -{product.discountPercent}%
           </span>
         )}
@@ -90,14 +90,14 @@ export default function ProductCard({
       <button
         type="button"
         onClick={handleWishlistToggle}
-        className="absolute right-2 top-2 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 hover:scale-110"
+        className="absolute top-2 right-2 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 hover:scale-110"
         aria-label="Add to wishlist"
       >
         <svg
           className={`h-4 w-4 ${
             wishlisted
-              ? 'fill-red-600 text-red-600'
-              : 'fill-none stroke-gray-400'
+              ? "fill-red-600 text-red-600"
+              : "fill-none stroke-gray-400"
           }`}
           viewBox="0 0 24 24"
           strokeWidth="2"
@@ -116,16 +116,16 @@ export default function ProductCard({
       <div className={`bg-gray-50 ${imageBox}`}>
         <img
           src={product?.image}
-          alt={product?.title || 'Product'}
+          alt={product?.title || "Product"}
           className={`h-full w-full transition-transform duration-500 group-hover:scale-105 ${
-            imageFit === 'cover' ? 'object-cover' : 'object-contain p-4'
+            imageFit === "cover" ? "object-cover" : "object-contain p-4"
           }`}
         />
 
         <button
           type="button"
           onClick={handleAddToCart}
-          className="absolute inset-x-0 bottom-0 z-10 translate-y-0 cursor-pointer border-0 bg-black py-2.5 text-[11px] font-bold uppercase tracking-widest text-white transition-transform duration-300 md:translate-y-full md:group-hover:translate-y-0 hover:bg-red-600"
+          className="absolute inset-x-0 bottom-0 z-10 cursor-pointer border-0 bg-black py-2.5 text-[11px] font-bold tracking-widest text-white uppercase transition-all duration-300 ease-out hover:bg-red-600 md:invisible md:translate-y-[101%] md:opacity-0 md:group-hover:visible md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-has-[:focus-visible]:visible md:group-has-[:focus-visible]:translate-y-0 md:group-has-[:focus-visible]:opacity-100"
         >
           Add to cart
         </button>
@@ -134,7 +134,7 @@ export default function ProductCard({
       {/* ===== Info ===== */}
       <div className="flex flex-grow flex-col justify-between p-3">
         <div>
-          <span className="block truncate text-[10px] font-semibold uppercase tracking-widest text-red-600">
+          <span className="block truncate text-[10px] font-semibold tracking-widest text-red-600 uppercase">
             {subtitle}
           </span>
 
@@ -142,7 +142,7 @@ export default function ProductCard({
             {product?.title}
           </h4>
 
-          {ratingStyle === 'stars' ? (
+          {ratingStyle === "stars" ? (
             <StarRow rating={product?.rating} />
           ) : (
             <div className="mt-1 flex items-center gap-1 text-xs">
@@ -158,7 +158,7 @@ export default function ProductCard({
 
         <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <span className="text-sm font-bold text-gray-900">
-            Nrs {product?.price ? product.price.toLocaleString() : '0'}
+            Nrs {product?.price ? product.price.toLocaleString() : "0"}
           </span>
 
           {showDiscount && product?.mrp && (
@@ -176,5 +176,5 @@ export default function ProductCard({
         </div>
       </div>
     </Link>
-  );
+  )
 }

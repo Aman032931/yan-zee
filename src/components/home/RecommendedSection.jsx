@@ -6,19 +6,18 @@ export default function RecommendedSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('https://fakestoreapi.com/products')
+    fetch('https://dummyjson.com/products?limit=100')
       .then((res) => res.json())
       .then((data) => {
-        const topPicks = data
-          .filter((item) => item.rating?.rate >= 4.0)
+        const topPicks = data.products
+          .filter((item) => item.rating >= 4.0)
           .map((item) => ({
             id: item.id,
             title: item.title,
             category: item.category,
             price: Math.round(item.price * 135),
-            image: item.image,
-            rating: item.rating?.rate,
-            count: item.rating?.count,
+            image: item.thumbnail || item.images?.[0],
+            rating: item.rating,
           }));
         setRecommendations(topPicks);
         setLoading(false);

@@ -18,7 +18,7 @@ export default function BeautyHero() {
           Explore skincare, cosmetics, and self-care essentials — 100% authentic, delivered across Nepal.
         </p>
         <button className="bg-red-600 hover:bg-red-700 transition text-white text-sm font-semibold px-6 py-3 rounded-full w-fit cursor-pointer">
-          Shop bestsellers
+          Shop for Beauty
         </button>
       </div>
     </div>

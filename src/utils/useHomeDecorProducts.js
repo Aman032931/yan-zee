@@ -1,18 +1,36 @@
 import { useState, useEffect } from 'react';
 
+const HOME_DECOR_CATEGORIES = ["furniture", "home-decoration", "kitchen-accessories"];
+
 export function useHomeDecorProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('https://fakestoreapi.com/products')
+    fetch('https://dummyjson.com/products?limit=0')
       .then((res) => res.json())
       .then((data) => {
-        // No real furniture/kitchen/lighting/decor/appliance category exists in fakestoreapi.
-        // Deliberately not stretching "electronics" to cover this — always resolves empty
-        // until a richer API or real backend has an actual home category.
-        const homeOnly = data.filter((item) => item.category === "home");
+        const homeOnly = data.products
+          .filter((item) => HOME_DECOR_CATEGORIES.includes(item.category))
+          .map((item) => {
+            const price = Math.round(item.price * 135);
+            const mrp = Math.round(price * 1.3);
+            const discountPercent = Math.round(((mrp - price) / mrp) * 100);
+
+            return {
+              id: item.id,
+              title: item.title,
+              category: item.category,
+              price,
+              mrp,
+              discountPercent,
+              image: item.thumbnail || item.images?.[0],
+              rating: Math.round(item.rating || 4),
+              badge: item.rating > 4.5 ? "TOP SELLING" : null,
+              isNew: item.id <= 5,
+            };
+          });
         setProducts(homeOnly);
       })
       .catch(setError)

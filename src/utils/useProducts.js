@@ -1,7 +1,7 @@
 // src/utils/useProducts.js
 import { useState, useEffect } from "react";
 
-const FAKE_API_URL = "https://fakestoreapi.com/products";
+const FAKE_API_URL = "https://dummyjson.com/products";
 
 export function useProducts(category) {
   const [products, setProducts] = useState([]);

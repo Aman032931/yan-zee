@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-// Fetches real fakestoreapi products into local, editable state.
+// Fetches real dummyjson products into local, editable state.
 // Add/Edit/Delete only mutate this in-memory array — nothing persists
 // to a real backend yet. Swap this out once real product CRUD exists.
 export function useManagedProducts(scopeFilter = null) {
@@ -8,7 +8,7 @@ export function useManagedProducts(scopeFilter = null) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('https://fakestoreapi.com/products')
+    fetch('https://dummyjson.com/products')
       .then((res) => res.json())
       .then((data) => {
         const formatted = data.map((item) => ({

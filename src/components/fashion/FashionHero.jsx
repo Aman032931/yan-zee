@@ -1,4 +1,4 @@
-export default function FashionHero() {
+export default function FashionHero({ onShopNew }) {
   return (
     <div className="relative w-full h-125 overflow-hidden">
       <img
@@ -17,7 +17,11 @@ export default function FashionHero() {
         <p className="text-white/90 text-sm md:text-base mb-6">
           Discover trending apparel, accessories, and shoes — curated drops from the brands you love.
         </p>
-        <button className="bg-red-600 hover:bg-red-700 transition text-white text-sm font-semibold px-6 py-3 rounded-full w-fit cursor-pointer">
+        <button
+          type="button"
+          onClick={onShopNew}
+          className="bg-red-600 hover:bg-red-700 transition text-white text-sm font-semibold px-6 py-3 rounded-full w-fit cursor-pointer"
+        >
           Shop new arrivals
         </button>
       </div>

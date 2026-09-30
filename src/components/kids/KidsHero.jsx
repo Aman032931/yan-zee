@@ -7,7 +7,7 @@ export default function KidsHero() {
         <span className="text-red-500 text-xs font-bold tracking-widest uppercase mb-3">Little Ones 2026</span>
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">Kids & Baby</h1>
         <p className="text-white/90 text-sm md:text-base mb-6">Playful, comfy essentials for babies, toddlers, and big kids — plus toys they will love.</p>
-        <button className="bg-red-600 hover:bg-red-700 transition text-white text-sm font-semibold px-6 py-3 rounded-full w-fit cursor-pointer">Shop kids</button>
+        <button className="bg-red-600 hover:bg-red-700 transition text-white text-sm font-semibold px-6 py-3 rounded-full w-fit cursor-pointer">Shop for kids</button>
       </div>
     </div>
   );

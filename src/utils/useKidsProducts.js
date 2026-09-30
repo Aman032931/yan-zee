@@ -6,10 +6,10 @@ export function useKidsProducts() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('https://fakestoreapi.com/products')
+    fetch('https://dummyjson.com/products')
       .then((res) => res.json())
       .then((data) => {
-        // fakestoreapi has no kids category — always resolves empty until a richer API/backend exists.
+        // dummyjson has no kids category — always resolves empty until a richer API/backend exists.
         const kidsOnly = data
           .filter((item) => item.category === "kids")
           .map((item) => ({

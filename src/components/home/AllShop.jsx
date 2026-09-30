@@ -6,6 +6,7 @@ import RecommendedSection from "./RecommendedSection";
 import ProductSkeleton from "../ProductSkeleton";
 import ActivePriceChip from "../shared/ActivePriceChip";
 import { useGender } from "../../context/useGender";
+import { filterByDealsAndDelivery } from "../../utils/dealDeliveryFilters"; // NEW
 
 export default function AllShop({
   selectedCategory = "all",
@@ -21,6 +22,8 @@ export default function AllShop({
   const [selectedBrand, setSelectedBrand] = useState("All Brands");
   const [priceFilter, setPriceFilterRaw] = useState(null); // { min, max, label } | null
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(false);
+  const [deals, setDeals] = useState([]); // NEW
+  const [delivery, setDelivery] = useState([]); // NEW
   const [sortBy, setSortBy] = useState("featured");
   const [visibleCount, setVisibleCount] = useState(12);
 
@@ -55,19 +58,30 @@ export default function AllShop({
     setVisibleCount(12);
   };
 
+  // NEW: reset "See More" whenever a deal/delivery box changes
+  const handleSetDeals = (next) => {
+    setDeals(next);
+    setVisibleCount(12);
+  };
+
+  const handleSetDelivery = (next) => {
+    setDelivery(next);
+    setVisibleCount(12);
+  };
+
   const handleSortChange = (e) => {
     setSortBy(e.target.value);
     setVisibleCount(12);
   };
 
   useEffect(() => {
-    fetch("https://fakestoreapi.com/products")
+    fetch("https://dummyjson.com/products?limit=100")
       .then((res) => res.json())
       .then((data) => {
-        const formatted = data.map((item) => {
+        const formatted = data.products.map((item) => {
           const price = Math.round(item.price * 135);
-          // fakestoreapi has no MRP/discount field — this is a placeholder
-          // "original price" (30% higher) purely for layout, not a real discount.
+          // dummyjson has no separate MRP/discount field the way we need —
+          // this is a placeholder "original price" (30% higher) purely for layout.
           const mrp = Math.round(price * 1.3);
           const discountPercent = Math.round(((mrp - price) / mrp) * 100);
 
@@ -79,9 +93,9 @@ export default function AllShop({
             price,
             mrp,
             discountPercent,
-            image: item.image,
-            rating: Math.round(item.rating?.rate || 4),
-            badge: item.rating?.rate > 4.2 ? "TOP SELLING" : null,
+            image: item.thumbnail || item.images?.[0],
+            rating: Math.round(item.rating || 4),
+            badge: item.rating > 4.5 ? "TOP SELLING" : null,
             isNew: item.id <= 5,
           };
         });
@@ -99,6 +113,8 @@ export default function AllShop({
     setSelectedBrand("All Brands");
     setPriceFilterRaw(null);
     setOnlyNewArrivals(false);
+    setDeals([]); // NEW
+    setDelivery([]); // NEW
     setVisibleCount(12);
   };
 
@@ -109,7 +125,7 @@ export default function AllShop({
     );
   };
 
-  const filteredProducts = products
+  const baseProducts = products
     .filter((p) => isCategoryMatch(p.category, selectedCategory))
     .filter((p) => matchesGender(p.category))
     .filter(
@@ -122,12 +138,18 @@ export default function AllShop({
         !priceFilter ||
         (p.price >= priceFilter.min && p.price <= priceFilter.max),
     )
-    .filter((p) => !onlyNewArrivals || p.isNew)
-    .sort((a, b) => {
-      if (sortBy === "price-low") return a.price - b.price;
-      if (sortBy === "price-high") return b.price - a.price;
-      return 0;
-    });
+    .filter((p) => !onlyNewArrivals || p.isNew);
+
+  // NEW: apply Deals + Delivery Type, then sort
+  const filteredProducts = filterByDealsAndDelivery(
+    baseProducts,
+    deals,
+    delivery,
+  ).sort((a, b) => {
+    if (sortBy === "price-low") return a.price - b.price;
+    if (sortBy === "price-high") return b.price - a.price;
+    return 0;
+  });
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
 
@@ -172,6 +194,10 @@ export default function AllShop({
             setPriceFilter={setPriceFilter}
             onlyNewArrivals={onlyNewArrivals}
             setOnlyNewArrivals={handleNewArrivalsChange}
+            deals={deals} // NEW
+            setDeals={handleSetDeals} // NEW
+            delivery={delivery} // NEW
+            setDelivery={handleSetDelivery} // NEW
             onClearFilters={clearFilters}
           />
         </div>

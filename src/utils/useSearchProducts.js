@@ -6,7 +6,7 @@ export function useSearchProducts(query) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('https://fakestoreapi.com/products')
+    fetch('https://dummyjson.com/products')
       .then((res) => res.json())
       .then((data) => {
         const formatted = data.map((item) => ({

@@ -5,21 +5,26 @@ import FilterPanel from "../components/shared/FilterPanel"
 import ProductCard from "../components/shared/ProductCard"
 import ProductSkeleton from "../components/ProductSkeleton"
 import { useKidsProducts } from "../utils/useKidsProducts"
+import { filterByDealsAndDelivery } from "../utils/dealDeliveryFilters" // NEW
 
 export default function Kids() {
   const { products, loading } = useKidsProducts()
   const [activeTab, setActiveTab] = useState("All")
   const [priceFilter, setPriceFilter] = useState(null)
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(false)
+  const [deals, setDeals] = useState([]) // NEW
+  const [delivery, setDelivery] = useState([]) // NEW
   const [sortBy, setSortBy] = useState("featured")
 
   const clearFilters = () => {
     setPriceFilter(null)
     setOnlyNewArrivals(false)
+    setDeals([]) // NEW
+    setDelivery([]) // NEW
   }
 
   const filteredProducts = useMemo(() => {
-    return products
+    const base = products
       .filter((p) => activeTab === "All" || p.category === activeTab)
       .filter(
         (p) =>
@@ -27,12 +32,14 @@ export default function Kids() {
           (p.price >= priceFilter.min && p.price <= priceFilter.max)
       )
       .filter((p) => !onlyNewArrivals || p.isNew)
-      .sort((a, b) => {
-        if (sortBy === "price-low") return a.price - b.price
-        if (sortBy === "price-high") return b.price - a.price
-        return 0
-      })
-  }, [products, activeTab, priceFilter, onlyNewArrivals, sortBy])
+
+    // NEW: apply Deals + Delivery Type
+    return filterByDealsAndDelivery(base, deals, delivery).sort((a, b) => {
+      if (sortBy === "price-low") return a.price - b.price
+      if (sortBy === "price-high") return b.price - a.price
+      return 0
+    })
+  }, [products, activeTab, priceFilter, onlyNewArrivals, deals, delivery, sortBy]) // NEW: deals, delivery
 
   return (
     <>
@@ -68,6 +75,10 @@ export default function Kids() {
               setPriceFilter={setPriceFilter}
               onlyNewArrivals={onlyNewArrivals}
               setOnlyNewArrivals={setOnlyNewArrivals}
+              deals={deals} // NEW
+              setDeals={setDeals} // NEW
+              delivery={delivery} // NEW
+              setDelivery={setDelivery} // NEW
               onClearFilters={clearFilters}
             />
           </div>

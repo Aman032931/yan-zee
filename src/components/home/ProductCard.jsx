@@ -1,10 +1,10 @@
-import { Link } from "react-router-dom";
-import { useCart } from "../../context/CartContext";
-import { useWishlist } from "../../context/WishlistContext";
-import { useToast } from "../../context/ToastContext";
+import { Link } from "react-router-dom"
+import { useCart } from "../../context/CartContext"
+import { useWishlist } from "../../context/WishlistContext"
+import { useToast } from "../../context/ToastContext"
 
 function StarRow({ rating = 0 }) {
-  const rounded = Math.round(rating);
+  const rounded = Math.round(rating)
 
   return (
     <div className="mt-1 flex items-center gap-0.5">
@@ -23,15 +23,15 @@ function StarRow({ rating = 0 }) {
         <span className="ml-1 text-[11px] text-gray-400">{rating}</span>
       ) : null}
     </div>
-  );
+  )
 }
 
 export default function ProductCard({ product }) {
-  const { addToCart } = useCart();
-  const { toggleWishlist, isWishlisted } = useWishlist();
-  const { showToast } = useToast();
+  const { addToCart } = useCart()
+  const { toggleWishlist, isWishlisted } = useWishlist()
+  const { showToast } = useToast()
 
-  const wishlisted = isWishlisted(product.id);
+  const wishlisted = isWishlisted(product.id)
 
   const cartPayload = {
     ...product,
@@ -41,22 +41,22 @@ export default function ProductCard({ product }) {
     priceNPR: product.priceNPR ?? product.price ?? 0,
     brand: product.brand || product.category,
     stock: product.stock ?? 999,
-  };
+  }
 
   const handleWishlistToggle = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const wasWishlisted = wishlisted;
-    toggleWishlist(cartPayload);
-    showToast(wasWishlisted ? "Removed from wishlist" : "Added to wishlist");
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    const wasWishlisted = wishlisted
+    toggleWishlist(cartPayload)
+    showToast(wasWishlisted ? "Removed from wishlist" : "Added to wishlist")
+  }
 
   const handleAddToCart = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addToCart(cartPayload);
-    showToast("Added to cart"); 
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    addToCart(cartPayload)
+    showToast("Added to cart")
+  }
 
   return (
     <Link
@@ -64,19 +64,19 @@ export default function ProductCard({ product }) {
       className="group relative flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all duration-300 hover:border-gray-200 hover:shadow-lg"
     >
       {/* ===== Badges (top-left stack) ===== */}
-      <div className="absolute left-2 top-2 z-20 flex flex-col items-start gap-1">
+      <div className="absolute top-2 left-2 z-20 flex flex-col items-start gap-1">
         {product?.badge && (
-          <span className="rounded bg-orange-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+          <span className="rounded bg-orange-600 px-2 py-0.5 text-[10px] font-bold text-white uppercase">
             {product.badge}
           </span>
         )}
         {product?.isNew && (
-          <span className="rounded bg-emerald-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+          <span className="rounded bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white uppercase">
             New
           </span>
         )}
         {product?.discountPercent > 0 && (
-          <span className="rounded bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+          <span className="rounded bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white uppercase">
             -{product.discountPercent}%
           </span>
         )}
@@ -86,7 +86,7 @@ export default function ProductCard({ product }) {
       <button
         type="button"
         onClick={handleWishlistToggle}
-        className="absolute right-2 top-2 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 hover:scale-110"
+        className="absolute top-2 right-2 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 hover:scale-110"
         aria-label="Add to wishlist"
       >
         <svg
@@ -108,7 +108,7 @@ export default function ProductCard({ product }) {
         anchor for the Add to Cart bar and the clip boundary that
         stops it pushing card content down.
       */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-gray-50">
+      <div className="relative -mb-px aspect-[4/5] w-full overflow-hidden bg-gray-50">
         <img
           src={product?.image}
           alt={product?.title || product?.name || "Product"}
@@ -124,7 +124,7 @@ export default function ProductCard({ product }) {
         <button
           type="button"
           onClick={handleAddToCart}
-          className="absolute inset-x-0 bottom-0 z-10 translate-y-0 cursor-pointer border-0 bg-black py-2.5 text-[11px] font-bold uppercase tracking-widest text-white transition-transform duration-300 md:translate-y-full md:group-hover:translate-y-0 hover:bg-red-600"
+          className="absolute inset-x-0 bottom-0 z-10 cursor-pointer border-0 bg-black py-2.5 text-[11px] font-bold tracking-widest text-white uppercase transition-all duration-300 ease-out hover:bg-red-600 md:invisible md:translate-y-[101%] md:opacity-0 md:group-hover:visible md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-has-[:focus-visible]:visible md:group-has-[:focus-visible]:translate-y-0 md:group-has-[:focus-visible]:opacity-100"
         >
           Add to cart
         </button>
@@ -133,7 +133,7 @@ export default function ProductCard({ product }) {
       {/* ===== Info ===== */}
       <div className="flex flex-grow flex-col justify-between p-3">
         <div>
-          <span className="block truncate text-[10px] font-semibold uppercase tracking-widest text-red-600">
+          <span className="block truncate text-[10px] font-semibold tracking-widest text-red-600 uppercase">
             {product?.brand || "GENERIC"}
           </span>
 
@@ -164,5 +164,5 @@ export default function ProductCard({ product }) {
         </div>
       </div>
     </Link>
-  );
+  )
 }
