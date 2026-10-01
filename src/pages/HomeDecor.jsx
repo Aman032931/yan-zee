@@ -5,6 +5,7 @@ import FilterPanel from "../components/shared/FilterPanel"
 import ProductCard from "../components/shared/ProductCard"
 import ProductSkeleton from "../components/ProductSkeleton"
 import { useHomeDecorProducts } from "../utils/useHomeDecorProducts"
+import ActivePriceChip from "../components/shared/ActivePriceChip"
 
 export default function HomeDecor() {
   const { products, loading } = useHomeDecorProducts()
@@ -61,7 +62,7 @@ export default function HomeDecor() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[240px_1fr]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr] xl:grid-cols-[320px_1fr]">
           <div className="items-start">
             <FilterPanel
               priceFilter={priceFilter}
@@ -73,23 +74,13 @@ export default function HomeDecor() {
           </div>
 
           <div className="min-w-0">
-            {priceFilter && (
-              <div className="mb-4 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-800">
-                  {priceFilter.label}
-                  <button
-                    onClick={() => setPriceFilter(null)}
-                    className="cursor-pointer leading-none font-bold text-gray-500 hover:text-gray-900"
-                    aria-label="Remove price filter"
-                  >
-                    ×
-                  </button>
-                </span>
-              </div>
-            )}
+            <ActivePriceChip
+              priceFilter={priceFilter}
+              setPriceFilter={setPriceFilter}
+            />
 
             {loading ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {[...Array(8)].map((_, i) => (
                   <ProductSkeleton key={i} />
                 ))}
@@ -104,7 +95,7 @@ export default function HomeDecor() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {filteredProducts.map((product) => (
                   <ProductCard
                     key={product.id}

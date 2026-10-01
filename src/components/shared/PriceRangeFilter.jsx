@@ -1,19 +1,19 @@
-import { useState, useRef, useCallback, useEffect } from "react"; // ✅ add useEffect
+import { useState, useRef, useCallback, useEffect } from "react";
 
 const SLIDER_MIN = 1;
 const SLIDER_MAX = 10000;
 const STEP = 100;
 
 export default function PriceRangeFilter({ priceFilter, setPriceFilter }) {
-  const [sliderMin, setSliderMin] = useState(1);
-  const [sliderMax, setSliderMax] = useState(10000);
+  const [sliderMin, setSliderMin] = useState(SLIDER_MIN);
+  const [sliderMax, setSliderMax] = useState(SLIDER_MAX);
   const [customMin, setCustomMin] = useState("");
   const [customMax, setCustomMax] = useState("");
   const [customApplied, setCustomApplied] = useState(false);
   const [dragging, setDragging] = useState(null);
   const trackRef = useRef(null);
 
-  // ✅ Sync local display state whenever priceFilter is cleared externally
+  // Sync local display state whenever priceFilter is cleared externally
   // (e.g. "Clear all" in the filter panel, or the × on the active-filter chip)
   useEffect(() => {
     if (priceFilter === null) {
@@ -41,7 +41,8 @@ export default function PriceRangeFilter({ priceFilter, setPriceFilter }) {
     setCustomApplied(false);
     setPriceFilter({
       min,
-      max: Infinity,
+      // Right handle at the far end means "no upper limit" (the label shows "+")
+      max: max >= SLIDER_MAX ? Infinity : max,
       label: `Nrs ${min.toLocaleString()} – Nrs ${max.toLocaleString()}+`,
     });
   };
@@ -105,13 +106,13 @@ export default function PriceRangeFilter({ priceFilter, setPriceFilter }) {
   return (
     <div className="space-y-4">
       {/* Dual-handle slider */}
-      <div>
+      <div className="px-2.5">
         <div
           ref={trackRef}
-          className="relative h-1.5 rounded-full bg-gray-200 mt-5 mb-2 select-none"
+          className="relative mt-6 mb-3 h-2 rounded-full bg-gray-200 select-none"
         >
           <div
-            className="absolute h-1.5 rounded-full bg-gray-900"
+            className="absolute h-2 rounded-full bg-gray-900"
             style={{
               left: `${valueToPercent(sliderMin)}%`,
               width: `${valueToPercent(sliderMax) - valueToPercent(sliderMin)}%`,
@@ -121,66 +122,63 @@ export default function PriceRangeFilter({ priceFilter, setPriceFilter }) {
             onPointerDown={handlePointerDown("min")}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border-2 border-gray-900 shadow-md cursor-pointer touch-none"
+            className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 cursor-pointer touch-none rounded-full border-2 border-gray-900 bg-white shadow-md"
             style={{ left: `${valueToPercent(sliderMin)}%` }}
           />
           <div
             onPointerDown={handlePointerDown("max")}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full  bg-white border-2 border-gray-900 shadow-md cursor-pointer touch-none"
+            className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 cursor-pointer touch-none rounded-full border-2 border-gray-900 bg-white shadow-md"
             style={{ left: `${valueToPercent(sliderMax)}%` }}
           />
         </div>
-        <p className="text-[11px] font-semibold text-gray-700">
-          Nrs {sliderMin.toLocaleString()} – Nrs {sliderMax.toLocaleString()}+
-        </p>
       </div>
+      <p className="text-sm font-semibold text-gray-700">
+        Nrs {sliderMin.toLocaleString()} – Nrs {sliderMax.toLocaleString()}+
+      </p>
 
       {/* Custom Range */}
-      <div className="pt-3 border-t border-gray-100">
-        <p className="text-[11px] font-semibold text-gray-500 mb-2 tracking-wide">
+      <div className="border-t border-gray-100 pt-4">
+        <p className="mb-2 text-xs font-semibold tracking-wide text-gray-500">
           CUSTOM RANGE
         </p>
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex-1">
-            <label className="text-[10px] text-gray-500 block mb-1">Min</label>
+        <div className="mb-3 flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <label className="mb-1 block text-xs text-gray-500">Min</label>
             <input
               type="number"
               min="0"
               value={customMin}
               onChange={handleCustomMinChange}
               placeholder="0"
-              className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs outline-none focus:border-black"
+              className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-black"
             />
           </div>
-          <div className="flex-1">
-            <label className="text-[10px] text-gray-500 block mb-1">Max</label>
+          <div className="min-w-0 flex-1">
+            <label className="mb-1 block text-xs text-gray-500">Max</label>
             <input
               type="number"
               min="0"
               value={customMax}
               onChange={handleCustomMaxChange}
               placeholder="Any"
-              className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs outline-none focus:border-black"
+              className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-black"
             />
           </div>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleApplyCustom}
-
-            className="flex-1 bg-red-800 text-white text-xs font-semibold py-2 rounded hover:bg-red-600 transition cursor-pointer"
-
+            className="flex-1 cursor-pointer rounded bg-red-800 py-2.5 text-sm font-semibold text-white transition hover:bg-red-600"
           >
             Apply
           </button>
           {customApplied && (
             <button
               onClick={handleClearCustom}
-
-              className="flex-1 border  bg-black text-white text-xs font-semibold py-2 rounded transition cursor-pointer"
-              >
+              className="flex-1 cursor-pointer rounded border bg-black py-2.5 text-sm font-semibold text-white transition"
+            >
               Clear
             </button>
           )}

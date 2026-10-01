@@ -1,21 +1,27 @@
 import { useState, useMemo } from "react"
 import BeautyHero from "../components/beauty/BeautyHero"
 import BeautyCategoryTabs from "../components/beauty/BeautyCategoryTabs"
-import FilterPanel from "../components/shared/FilterPanel";
+import FilterPanel from "../components/shared/FilterPanel"
+import ActivePriceChip from "../components/shared/ActivePriceChip"
 import ProductCard from "../components/shared/ProductCard"
 import ProductSkeleton from "../components/ProductSkeleton"
 import { useBeautyProducts } from "../utils/useBeautyProducts"
 import { useGender } from "../context/useGender"
-import { filterByDealsAndDelivery } from "../utils/dealDeliveryFilters" // NEW
+import { filterByDealsAndDelivery } from "../utils/dealDeliveryFilters"
 
+const SHOP_LAYOUT =
+  "grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] 2xl:grid-cols-[300px_minmax(0,1fr)]";
+
+const GRID_CLASSES =
+  "grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3 sm:gap-4 md:grid-cols-[repeat(3,minmax(0,1fr))] xl:grid-cols-[repeat(4,minmax(0,1fr))]";
 export default function Beauty() {
   const { products, loading } = useBeautyProducts()
   const { matchesGender } = useGender()
   const [activeTab, setActiveTab] = useState("All")
   const [priceFilter, setPriceFilterRaw] = useState(null)
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(false)
-  const [deals, setDeals] = useState([]) // NEW
-  const [delivery, setDelivery] = useState([]) // NEW
+  const [deals, setDeals] = useState([])
+  const [delivery, setDelivery] = useState([])
   const [sortBy, setSortBy] = useState("featured")
   const [visibleCount, setVisibleCount] = useState(8)
 
@@ -24,7 +30,6 @@ export default function Beauty() {
     setVisibleCount(8)
   }
 
-  // NEW
   const handleSetDeals = (next) => {
     setDeals(next)
     setVisibleCount(8)
@@ -37,8 +42,8 @@ export default function Beauty() {
   const clearFilters = () => {
     setPriceFilterRaw(null)
     setOnlyNewArrivals(false)
-    setDeals([]) // NEW
-    setDelivery([]) // NEW
+    setDeals([])
+    setDelivery([])
     setVisibleCount(8)
   }
 
@@ -58,7 +63,6 @@ export default function Beauty() {
       )
       .filter((p) => !onlyNewArrivals || p.isNew)
 
-    // NEW: apply Deals + Delivery Type
     return filterByDealsAndDelivery(base, deals, delivery).sort((a, b) => {
       if (sortBy === "price-low") return a.price - b.price
       if (sortBy === "price-high") return b.price - a.price
@@ -69,8 +73,8 @@ export default function Beauty() {
     activeTab,
     priceFilter,
     onlyNewArrivals,
-    deals, // NEW
-    delivery, // NEW
+    deals,
+    delivery,
     sortBy,
     matchesGender,
   ])
@@ -106,39 +110,29 @@ export default function Beauty() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[240px_1fr]">
+        <div className={SHOP_LAYOUT}>
           <div className="items-start">
             <FilterPanel
               priceFilter={priceFilter}
               setPriceFilter={setPriceFilter}
               onlyNewArrivals={onlyNewArrivals}
               setOnlyNewArrivals={setOnlyNewArrivals}
-              deals={deals} // NEW
-              setDeals={handleSetDeals} // NEW
-              delivery={delivery} // NEW
-              setDelivery={handleSetDelivery} // NEW
+              deals={deals}
+              setDeals={handleSetDeals}
+              delivery={delivery}
+              setDelivery={handleSetDelivery}
               onClearFilters={clearFilters}
             />
           </div>
 
           <div className="min-w-0">
-            {priceFilter && (
-              <div className="mb-4 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-800">
-                  {priceFilter.label}
-                  <button
-                    onClick={() => setPriceFilter(null)}
-                    className="cursor-pointer leading-none font-bold text-gray-500 hover:text-gray-900"
-                    aria-label="Remove price filter"
-                  >
-                    ×
-                  </button>
-                </span>
-              </div>
-            )}
+            <ActivePriceChip
+              priceFilter={priceFilter}
+              setPriceFilter={setPriceFilter}
+            />
 
             {loading ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+              <div className={GRID_CLASSES}>
                 {[...Array(8)].map((_, i) => (
                   <ProductSkeleton key={i} />
                 ))}
@@ -157,7 +151,7 @@ export default function Beauty() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                <div className={GRID_CLASSES}>
                   {visibleProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}

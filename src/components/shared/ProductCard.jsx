@@ -26,40 +26,56 @@ function StarRow({ rating = 0 }) {
   )
 }
 
+/**
+ * The one product card used on every page. Tags come only from
+ * product.tags (built in utils/formatProduct.js), so the same product
+ * looks the same everywhere.
+ *
+ * The old props badgeColor and showDiscount are no longer used. Pages
+ * that still pass them (for example Fashion) keep working; the values
+ * are simply ignored.
+ */
 export default function ProductCard({
   product,
-  badgeColor = "bg-red-600",
   imageHeight = "",
   imageFit = "contain",
   subtitleField = "category",
-  ratingStyle = "single",
-  showDiscount = false,
+  ratingStyle = "stars",
 }) {
   const { addToCart } = useCart()
   const { isWishlisted, toggleWishlist } = useWishlist()
   const { showToast } = useToast()
   const wishlisted = isWishlisted(product.id)
 
+  const cartPayload = {
+    ...product,
+    id: product.id,
+    name: product.name || product.title,
+    image: product.image,
+    priceNPR: product.priceNPR ?? product.price ?? 0,
+    brand: product.brand || product.category,
+    stock: product.stock ?? 999,
+  }
+
   const handleWishlistToggle = (e) => {
     e.preventDefault()
     e.stopPropagation()
     const wasWishlisted = wishlisted
-    toggleWishlist(product)
+    toggleWishlist(cartPayload)
     showToast(wasWishlisted ? "Removed from wishlist" : "Added to wishlist")
   }
 
   const handleAddToCart = (e) => {
     e.preventDefault()
     e.stopPropagation()
-    addToCart(product)
+    addToCart(cartPayload)
     showToast("Added to cart")
   }
 
   const subtitle =
-    subtitleField === "brand" ? product?.brand || "GENERIC" : product?.category
-
-  const resolvedBadgeColor =
-    product?.badge === "NEW" ? "bg-emerald-500" : badgeColor
+    subtitleField === "brand"
+      ? product?.brand || "GENERIC"
+      : product?.category || product?.brand || "GENERIC"
 
   const imageBox = imageHeight
     ? `relative w-full ${imageHeight} overflow-hidden`
@@ -70,20 +86,16 @@ export default function ProductCard({
       to={`/product/${product.id}`}
       className="group relative flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all duration-300 hover:border-gray-200 hover:shadow-lg"
     >
-      {/* ===== Badges (top-left stack) ===== */}
+      {/* ===== Badges (top-left stack) — driven by product.tags ===== */}
       <div className="absolute top-2 left-2 z-20 flex flex-col items-start gap-1">
-        {product?.badge && (
+        {product?.tags?.map((tag) => (
           <span
-            className={`rounded px-2 py-0.5 text-[10px] font-bold text-white uppercase ${resolvedBadgeColor}`}
+            key={tag.label}
+            className={`rounded px-2 py-0.5 text-[10px] font-bold text-white uppercase ${tag.color}`}
           >
-            {product.badge}
+            {tag.label}
           </span>
-        )}
-        {showDiscount && product?.discountPercent > 0 && (
-          <span className="rounded bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white uppercase">
-            -{product.discountPercent}%
-          </span>
-        )}
+        ))}
       </div>
 
       {/* ===== Wishlist ===== */}
@@ -111,12 +123,12 @@ export default function ProductCard({
         This wrapper MUST keep `relative overflow-hidden` (built into
         `imageBox` above) — it's the anchor for the Add to Cart bar
         and the clip boundary that stops it from pushing card content
-        down, which was the bug in your screenshot.
+        down.
       */}
       <div className={`bg-gray-50 ${imageBox}`}>
         <img
           src={product?.image}
-          alt={product?.title || "Product"}
+          alt={product?.title || product?.name || "Product"}
           className={`h-full w-full transition-transform duration-500 group-hover:scale-105 ${
             imageFit === "cover" ? "object-cover" : "object-contain p-4"
           }`}
@@ -132,14 +144,14 @@ export default function ProductCard({
       </div>
 
       {/* ===== Info ===== */}
-      <div className="flex flex-grow flex-col justify-between p-3">
+      <div className="flex flex-grow flex-col p-3">
         <div>
           <span className="block truncate text-[10px] font-semibold tracking-widest text-red-600 uppercase">
             {subtitle}
           </span>
 
-          <h4 className="mt-1 line-clamp-2 min-h-[36px] text-sm font-medium text-gray-800">
-            {product?.title}
+          <h4 className="mt-1 line-clamp-2 min-h-[20px] text-sm font-medium text-gray-800">
+            {product?.title || product?.name}
           </h4>
 
           {ratingStyle === "stars" ? (
@@ -158,10 +170,10 @@ export default function ProductCard({
 
         <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <span className="text-sm font-bold text-gray-900">
-            Nrs {product?.price ? product.price.toLocaleString() : "0"}
+            Nrs {(product?.priceNPR ?? product?.price ?? 0).toLocaleString()}
           </span>
 
-          {showDiscount && product?.mrp && (
+          {product?.mrp && (
             <>
               <span className="text-[11px] text-gray-400 line-through">
                 Nrs {product.mrp.toLocaleString()}

@@ -2,18 +2,22 @@ import { useState, useMemo } from "react"
 import SportsHero from "../components/sports/SportsHero"
 import SportsCategoryTabs from "../components/sports/SportsCategoryTabs"
 import FilterPanel from "../components/shared/FilterPanel"
+import ActivePriceChip from "../components/shared/ActivePriceChip"
 import ProductCard from "../components/shared/ProductCard"
 import ProductSkeleton from "../components/ProductSkeleton"
 import { useSportsProducts } from "../utils/useSportsProducts"
-import { filterByDealsAndDelivery } from "../utils/dealDeliveryFilters" // NEW
+import { filterByDealsAndDelivery } from "../utils/dealDeliveryFilters"
+
+const GRID_CLASSES =
+  "grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
 
 export default function Sports() {
   const { products, loading } = useSportsProducts()
   const [activeTab, setActiveTab] = useState("All")
   const [priceFilter, setPriceFilterRaw] = useState(null)
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(false)
-  const [deals, setDeals] = useState([]) // NEW
-  const [delivery, setDelivery] = useState([]) // NEW
+  const [deals, setDeals] = useState([])
+  const [delivery, setDelivery] = useState([])
   const [sortBy, setSortBy] = useState("featured")
   const [visibleCount, setVisibleCount] = useState(8)
 
@@ -22,7 +26,6 @@ export default function Sports() {
     setVisibleCount(8)
   }
 
-  // NEW
   const handleSetDeals = (next) => {
     setDeals(next)
     setVisibleCount(8)
@@ -35,8 +38,8 @@ export default function Sports() {
   const clearFilters = () => {
     setPriceFilterRaw(null)
     setOnlyNewArrivals(false)
-    setDeals([]) // NEW
-    setDelivery([]) // NEW
+    setDeals([])
+    setDelivery([])
     setVisibleCount(8)
   }
 
@@ -55,13 +58,12 @@ export default function Sports() {
       )
       .filter((p) => !onlyNewArrivals || p.isNew)
 
-    // NEW: apply Deals + Delivery Type
     return filterByDealsAndDelivery(base, deals, delivery).sort((a, b) => {
       if (sortBy === "price-low") return a.price - b.price
       if (sortBy === "price-high") return b.price - a.price
       return 0
     })
-  }, [products, activeTab, priceFilter, onlyNewArrivals, deals, delivery, sortBy]) // NEW: deals, delivery
+  }, [products, activeTab, priceFilter, onlyNewArrivals, deals, delivery, sortBy])
 
   const visibleProducts = filteredProducts.slice(0, visibleCount)
 
@@ -92,39 +94,29 @@ export default function Sports() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[240px_1fr]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr] xl:grid-cols-[320px_1fr]">
           <div className="items-start">
             <FilterPanel
               priceFilter={priceFilter}
               setPriceFilter={setPriceFilter}
               onlyNewArrivals={onlyNewArrivals}
               setOnlyNewArrivals={setOnlyNewArrivals}
-              deals={deals} // NEW
-              setDeals={handleSetDeals} // NEW
-              delivery={delivery} // NEW
-              setDelivery={handleSetDelivery} // NEW
+              deals={deals}
+              setDeals={handleSetDeals}
+              delivery={delivery}
+              setDelivery={handleSetDelivery}
               onClearFilters={clearFilters}
             />
           </div>
 
           <div className="min-w-0">
-            {priceFilter && (
-              <div className="mb-4 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-800">
-                  {priceFilter.label}
-                  <button
-                    onClick={() => setPriceFilter(null)}
-                    className="cursor-pointer leading-none font-bold text-gray-500 hover:text-gray-900"
-                    aria-label="Remove price filter"
-                  >
-                    ×
-                  </button>
-                </span>
-              </div>
-            )}
+            <ActivePriceChip
+              priceFilter={priceFilter}
+              setPriceFilter={setPriceFilter}
+            />
 
             {loading ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+              <div className={GRID_CLASSES}>
                 {[...Array(8)].map((_, i) => (
                   <ProductSkeleton key={i} />
                 ))}
@@ -140,7 +132,7 @@ export default function Sports() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                <div className={GRID_CLASSES}>
                   {visibleProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}

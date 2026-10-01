@@ -71,16 +71,14 @@ export default function FilterPanel({
   };
 
   return (
-    <div className="sticky top-20 rounded-2xl border border-gray-100 bg-white p-5">
+    <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-gray-100 bg-white p-6">
       {/* ===== Header ===== */}
-      <div className="mb-5 flex items-center justify-between">
-        <h3 className="text-[15px] font-bold text-gray-900">All Filters</h3>
+      <div className="mb-6 flex items-center justify-between">
+        <h3 className="text-lg font-bold text-gray-900">All Filters</h3>
         {activeFilterCount > 0 && (
           <button
-
             onClick={handleClear}
-            className="cursor-pointer text-xs font-semibold text-red-600 hover:text-red-700"
-
+            className="cursor-pointer text-sm font-semibold text-red-600 hover:text-red-700"
           >
             Clear all
           </button>
@@ -88,102 +86,95 @@ export default function FilterPanel({
       </div>
 
       {/* ===== Toggle ===== */}
-      <div className="border-t border-gray-100 py-4 first:border-t-0 first:pt-0">
-        <span className="text-[13px] font-semibold text-gray-900">
+      <div className="border-t border-gray-100 py-5 first:border-t-0 first:pt-0">
+        <span className="text-[15px] font-semibold text-gray-900">
           {toggleLabel}
         </span>
 
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-xs text-gray-500">{toggleSubLabel}</span>
+          <span className="text-sm text-gray-500">{toggleSubLabel}</span>
           <button
             onClick={() => setOnlyNewArrivals(!onlyNewArrivals)}
             role="switch"
             aria-checked={onlyNewArrivals}
-            className={`relative h-5 w-10 cursor-pointer rounded-full transition-colors duration-200 ${
-              onlyNewArrivals ? "bg-gray-900" : "bg-gray-200"
+            className={`relative h-6 w-12 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${
+              onlyNewArrivals ? "bg-red-600" : "bg-gray-200"
             }`}
           >
             <span
-              className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${
-                onlyNewArrivals ? "translate-x-5" : "translate-x-0"
+              className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                onlyNewArrivals ? "translate-x-6" : "translate-x-0"
               }`}
             />
           </button>
         </div>
       </div>
 
-      {/* =========================================================
-          ===== Price — UNCHANGED. Do not restyle this block. =====
-          ========================================================= */}
-      <div className="border-t border-gray-100 py-4">
-        <h4 className="mb-2 text-xs font-semibold text-gray-800">Price</h4>
+      {/* ===== Price ===== */}
+      <div className="border-t border-gray-100 py-5">
+        <h4 className="mb-3 text-[15px] font-semibold text-gray-900">Price</h4>
         <PriceRangeFilter
           priceFilter={priceFilter}
           setPriceFilter={setPriceFilter}
         />
       </div>
-      {/* =========================================================
-          ===== End of unchanged Price block =====
-          ========================================================= */}
 
       {/* ===== Deals ===== */}
-      <div className="border-t border-gray-100 py-4">
+      <div className="border-t border-gray-100 py-5">
         <button
           onClick={() => toggleSection("deals")}
-          className="flex w-full cursor-pointer items-center justify-between text-[13px] font-semibold text-gray-900"
+          className="flex w-full cursor-pointer items-center justify-between text-[15px] font-semibold text-gray-900"
         >
           Deals
-          <span className="text-[9px] text-gray-400">
+          <span className="text-[11px] text-gray-400">
             {openSections.deals ? "▲" : "▼"}
           </span>
         </button>
 
         {openSections.deals && (
-          <div className="mt-3 space-y-2.5">
-
+          <div className="mt-3 space-y-3">
             {DEALS.map(({ key, label }) => (
               <label
                 key={key}
-                className="flex cursor-pointer items-center gap-2.5 text-[13px] font-normal text-gray-500 hover:text-gray-800"
+                className="flex cursor-pointer items-center gap-2.5 text-[15px] font-normal text-gray-500 hover:text-gray-800"
               >
                 <input
                   type="checkbox"
                   checked={deals.includes(key)}
                   onChange={() => toggleInList(deals, setDeals, key)}
-                  className="h-3.5 w-3.5 accent-red-600"
+                  className="h-4 w-4 accent-red-600"
                 />
                 {label}
               </label>
             ))}
-
           </div>
         )}
       </div>
 
       {/* ===== Delivery Type ===== */}
-      <div className="border-t border-gray-100 pt-4">
+      <div className="border-t border-gray-100 pt-5">
         <button
           onClick={() => toggleSection("delivery")}
-          className="flex w-full cursor-pointer items-center justify-between text-[13px] font-semibold text-gray-900"
+          className="flex w-full cursor-pointer items-center justify-between text-[15px] font-semibold text-gray-900"
         >
           Delivery Type
-          <span className="text-[9px] text-gray-400">
+          <span className="text-[11px] text-gray-400">
             {openSections.delivery ? "▲" : "▼"}
           </span>
         </button>
 
         {openSections.delivery && (
-          <div className="mt-3 space-y-2.5">
+          <div className="mt-3 space-y-3">
             {DELIVERY_TYPES.map(({ key, label }) => (
               <label
                 key={key}
-                className="flex cursor-pointer items-center gap-2.5 text-[13px] font-normal text-gray-500 hover:text-gray-800"
+                className="flex cursor-pointer items-center gap-2.5 text-[15px] font-normal text-gray-500 hover:text-gray-800"
               >
                 <input
                   type="checkbox"
                   checked={delivery.includes(key)}
                   onChange={() => toggleInList(delivery, setDelivery, key)}
-                  className="h-3.5 w-3.5 accent-red-600"
+                  className="h-4 w-4 accent-red-600"
                 />
                 {label}
               </label>

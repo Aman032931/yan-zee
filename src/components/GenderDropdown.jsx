@@ -20,7 +20,7 @@ const GenderDropdown = ({ selectedGender, onSelectGender }) => {
       <DropdownMenuContent
         align="start"
         sideOffset={8}
-        className="min-w-[180px] rounded-[8px] border-[#e5e5e5] p-0 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-[768px]:min-w-[160px]"
+        className="z-[2100] min-w-[180px] rounded-[8px] border-[#e5e5e5] p-0 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-[768px]:min-w-[160px]"
       >
         <DropdownMenuItem
           onSelect={() => onSelectGender("Women")}
@@ -54,7 +54,7 @@ const GenderDropdown = ({ selectedGender, onSelectGender }) => {
 
           <DropdownMenuSubContent
             sideOffset={8}
-            className="min-w-[160px] rounded-[8px] border-[#e5e5e5] p-0 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+            className="z-[2100] min-w-[160px] rounded-[8px] border-[#e5e5e5] p-0 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
           >
             <DropdownMenuItem
               onSelect={() => onSelectGender("Kids")}
