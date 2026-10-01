@@ -224,31 +224,31 @@ function App() {
   return (
     <GenderProvider>
       <ToastProvider>
-      <ScrollToTop />
+        <ScrollToTop />
 
-      {!isDashboardRoute && <Announcement />}
-      {!isDashboardRoute && <Header />}
-       
-      <main className={isDashboardRoute ? "" : "min-h-[30vh]"}>
-        {backgroundContent}
-      </main>
-    
-      {!isDashboardRoute && <Footer />}
+        {!isDashboardRoute && <Announcement />}
+        {!isDashboardRoute && <Header />}
 
-      {/* ==========================================
+        <main className={isDashboardRoute ? "" : "min-h-[30vh]"}>
+          {backgroundContent}
+        </main>
+
+        {!isDashboardRoute && <Footer />}
+
+        {/* ==========================================
                 LOGIN / SIGNUP POPUP
             ========================================== */}
 
-      {isAuthPopup && (
-        <div className="auth-modal-layer">
-          <div className="auth-modal-wrapper" ref={authRef}>
-            {isLogin && <Login />}
+        {isAuthPopup && (
+          <div className="auth-modal-layer">
+            <div className="auth-modal-wrapper" ref={authRef}>
+              {isLogin && <Login />}
 
-            {isSignup && <Signup />}
+              {isSignup && <Signup />}
+            </div>
           </div>
-        </div>
-      )}
-      
+        )}
+
         <Toast />
       </ToastProvider>
     </GenderProvider>

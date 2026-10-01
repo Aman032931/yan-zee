@@ -17,14 +17,14 @@ const MobileSidebar = ({ isOpen, onClose, selectedGender, onSelectGender }) => {
   ];
 
   return (
-    <div className="fixed inset-0 z-[2000] flex">
+    <div className="fixed inset-0 z-2000 flex">
 
       <div
         className="absolute inset-0 bg-[rgba(0,0,0,0.5)]"
         onClick={onClose}
       ></div>
 
-      <div className="relative z-[1] flex h-full w-[300px] max-w-[85%] animate-slide-in flex-col overflow-y-auto bg-white">
+      <div className="relative z-1 flex h-full w-75 max-w-[85%] animate-slide-in flex-col overflow-y-auto bg-white">
 
         {/* Header — wordmark + close */}
         <div className="flex items-center justify-between border-b border-[#eee] px-5 py-5">
