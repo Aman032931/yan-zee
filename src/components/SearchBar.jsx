@@ -1,7 +1,7 @@
 const SearchBar = ({ value, onChange, onSubmit }) => {
   return (
     <form
-      className="flex w-[280px] items-center rounded-[8px] bg-[#f5f5f5] px-[12px] transition-colors duration-200 focus-within:bg-[#eeeeee] max-[1024px]:w-[200px] max-[768px]:w-[140px] max-[480px]:w-[100px]"
+      className="flex w-full min-w-0 items-center rounded-[8px] bg-[#f5f5f5] px-3 transition-colors duration-200 focus-within:bg-[#eeeeee] lg:w-[280px] xl:w-[320px]"
       role="search"
       onSubmit={onSubmit}
     >
@@ -26,7 +26,7 @@ const SearchBar = ({ value, onChange, onSubmit }) => {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         name="q"
-        className="w-full border-none bg-transparent px-[10px] py-[10px] text-[14px] text-black outline-none placeholder:text-[#999] max-[768px]:px-[6px] max-[768px]:py-2 max-[768px]:text-[13px] max-[480px]:px-1 max-[480px]:py-[6px] max-[480px]:text-[12px]"
+        className="w-full min-w-0 border-none bg-transparent px-2 py-2.5 text-sm text-black outline-none placeholder:text-[#999]"
       />
     </form>
   );

@@ -281,7 +281,7 @@ export default function Wishlist() {
         )}
       </div>
 
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid items-start gap-5 md:gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
         {/* List */}
         <div className="flex flex-col divide-y divide-gray-100 rounded-lg border border-gray-100 bg-white shadow-sm">
           {sortedWishlist.map((item) => {
@@ -308,12 +308,12 @@ export default function Wishlist() {
             return (
               <div
                 key={item.id}
-                className={`group flex items-start gap-4 p-4 transition sm:gap-5 sm:p-5 ${
+                className={`group grid grid-cols-[auto_72px_minmax(0,1fr)] items-start gap-3 p-3 transition sm:flex sm:gap-5 sm:p-5 ${
                   selected ? "bg-gray-50" : ""
                 }`}
               >
                 {/* Checkbox */}
-                <div className="mt-9 shrink-0 sm:mt-11">
+                <div className="mt-8 shrink-0 sm:mt-11">
                   <Checkbox
                     checked={selected}
                     onCheckedChange={() =>
@@ -330,7 +330,7 @@ export default function Wishlist() {
                 {/* Image */}
                 <Link
                   to={`/product/${item.id}`}
-                  className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-50 p-2 sm:h-28 sm:w-28"
+                  className="flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-50 p-2 sm:h-28 sm:w-28"
                 >
                   <img
                     src={item.image}
@@ -402,7 +402,7 @@ export default function Wishlist() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex shrink-0 flex-col items-end gap-2">
+                <div className="col-span-3 flex w-full flex-row flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-3 sm:col-auto sm:w-auto sm:flex-col sm:items-end sm:border-0 sm:pt-0">
                   <button
                     type="button"
                     onClick={() =>
@@ -425,7 +425,7 @@ export default function Wishlist() {
                         ? "secondary"
                         : "default"
                     }
-                    className="w-32 sm:w-36"
+                    className="w-full sm:w-36"
                     onClick={() =>
                       addToCart(buildCartItem(item))
                     }
@@ -440,7 +440,7 @@ export default function Wishlist() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="w-32 sm:w-36"
+                    className="w-full sm:w-36"
                     onClick={() =>
                       handleBuyNow(item)
                     }

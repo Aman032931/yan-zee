@@ -8,11 +8,14 @@ import ProductSkeleton from "../ProductSkeleton";
 import ActivePriceChip from "../shared/ActivePriceChip";
 import { useGender } from "../../context/useGender";
 import { filterByDealsAndDelivery } from "../../utils/dealDeliveryFilters";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import ResponsiveFilterPanel from "../shared/ResponsiveFilterPanel";
 
 const SHOP_LAYOUT =
-  "grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr] xl:grid-cols-[320px_1fr]";
+  "grid grid-cols-1 gap-5 lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] 2xl:grid-cols-[300px_minmax(0,1fr)]";
 const GRID_CLASSES =
-  "grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
+  "grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4";
 
 export default function AllShop({
   selectedCategory = "all",
@@ -169,25 +172,57 @@ useEffect(() => {
       </div>
 
       <div className={SHOP_LAYOUT}>
-        <div className="items-start">
-          <FilterPanel
-            selectedCategory={selectedCategory || "all"}
-            onSelectCategory={handleCategorySelect}
-            selectedBrand={selectedBrand}
-            onSelectBrand={handleBrandSelect}
-            priceFilter={priceFilter}
-            setPriceFilter={setPriceFilter}
-            onlyNewArrivals={onlyNewArrivals}
-            setOnlyNewArrivals={handleNewArrivalsChange}
-            deals={deals}
-            setDeals={handleSetDeals}
-            delivery={delivery}
-            setDelivery={handleSetDelivery}
-            onClearFilters={clearFilters}
-          />
-        </div>
+      <ResponsiveFilterPanel>
+        <FilterPanel
+          selectedCategory={selectedCategory || "all"}
+          onSelectCategory={handleCategorySelect}
+          selectedBrand={selectedBrand}
+          onSelectBrand={handleBrandSelect}
+          priceFilter={priceFilter}
+          setPriceFilter={setPriceFilter}
+          onlyNewArrivals={onlyNewArrivals}
+          setOnlyNewArrivals={handleNewArrivalsChange}
+          deals={deals}
+          setDeals={handleSetDeals}
+          delivery={delivery}
+          setDelivery={handleSetDelivery}
+          onClearFilters={clearFilters}
+        />
+      </ResponsiveFilterPanel>
 
         <div className="min-w-0">
+          <div className="mb-4 lg:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  <span>Filter & Sort</span>
+                  <span className="text-xs text-gray-500">Open filters</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="overflow-y-auto">
+                <SheetHeader className="pr-8">
+                  <SheetTitle>Filter Products</SheetTitle>
+                </SheetHeader>
+                <div className="mt-2">
+                  <FilterPanel
+                    selectedCategory={selectedCategory || "all"}
+                    onSelectCategory={handleCategorySelect}
+                    selectedBrand={selectedBrand}
+                    onSelectBrand={handleBrandSelect}
+                    priceFilter={priceFilter}
+                    setPriceFilter={setPriceFilter}
+                    onlyNewArrivals={onlyNewArrivals}
+                    setOnlyNewArrivals={handleNewArrivalsChange}
+                    deals={deals}
+                    setDeals={handleSetDeals}
+                    delivery={delivery}
+                    setDelivery={handleSetDelivery}
+                    onClearFilters={clearFilters}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
           <ActivePriceChip
             priceFilter={priceFilter}
             setPriceFilter={setPriceFilter}
