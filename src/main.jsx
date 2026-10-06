@@ -11,15 +11,17 @@ import { AuthProvider } from "./context/AuthContext.jsx"
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <ProductProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <App />
-            </WishlistProvider>
-          </CartProvider>
-        </ProductProvider>
-      </AuthProvider>
+      <ProductProvider>
+        <AuthProvider>
+          <ProductProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <App />
+              </WishlistProvider>
+            </CartProvider>
+          </ProductProvider>
+        </AuthProvider>
+      </ProductProvider>
     </BrowserRouter>
   </React.StrictMode>
 )

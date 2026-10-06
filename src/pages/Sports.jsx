@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react"
 import SportsHero from "../components/sports/SportsHero"
-import SportsCategoryTabs from "../components/sports/SportsCategoryTabs"
 import FilterPanel from "../components/shared/FilterPanel"
 import ResponsiveFilterPanel from "../components/shared/ResponsiveFilterPanel"
 import ActivePriceChip from "../components/shared/ActivePriceChip"
@@ -17,8 +16,6 @@ const GRID_CLASSES =
 
 export default function Sports() {
   const { products, loading } = useSportsProducts()
-
-  const [activeTab, setActiveTab] = useState("All")
   const [priceFilter, setPriceFilterRaw] = useState(null)
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(false)
   const [deals, setDeals] = useState([])
@@ -49,18 +46,8 @@ export default function Sports() {
     setVisibleCount(8)
   }
 
-  const handleTabSelect = (tab) => {
-    setActiveTab(tab)
-    setVisibleCount(8)
-  }
-
   const filteredProducts = useMemo(() => {
     const base = products
-      .filter(
-        (p) =>
-          activeTab === "All" ||
-          p.category === activeTab
-      )
       .filter(
         (p) =>
           !priceFilter ||
@@ -87,15 +74,7 @@ export default function Sports() {
 
       return 0
     })
-  }, [
-    products,
-    activeTab,
-    priceFilter,
-    onlyNewArrivals,
-    deals,
-    delivery,
-    sortBy,
-  ])
+  }, [products, priceFilter, onlyNewArrivals, deals, delivery, sortBy])
 
   const visibleProducts = filteredProducts.slice(
     0,
@@ -111,14 +90,6 @@ export default function Sports() {
 
       {/* Main content */}
       <div className="mx-auto w-full max-w-[1600px] px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8">
-        {/* Category tabs */}
-        <div className="mb-6 min-w-0 overflow-x-auto">
-          <SportsCategoryTabs
-            activeTab={activeTab}
-            onSelect={handleTabSelect}
-          />
-        </div>
-
         {/* Product count + sorting */}
         <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-gray-500">

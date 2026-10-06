@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { AuthContext } from "./authContextObject"
-import { loginUser, logoutUser } from "../services/authService"
+import { loginUser, logoutUser, getMe } from "../services/authService"
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(() => {
@@ -12,13 +12,21 @@ export function AuthProvider({ children }) {
     }
   })
 
+  // On app load, refresh the stored user from the server (role or name may have changed)
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem("yanzee_user", JSON.stringify(currentUser))
-    } else {
-      localStorage.removeItem("yanzee_user")
+    if (!localStorage.getItem("yanzee_token")) return
+    let cancelled = false
+    getMe()
+      .then((user) => {
+        if (!cancelled) setCurrentUser({ ...user, name: user.fullName })
+      })
+      .catch(() => {
+        // a 401 is handled in api.js; any other error keeps the stored user
+      })
+    return () => {
+      cancelled = true
     }
-  }, [currentUser])
+  }, [])
 
   const login = async (email, password) => {
     try {

@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react"
 import OutletHero from "../components/outlet/OutletHero"
-import OutletCategoryTabs from "../components/outlet/OutletCategoryTabs"
 import FilterPanel from "../components/shared/FilterPanel"
 import ResponsiveFilterPanel from "../components/shared/ResponsiveFilterPanel"
 import ProductCard from "../components/shared/ProductCard"
@@ -17,8 +16,6 @@ const GRID_CLASSES =
 
 export default function Outlet() {
   const { products, loading } = useOutletProducts()
-
-  const [activeTab, setActiveTab] = useState("All")
   const [priceFilter, setPriceFilterRaw] = useState(null)
   const [onSaleOnly, setOnSaleOnly] = useState(false)
   const [deals, setDeals] = useState([])
@@ -49,18 +46,8 @@ export default function Outlet() {
     setVisibleCount(8)
   }
 
-  const handleTabSelect = (tab) => {
-    setActiveTab(tab)
-    setVisibleCount(8)
-  }
-
   const filteredProducts = useMemo(() => {
     const base = products
-      .filter(
-        (p) =>
-          activeTab === "All" ||
-          p.category === activeTab
-      )
       .filter(
         (p) =>
           !priceFilter ||
@@ -87,15 +74,7 @@ export default function Outlet() {
 
       return 0
     })
-  }, [
-    products,
-    activeTab,
-    priceFilter,
-    onSaleOnly,
-    deals,
-    delivery,
-    sortBy,
-  ])
+  }, [products, priceFilter, onSaleOnly, deals, delivery, sortBy])
 
   const visibleProducts = filteredProducts.slice(
     0,
@@ -111,14 +90,6 @@ export default function Outlet() {
 
       {/* Main content */}
       <div className="mx-auto w-full max-w-[1600px] px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8">
-        {/* Category tabs */}
-        <div className="mb-6 min-w-0 overflow-x-auto">
-          <OutletCategoryTabs
-            activeTab={activeTab}
-            onSelect={handleTabSelect}
-          />
-        </div>
-
         {/* Product count + sorting */}
         <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-gray-500">

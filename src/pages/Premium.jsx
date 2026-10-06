@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react"
 import PremiumHero from "../components/premium/PremiumHero"
-import PremiumCategoryTabs from "../components/premium/PremiumCategoryTabs"
 import ResponsiveFilterPanel from "../components/shared/ResponsiveFilterPanel"
 import FilterPanel from "../components/shared/FilterPanel"
 import ProductCard from "../components/shared/ProductCard"
@@ -19,8 +18,6 @@ const GRID_CLASSES =
 export default function Premium() {
   const { products, loading } = usePremiumProducts()
   const { matchesGender } = useGender()
-
-  const [activeTab, setActiveTab] = useState("All")
   const [priceFilter, setPriceFilterRaw] = useState(null)
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(false)
   const [deals, setDeals] = useState([])
@@ -51,17 +48,9 @@ export default function Premium() {
     setVisibleCount(8)
   }
 
-  const handleTabSelect = (tab) => {
-    setActiveTab(tab)
-    setVisibleCount(8)
-  }
-
   const filteredProducts = useMemo(() => {
     const base = products
-      .filter(
-        (p) => activeTab === "All" || p.category === activeTab
-      )
-      .filter((p) => matchesGender(p.category))
+      .filter((p) => matchesGender(p.audience))
       .filter(
         (p) =>
           !priceFilter ||
@@ -76,7 +65,6 @@ export default function Premium() {
     })
   }, [
     products,
-    activeTab,
     priceFilter,
     onlyNewArrivals,
     deals,
@@ -94,14 +82,6 @@ export default function Premium() {
       </div>
 
       <div className="mx-auto w-full max-w-[1600px] px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8">
-        {/* Category tabs */}
-        <div className="mb-6 min-w-0 overflow-x-auto">
-          <PremiumCategoryTabs
-            activeTab={activeTab}
-            onSelect={handleTabSelect}
-          />
-        </div>
-
         {/* Product count + sorting */}
         <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-gray-500">

@@ -1,15 +1,21 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "../shared/ProductCard";
-import { formatProduct } from "../../utils/formatProduct";
 import FilterPanel from "./FilterPanel";
 import RecommendedSection from "./RecommendedSection";
 import ProductSkeleton from "../ProductSkeleton";
 import ActivePriceChip from "../shared/ActivePriceChip";
 import { useGender } from "../../context/useGender";
 import { filterByDealsAndDelivery } from "../../utils/dealDeliveryFilters";
+import { useProducts } from "../../context/useProducts";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import ResponsiveFilterPanel from "../shared/ResponsiveFilterPanel";
 
 const SHOP_LAYOUT =
@@ -26,8 +32,6 @@ export default function AllShop({
 }) {
   const { matchesGender } = useGender();
   const [searchParams] = useSearchParams();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [selectedBrand, setSelectedBrand] = useState("All Brands");
   const [priceFilter, setPriceFilterRaw] = useState(null); // { min, max, label } | null
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(false);
@@ -35,6 +39,7 @@ export default function AllShop({
   const [delivery, setDelivery] = useState([]);
   const [sortBy, setSortBy] = useState("featured");
   const [visibleCount, setVisibleCount] = useState(12);
+  const { products, loading } = useProducts();
 
   useEffect(() => {
     const categoryFromUrl = searchParams.get("category");
@@ -83,19 +88,6 @@ export default function AllShop({
     setVisibleCount(12);
   };
 
-useEffect(() => {
-  fetch("https://dummyjson.com/products?limit=100")
-    .then((res) => res.json())
-    .then((data) => {
-      setProducts(data.products.map(formatProduct));
-      setLoading(false);
-    })
-    .catch((err) => {
-      console.error("Failed to load products:", err);
-      setLoading(false);
-    });
-}, []);
-
   const clearFilters = () => {
     if (setSelectedCategory) setSelectedCategory("all");
     setSelectedBrand("All Brands");
@@ -106,16 +98,16 @@ useEffect(() => {
     setVisibleCount(12);
   };
 
+  const normalize = (s) => s.toLowerCase().trim().replace(/[\s_]+/g, "-");
+
   const isCategoryMatch = (productCategory, selectedCat) => {
     if (!selectedCat || selectedCat === "all") return true;
-    return (
-      productCategory.toLowerCase().trim() === selectedCat.toLowerCase().trim()
-    );
+    return normalize(productCategory) === normalize(selectedCat);
   };
 
   const baseProducts = products
     .filter((p) => isCategoryMatch(p.category, selectedCategory))
-    .filter((p) => matchesGender(p.category))
+    .filter((p) => matchesGender(p.audience))
     .filter(
       (p) =>
         selectedBrand === "All Brands" ||
@@ -138,6 +130,11 @@ useEffect(() => {
     if (sortBy === "price-high") return b.price - a.price;
     return 0;
   });
+
+  const brandOptions = [
+    "All Brands",
+    ...Array.from(new Set(products.map((p) => p.brand))).sort(),
+  ];
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
 
@@ -172,23 +169,24 @@ useEffect(() => {
       </div>
 
       <div className={SHOP_LAYOUT}>
-      <ResponsiveFilterPanel>
-        <FilterPanel
-          selectedCategory={selectedCategory || "all"}
-          onSelectCategory={handleCategorySelect}
-          selectedBrand={selectedBrand}
-          onSelectBrand={handleBrandSelect}
-          priceFilter={priceFilter}
-          setPriceFilter={setPriceFilter}
-          onlyNewArrivals={onlyNewArrivals}
-          setOnlyNewArrivals={handleNewArrivalsChange}
-          deals={deals}
-          setDeals={handleSetDeals}
-          delivery={delivery}
-          setDelivery={handleSetDelivery}
-          onClearFilters={clearFilters}
-        />
-      </ResponsiveFilterPanel>
+        <ResponsiveFilterPanel>
+          <FilterPanel
+            selectedCategory={selectedCategory || "all"}
+            onSelectCategory={handleCategorySelect}
+            selectedBrand={selectedBrand}
+            onSelectBrand={handleBrandSelect}
+            priceFilter={priceFilter}
+            setPriceFilter={setPriceFilter}
+            onlyNewArrivals={onlyNewArrivals}
+            setOnlyNewArrivals={handleNewArrivalsChange}
+            deals={deals}
+            setDeals={handleSetDeals}
+            delivery={delivery}
+            setDelivery={handleSetDelivery}
+            onClearFilters={clearFilters}
+            brands={brandOptions}
+          />
+        </ResponsiveFilterPanel>
 
         <div className="min-w-0">
           <div className="mb-4 lg:hidden">
@@ -218,11 +216,13 @@ useEffect(() => {
                     delivery={delivery}
                     setDelivery={handleSetDelivery}
                     onClearFilters={clearFilters}
+                    brands={brandOptions}
                   />
                 </div>
               </SheetContent>
             </Sheet>
           </div>
+
           <ActivePriceChip
             priceFilter={priceFilter}
             setPriceFilter={setPriceFilter}

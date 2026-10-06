@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react"
 import HomeDecorHero from "../components/homedecor/HomeDecorHero"
-import HomeDecorCategoryTabs from "../components/homedecor/HomeDecorCategoryTabs"
 import FilterPanel from "../components/shared/FilterPanel"
 import ResponsiveFilterPanel from "../components/shared/ResponsiveFilterPanel"
 import ProductCard from "../components/shared/ProductCard"
@@ -16,8 +15,6 @@ const GRID_CLASSES =
 
 export default function HomeDecor() {
   const { products, loading } = useHomeDecorProducts()
-
-  const [activeTab, setActiveTab] = useState("All")
   const [priceFilter, setPriceFilter] = useState(null)
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(false)
   const [sortBy, setSortBy] = useState("featured")
@@ -29,11 +26,6 @@ export default function HomeDecor() {
 
   const filteredProducts = useMemo(() => {
     return products
-      .filter(
-        (p) =>
-          activeTab === "All" ||
-          p.category === activeTab
-      )
       .filter(
         (p) =>
           !priceFilter ||
@@ -55,13 +47,7 @@ export default function HomeDecor() {
 
         return 0
       })
-  }, [
-    products,
-    activeTab,
-    priceFilter,
-    onlyNewArrivals,
-    sortBy,
-  ])
+  }, [products, priceFilter, onlyNewArrivals, sortBy])
 
   return (
     <>
@@ -72,14 +58,6 @@ export default function HomeDecor() {
 
       {/* Main content */}
       <div className="mx-auto w-full max-w-[1600px] px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8">
-        {/* Category tabs */}
-        <div className="mb-6 min-w-0 overflow-x-auto">
-          <HomeDecorCategoryTabs
-            activeTab={activeTab}
-            onSelect={setActiveTab}
-          />
-        </div>
-
         {/* Product count + sorting */}
         <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-gray-500">

@@ -1,29 +1,12 @@
-import { useState, useEffect } from "react"
+import { useProducts } from "../../context/useProducts"
 import ProductCard from "../shared/ProductCard"
-import { formatProduct } from "../../utils/formatProduct"
 
 // Keeps the same card width as before (180px, 200px from `sm` up)
 const CARD_SLOT = "flex w-[180px] shrink-0 sm:w-[200px]"
 
 export default function RecommendedSection() {
-  const [recommendations, setRecommendations] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch("https://dummyjson.com/products?limit=100")
-      .then((res) => res.json())
-      .then((data) => {
-        const topPicks = data.products
-          .filter((item) => item.rating >= 4.0)
-          .map(formatProduct)
-        setRecommendations(topPicks)
-        setLoading(false)
-      })
-      .catch((err) => {
-        console.error("Failed to load recommendations:", err)
-        setLoading(false)
-      })
-  }, [])
+  const { products, loading } = useProducts()
+  const recommendations = products.filter((item) => item.rating >= 4)
 
   if (loading) {
     return (

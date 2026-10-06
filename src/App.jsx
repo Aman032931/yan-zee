@@ -39,6 +39,7 @@ import SellerProducts from "./pages/seller/SellerProducts"
 
 import { ToastProvider } from "./context/ToastContext"
 import Toast from "./components/Toast"
+import ProtectedRoute from "./components/ProtectedRoute"
 
 function App() {
   const location = useLocation()
@@ -188,20 +189,16 @@ function App() {
      * Seller routes
      */
     {
-      path: "/seller",
-      element: <SellerLayout />,
+      element: <ProtectedRoute roles={["SHOP_OWNER"]} />,
       children: [
         {
-          index: true,
-          element: <SellerDashboard />,
-        },
-        {
-          path: "products",
-          element: <SellerProducts />,
-        },
-        {
-          path: "*",
-          element: <NotFound />,
+          path: "/seller",
+          element: <SellerLayout />,
+          children: [
+            { index: true, element: <SellerDashboard /> },
+            { path: "products", element: <SellerProducts /> },
+            { path: "*", element: <NotFound /> },
+          ],
         },
       ],
     },

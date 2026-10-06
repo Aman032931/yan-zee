@@ -4,53 +4,16 @@ import { DEALS, DELIVERY_TYPES } from "../../utils/dealDeliveryFilters"
 
 const CATEGORIES = [
   "All Departments",
+  "Fashion",
+  "Sports",
+  "Kids",
   "Beauty",
-  "Fragrances",
-  "Furniture",
-  "Home Decoration",
-  "Kitchen Accessories",
-  "Laptops",
-  "Mens Shirts",
-  "Mens Shoes",
-  "Mens Watches",
-  "Mobile Accessories",
-  "Skin Care",
-  "Smartphones",
-  "Sports Accessories",
-  "Sunglasses",
-  "Tablets",
-  "Tops",
-  "Womens Bags",
-  "Womens Dresses",
-  "Womens Jewellery",
-  "Womens Shoes",
-  "Womens Watches",
+  "Outlet",
+  "Premium",
+  "Home Decor",
 ]
 
-const BRANDS = [
-  "All Brands",
-  "BEAUTY",
-  "FRAGRANCES",
-  "FURNITURE",
-  "HOME-DECORATION",
-  "KITCHEN-ACCESSORIES",
-  "LAPTOPS",
-  "MENS-SHIRTS",
-  "MENS-SHOES",
-  "MENS-WATCHES",
-  "MOBILE-ACCESSORIES",
-  "SKIN-CARE",
-  "SMARTPHONES",
-  "SPORTS-ACCESSORIES",
-  "SUNGLASSES",
-  "TABLETS",
-  "TOPS",
-  "WOMENS-BAGS",
-  "WOMENS-DRESSES",
-  "WOMENS-JEWELLERY",
-  "WOMENS-SHOES",
-  "WOMENS-WATCHES",
-]
+const brands = ["All Brands"]
 
 function SectionHeader({ label, count, open, onClick }) {
   return (
@@ -141,7 +104,7 @@ export default function FilterPanel({
     onClearFilters?.()
   }
 
-  const visibleBrands = BRANDS.filter((b) =>
+  const visibleBrands = brands.filter((b) =>
     b.toLowerCase().includes(brandQuery.toLowerCase())
   )
 

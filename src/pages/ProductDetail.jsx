@@ -1,20 +1,21 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Heart, ShoppingCart, Check, Zap } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import { useProducts } from "../context/useProducts";
 import IconButton from "../components/shared/IconButton";
 import { useToast } from "../context/ToastContext";
 
-const CATEGORY_LABELS = {
-  "men's clothing": "Men's Clothing",
-  "women's clothing": "Women's Clothing",
-  jewelery: "Jewelery",
-  electronics: "Electronics",
+const CATEGORY_ROUTES = {
+  fashion: "/fashion",
+  sports: "/sports",
+  kids: "/kids",
+  beauty: "/beauty",
+  outlet: "/outlet",
+  premium: "/premium",
+  "home-decor": "/home-decor",
 };
-
-const CLOTHING_CATEGORIES = ["men's clothing", "women's clothing"];
-const SIZES = ["S", "M", "L", "XL", "XXL"];
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -23,71 +24,13 @@ export default function ProductDetail() {
   const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
   const { showToast } = useToast();
+  const { products, loading } = useProducts();
 
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [selectedSize, setSelectedSize] = useState(null);
+  // remembers which product the size belongs to, so it resets when the id changes
+  const [selection, setSelection] = useState({ productId: null, size: null });
+  const selectedSize = selection.productId === id ? selection.size : null;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    setLoading(true);
-    setNotFound(false);
-    setSelectedSize(null);
-
-    fetch(`https://dummyjson.com/products/${id}`)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Product not found");
-        }
-        return res.json();
-      })
-      .then((item) => {
-        if (cancelled) return;
-
-        if (!item || !item.id) {
-          setNotFound(true);
-          return;
-        }
-
-        const priceNPR = Math.round(item.price * 135);
-        const mrp = Math.round(priceNPR * 1.3);
-        const discountPercent = Math.round(
-          ((mrp - priceNPR) / mrp) * 100
-        );
-
-        setProduct({
-          id: item.id,
-          name: item.title,
-          title: item.title,
-          category: item.category,
-          priceNPR,
-          price: priceNPR,
-          mrp,
-          discountPercent,
-          image: item.image,
-          description: item.description,
-          rating: Math.round(item.rating?.rate || 4),
-          reviewCount: item.rating?.count || 0,
-          stock: 999,
-        });
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setNotFound(true);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
+  const product = products.find((p) => String(p.id) === id);
 
   if (loading) {
     return (
@@ -97,13 +40,10 @@ export default function ProductDetail() {
     );
   }
 
-  if (notFound || !product) {
+  if (!product) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-16 text-center">
-        <p className="text-lg font-semibold text-gray-700">
-          Product not found.
-        </p>
-
+        <p className="text-lg font-semibold text-gray-700">Product not found.</p>
         <button
           onClick={() => navigate(-1)}
           className="mt-4 cursor-pointer text-sm font-semibold text-red-600 hover:underline"
@@ -114,55 +54,41 @@ export default function ProductDetail() {
     );
   }
 
-  const isClothing = CLOTHING_CATEGORIES.includes(product.category);
-  const categoryLabel =
-    CATEGORY_LABELS[product.category] || product.category;
+  const variants = product.variants;
+  const hasSizes = variants.length > 0;
+  const selectedVariant = variants.find((v) => v.size === selectedSize);
+  const outOfStock = product.stock <= 0;
 
   const wishlisted = isWishlisted(product.id);
   const inCart = isInCart(product.id);
 
-  /*
-   * The product object sent to CartContext.
-   * This is important because CartContext expects
-   * name + priceNPR + stock.
-   */
+  // CartContext expects name + priceNPR + stock
   const cartProduct = {
     ...product,
-    name: product.name || product.title,
-    priceNPR: product.priceNPR ?? product.price ?? 0,
-    stock: product.stock ?? 999,
-    image: product.image,
+    name: product.title,
+    priceNPR: product.price,
+    stock: selectedVariant?.stock ?? product.stock,
+  };
+
+  const addCurrentToCart = () => {
+    if (outOfStock) {
+      showToast("This product is out of stock");
+      return false;
+    }
+    if (hasSizes && !selectedSize) {
+      alert("Please select a size first.");
+      return false;
+    }
+    addToCart({ ...cartProduct, ...(hasSizes && { size: selectedSize }) });
+    return true;
   };
 
   const handleAddToCart = () => {
-    if (isClothing && !selectedSize) {
-      alert("Please select a size first.");
-      return;
-    }
-
-    addToCart({
-      ...cartProduct,
-      ...(isClothing && { size: selectedSize }),
-    });
-    showToast("Added to cart");
+    if (addCurrentToCart()) showToast("Added to cart");
   };
 
   const handleBuyNow = () => {
-    if (isClothing && !selectedSize) {
-      alert("Please select a size first.");
-      return;
-    }
-
-    /*
-     * Add the product to the actual cart first.
-     * Then go to checkout.
-     */
-    addToCart({
-      ...cartProduct,
-      ...(isClothing && { size: selectedSize }),
-    });
-
-    navigate("/checkout");
+    if (addCurrentToCart()) navigate("/checkout");
   };
 
   const handleWishlist = () => {
@@ -173,34 +99,21 @@ export default function ProductDetail() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-
       {/* Breadcrumb */}
       <nav className="text-xs text-gray-500 mb-6 flex flex-wrap items-center gap-1">
-        <Link
-          to="/"
-          className="hover:text-gray-800 transition"
-        >
-          Home
-        </Link>
-
+        <Link to="/" className="hover:text-gray-800 transition">Home</Link>
         <span>/</span>
-
         <Link
-          to="/home"
-          className="hover:text-gray-800 transition"
+          to={CATEGORY_ROUTES[product.category] || "/home"}
+          className="hover:text-gray-800 transition capitalize"
         >
-          {categoryLabel}
+          {product.brand.toLowerCase()}
         </Link>
-
         <span>/</span>
-
-        <span className="text-gray-800 font-medium truncate max-w-xs">
-          {product.title}
-        </span>
+        <span className="text-gray-800 font-medium truncate max-w-xs">{product.title}</span>
       </nav>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-
         {/* ================= IMAGE ================= */}
         <div className="relative bg-gray-50 rounded-lg flex items-center justify-center p-8 h-96">
           <img
@@ -208,8 +121,6 @@ export default function ProductDetail() {
             alt={product.title}
             className="max-h-full max-w-full object-contain"
           />
-
-          {/* Wishlist heart — overlaid on the photo, top-right */}
           <button
             type="button"
             onClick={handleWishlist}
@@ -226,79 +137,74 @@ export default function ProductDetail() {
 
         {/* ================= DETAILS ================= */}
         <div>
-
           <span className="text-xs uppercase font-bold text-gray-400 tracking-wider">
-            {categoryLabel}
+            {product.brand}
           </span>
 
-          <h1 className="text-xl font-bold text-gray-900 mt-1 mb-3">
-            {product.title}
-          </h1>
+          <h1 className="text-xl font-bold text-gray-900 mt-1 mb-3">{product.title}</h1>
 
-          {/* Rating */}
-          <div className="inline-flex items-center gap-1 bg-emerald-600 text-white text-xs font-semibold px-2 py-1 rounded mb-4">
-            {product.rating}
-            <span>★</span>
-
-            <span className="text-white/80 font-normal ml-1">
-              | {product.reviewCount} Ratings
-            </span>
-          </div>
+          {product.rating > 0 && (
+            <div className="inline-flex items-center gap-1 bg-emerald-600 text-white text-xs font-semibold px-2 py-1 rounded mb-4">
+              {product.rating}
+              <span>★</span>
+            </div>
+          )}
 
           {/* Price */}
           <div className="flex items-baseline gap-2 mb-1">
             <span className="text-2xl font-bold text-gray-900">
-              Nrs {product.priceNPR.toLocaleString()}
+              Nrs {product.price.toLocaleString()}
             </span>
-
-            <span className="text-sm text-gray-400 line-through">
-              MRP Nrs {product.mrp.toLocaleString()}
-            </span>
-
-            <span className="text-sm font-semibold text-emerald-600">
-              ({product.discountPercent}% OFF)
-            </span>
+            {product.mrp && (
+              <>
+                <span className="text-sm text-gray-400 line-through">
+                  MRP Nrs {product.mrp.toLocaleString()}
+                </span>
+                <span className="text-sm font-semibold text-emerald-600">
+                  ({product.discountPercent}% OFF)
+                </span>
+              </>
+            )}
           </div>
 
-          <p className="text-xs text-green-600 mb-6">
-            inclusive of all taxes
-          </p>
+          <p className="text-xs text-green-600 mb-6">inclusive of all taxes</p>
 
-          {/* Size */}
-          {isClothing && (
+          {/* Sizes (real variants) */}
+          {hasSizes && (
             <div className="mb-6">
-              <p className="text-sm font-semibold text-gray-800 mb-2">
-                Select Size
-              </p>
-
-              <div className="flex gap-2">
-                {SIZES.map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => setSelectedSize(size)}
-                    className={`w-11 h-11 rounded-full border text-xs font-semibold transition cursor-pointer ${
-                      selectedSize === size
-                        ? "border-red-600 bg-red-600 text-white"
-                        : "border-gray-300 text-gray-700 hover:border-gray-500"
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
+              <p className="text-sm font-semibold text-gray-800 mb-2">Select Size</p>
+              <div className="flex flex-wrap gap-2">
+                {variants.map((v) => {
+                  const soldOut = v.stock <= 0;
+                  return (
+                    <button
+                      key={v.id ?? v.size}
+                      type="button"
+                      disabled={soldOut}
+                      onClick={() => setSelection({ productId: id, size: v.size })}
+                      className={`h-11 min-w-11 rounded-full border px-3 text-xs font-semibold transition cursor-pointer ${
+                        selectedSize === v.size
+                          ? "border-red-600 bg-red-600 text-white"
+                          : soldOut
+                            ? "cursor-not-allowed border-gray-200 text-gray-300 line-through"
+                            : "border-gray-300 text-gray-700 hover:border-gray-500"
+                      }`}
+                    >
+                      {v.size}
+                    </button>
+                  );
+                })}
               </div>
-
-              <p className="text-[11px] text-gray-400 mt-2">
-                Sizes shown for reference only — real per-size stock
-                isn't tracked yet.
-              </p>
+              {selectedVariant && (
+                <p className="text-[11px] text-gray-500 mt-2">
+                  {selectedVariant.stock} in stock
+                </p>
+              )}
             </div>
           )}
 
           {/* ================= ACTION BUTTONS ================= */}
           <div className="flex gap-3">
-
-            {/* ADD TO CART */}
             <IconButton
               icon={inCart ? Check : ShoppingCart}
               variant={inCart ? "secondary" : "primary"}
@@ -309,7 +215,6 @@ export default function ProductDetail() {
               {inCart ? "Added to Cart" : "Add to Cart"}
             </IconButton>
 
-            {/* BUY NOW */}
             <IconButton
               icon={Zap}
               variant="outline"
@@ -319,20 +224,17 @@ export default function ProductDetail() {
             >
               Buy Now
             </IconButton>
-
           </div>
 
           {/* Description */}
           <div className="border-t border-gray-100 pt-5 mt-6">
-            <p className="text-sm font-semibold text-gray-800 mb-2">
-              Description
-            </p>
-
-            <p className="text-sm text-gray-600 leading-relaxed">
-              {product.description}
-            </p>
+            <p className="text-sm font-semibold text-gray-800 mb-2">Description</p>
+            {product.description ? (
+              <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
+            ) : (
+              <p className="text-sm text-gray-400">No description yet.</p>
+            )}
           </div>
-
         </div>
       </div>
     </div>

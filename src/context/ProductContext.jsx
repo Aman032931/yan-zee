@@ -1,6 +1,9 @@
-import { createContext, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { ProductContext } from "./productContextObject";
+import { getPublicProducts } from "../services/productService";
+import { formatProduct } from "../utils/formatProduct";
 
-const ProductContext = createContext();
+const PAGE_SIZE = 50;
 
 export default function ProductProvider({ children }) {
   const [products, setProducts] = useState([]);
@@ -8,23 +11,35 @@ export default function ProductProvider({ children }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    let cancelled = false;
+
+    async function load() {
       try {
-        setLoading(true);
-        const response = await fetch('https://dummyjson.com/products');
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
+        const first = await getPublicProducts({ page: 1, limit: PAGE_SIZE });
+        let items = first.data.products;
+        const totalPages = first.data.pagination?.totalPages ?? 1;
+
+        if (totalPages > 1) {
+          const rest = await Promise.all(
+            Array.from({ length: totalPages - 1 }, (_, i) =>
+              getPublicProducts({ page: i + 2, limit: PAGE_SIZE }),
+            ),
+          );
+          items = items.concat(...rest.map((r) => r.data.products));
         }
-        const data = await response.json();
-        setProducts(data);
+
+        if (!cancelled) setProducts(items.map(formatProduct));
       } catch (err) {
-        setError(err.message);
+        if (!cancelled) setError(err.message);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
     };
-    
-    fetchProducts();
   }, []);
 
   return (
@@ -33,4 +48,3 @@ export default function ProductProvider({ children }) {
     </ProductContext.Provider>
   );
 }
-

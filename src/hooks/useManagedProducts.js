@@ -1,43 +1,72 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  getMyProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} from '../services/productService';
 
-// Fetches real dummyjson products into local, editable state.
-// Add/Edit/Delete only mutate this in-memory array — nothing persists
-// to a real backend yet. Swap this out once real product CRUD exists.
-export function useManagedProducts(scopeFilter = null) {
+const PAGE_SIZE = 50;
+
+async function fetchAllMine() {
+  const first = await getMyProducts({ page: 1, limit: PAGE_SIZE });
+  let items = first.data.products;
+  const totalPages = first.data.pagination?.totalPages ?? 1;
+
+  if (totalPages > 1) {
+    const rest = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, i) =>
+        getMyProducts({ page: i + 2, limit: PAGE_SIZE }),
+      ),
+    );
+    items = items.concat(...rest.map((r) => r.data.products));
+  }
+  return items;
+}
+
+// The seller's own products. After every change the list is reloaded,
+// because the create/update/delete responses carry very little data.
+export function useManagedProducts(enabled = true) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetch('https://dummyjson.com/products')
-      .then((res) => res.json())
-      .then((data) => {
-        const formatted = data.map((item) => ({
-          id: item.id,
-          title: item.title,
-          category: item.category,
-          price: Math.round(item.price * 135),
-          image: item.image,
-          description: item.description,
-        }));
-        setProducts(scopeFilter ? formatted.filter(scopeFilter) : formatted);
-      })
-      .finally(() => setLoading(false));
+  const reload = useCallback(async () => {
+    setProducts(await fetchAllMine());
   }, []);
 
-  const addProduct = (newProduct) => {
-    setProducts((prev) => [
-      { ...newProduct, id: Date.now() }, // temporary local-only id
-      ...prev,
-    ]);
+  useEffect(() => {
+    if (!enabled) return;
+    let cancelled = false;
+    fetchAllMine()
+      .then((items) => {
+        if (!cancelled) setProducts(items);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled]);
+
+  const addProduct = async (payload) => {
+    await createProduct(payload);
+    await reload();
   };
 
-  const updateProduct = (id, updates) => {
-    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
+  const editProduct = async (id, payload) => {
+    await updateProduct(id, payload);
+    await reload();
   };
 
-  const deleteProduct = (id) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+  const removeProduct = async (id) => {
+    await deleteProduct(id);
+    await reload();
   };
 
-  return { products, loading, addProduct, updateProduct, deleteProduct };
+  return { products, loading, error, addProduct, editProduct, removeProduct };
 }
