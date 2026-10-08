@@ -1,17 +1,26 @@
 import { apiRequest } from "./api";
 
-export const createShop = async (payload) => {
-  const res = await apiRequest("/shops", { method: "POST", body: payload });
-  return res.data.shop;
+export const uploadShopImage = (file) => {
+  const formData = new FormData();
+
+  formData.append("image", file);
+
+  return apiRequest("/images/store", {
+    method: "POST",
+    body: formData,
+    auth: true,
+  });
 };
 
-// Resolves to the shop, or null if this owner has no shop yet.
-export const getMyShop = async () => {
-  try {
-    const res = await apiRequest("/shops/my");
-    return res.data?.shop ?? null;
-  } catch (err) {
-    if (err.status === 404) return null;
-    throw err;
-  }
-};
+export const createShop = (payload) =>
+  apiRequest("/stores", {
+    method: "POST",
+    body: payload,
+    auth: true,
+  });
+
+export const getMyShop = () =>
+  apiRequest("/store", {
+    method: "GET",
+    auth: true,
+  });
