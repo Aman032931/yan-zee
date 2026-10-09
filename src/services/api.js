@@ -54,17 +54,20 @@ function refreshOnce() {
   return refreshPromise
 }
 
-async function sendRequest(path, { method, body, auth }, tokenOverride) {
+// 1. sendRequest: accept extra headers, and don't JSON-encode FormData
+async function sendRequest(path, { method, body, auth, headers }, tokenOverride) {
   const token = tokenOverride ?? localStorage.getItem(ACCESS_KEY)
+  const isForm = body instanceof FormData
   try {
     return await fetch(`${BASE_URL}${path}`, {
       method,
       credentials: "include",
       headers: {
-        ...(body ? { "Content-Type": "application/json" } : {}),
+        ...(body && !isForm ? { "Content-Type": "application/json" } : {}),
         ...(auth && token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
       },
-      body: body ? JSON.stringify(body) : undefined,
+      body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
     })
   } catch {
     throw new Error(NETWORK_ERROR)
@@ -73,9 +76,9 @@ async function sendRequest(path, { method, body, auth }, tokenOverride) {
 
 export async function apiRequest(
   path,
-  { method = "GET", body, auth = true } = {}
+  { method = "GET", body, auth = true, headers} = {}
 ) {
-  const options = { method, body, auth }
+  const options = { method, body, auth, headers }
 
   let res = await sendRequest(path, options)
 

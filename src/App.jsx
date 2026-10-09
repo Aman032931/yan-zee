@@ -159,28 +159,33 @@ function App() {
      * Admin routes
      */
     {
-      path: "/admin",
-      element: <AdminLayout />,
+      element: <ProtectedRoute roles={["ADMIN"]} />,
       children: [
         {
-          index: true,
-          element: <AdminDashboard />,
-        },
-        {
-          path: "products",
-          element: <AdminProducts />,
-        },
-        {
-          path: "orders",
-          element: <AdminOrders />,
-        },
-        {
-          path: "users",
-          element: <AdminUsers />,
-        },
-        {
-          path: "*",
-          element: <NotFound />,
+          path: "/admin",
+          element: <AdminLayout />,
+          children: [
+            {
+              index: true,
+              element: <AdminDashboard />,
+            },
+            {
+              path: "products",
+              element: <AdminProducts />,
+            },
+            {
+              path: "orders",
+              element: <AdminOrders />,
+            },
+            {
+              path: "users",
+              element: <AdminUsers />,
+            },
+            {
+              path: "*",
+              element: <NotFound />,
+            },
+          ],
         },
       ],
     },
@@ -189,7 +194,7 @@ function App() {
      * Seller routes
      */
     {
-      element: <ProtectedRoute roles={["SHOP_OWNER"]} />,
+      element: <ProtectedRoute roles={["OWNER"]} />,
       children: [
         {
           path: "/seller",

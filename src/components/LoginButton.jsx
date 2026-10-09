@@ -90,20 +90,39 @@ const LoginButton = () => {
       {isOpen && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-[1100] mt-2 w-60 overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-lg"
+          className="absolute right-0 top-full z-[1100] mt-2 w-72 overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-lg"
         >
-          <div className="border-b border-[#eee] px-4 py-3">
-            <p className="m-0 truncate text-[14px] font-semibold text-[#111]">
-              {fullName}
-            </p>
-            <p className="m-0 truncate text-[12px] text-[#777]">
-              {currentUser.email}
-            </p>
-            {role && (
-              <span className="mt-2 inline-block rounded-full bg-slate-100 px-2 py-[2px] text-[11px] font-medium capitalize text-slate-700">
-                {role}
-              </span>
+          <div className="flex items-center gap-3 border-b border-[#eee] px-4 py-3">
+            {currentUser.profileImg ? (
+              <img
+                src={currentUser.profileImg}
+                alt={fullName}
+                className="h-10 w-10 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[14px] font-semibold text-slate-700">
+                {fullName.charAt(0).toUpperCase()}
+              </div>
             )}
+
+            <div className="min-w-0">
+              <p className="m-0 truncate text-[14px] font-semibold text-[#111]">
+                {fullName}
+              </p>
+              <p className="m-0 truncate text-[12px] text-[#777]">
+                {currentUser.email}
+              </p>
+              {currentUser.phone && (
+                <p className="m-0 truncate text-[12px] text-[#777]">
+                  {currentUser.phone}
+                </p>
+              )}
+              {role && (
+                <span className="mt-1.5 inline-block rounded-full bg-slate-100 px-2 py-[2px] text-[11px] font-medium capitalize text-slate-700">
+                  {role}
+                </span>
+              )}
+            </div>
           </div>
 
           <button

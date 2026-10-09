@@ -1,47 +1,43 @@
 import { useState, useEffect } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { AuthContext } from "./authContextObject"
-import { loginUser, logoutUser, getMe } from "../services/authService"
+import { loginUser, logoutUser } from "../services/authService"
+import { useMe } from "../hooks/useMe"
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem("yanzee_user")
-      return saved ? JSON.parse(saved) : null
-    } catch {
-      return null
-    }
-  })
+  const qc = useQueryClient()
+  const [token, setToken] = useState(() => localStorage.getItem("yanzee_token"))
 
-  // On app load, refresh the stored user from the server (role or name may have changed)
-  useEffect(() => {
-    if (!localStorage.getItem("yanzee_token")) return
-    let cancelled = false
-    getMe()
-      .then((user) => {
-        if (!cancelled) setCurrentUser({ ...user, name: user.fullName })
-      })
-      .catch(() => {
-        // a 401 is handled in api.js; any other error keeps the stored user
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const { data: me, isLoading } = useMe(!!token)
+  const currentUser = token ? me ?? null : null
 
-  const login = async (email, password) => {
-    try {
-      const { accessToken, refreshToken, user } = await loginUser({
-        email,
-        password,
-      })
+  const clearSession = () => {
+    localStorage.removeItem("yanzee_token")
+    localStorage.removeItem("yanzee_refresh_token")
+    setToken(null)
+    qc.clear() // drops cached user and any user-specific data
+  }
 
+  const loginMutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: ({ accessToken, refreshToken, user }) => {
       localStorage.setItem("yanzee_token", accessToken)
       localStorage.setItem("yanzee_refresh_token", refreshToken)
+      setToken(accessToken)
+      qc.setQueryData(["me"], { ...user, name: user.fullName })
+    },
+  })
 
-      // `name` keeps older components working if they read user.name
-      const normalizedUser = { ...user, name: user.fullName }
-      setCurrentUser(normalizedUser)
-      return { success: true, user: normalizedUser }
+  const logoutMutation = useMutation({
+    mutationFn: logoutUser,
+    onSettled: clearSession, // runs even if the server call fails
+  })
+
+  // same return shapes as before, so Login.jsx and the header keep working
+  const login = async (email, password) => {
+    try {
+      await loginMutation.mutateAsync({ email, password })
+      return { success: true, user: qc.getQueryData(["me"]) }
     } catch (err) {
       return { success: false, error: err.message }
     }
@@ -49,23 +45,19 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await logoutUser()
+      await logoutMutation.mutateAsync()
     } catch {
-      // even if the server call fails (expired token, offline), still log out locally
+      // clearSession already ran in onSettled
     }
-    localStorage.removeItem("yanzee_token")
-    localStorage.removeItem("yanzee_refresh_token")
-    setCurrentUser(null)
   }
 
   useEffect(() => {
-    const handleForcedLogout = () => setCurrentUser(null)
-    window.addEventListener("auth:logout", handleForcedLogout)
-    return () => window.removeEventListener("auth:logout", handleForcedLogout)
+    window.addEventListener("auth:logout", clearSession)
+    return () => window.removeEventListener("auth:logout", clearSession)
   }, [])
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout }}>
+    <AuthContext.Provider value={{ currentUser, login, logout, loading: isLoading }}>
       {children}
     </AuthContext.Provider>
   )
