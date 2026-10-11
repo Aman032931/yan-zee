@@ -1,144 +1,320 @@
-import { useState } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
-import { useManagedProducts } from '../../hooks/useManagedProducts';
-import ProductFormModal from '../../components/shared/ProductFormModal';
+
+import { useState } from "react";
+import { Link, useOutletContext } from "react-router-dom";
+import { useManagedProducts } from "../../hooks/useManagedProducts";
+import ProductFormModal from "../../components/shared/ProductFormModal";
 
 const STATUS_STYLES = {
-  ACTIVE: 'bg-emerald-50 text-emerald-700',
-  DRAFT: 'bg-gray-100 text-gray-600',
-  OUT_OF_STOCK: 'bg-red-50 text-red-700',
+  ACTIVE: "bg-emerald-50 text-emerald-700",
+  DRAFT: "bg-gray-100 text-gray-600",
+  OUT_OF_STOCK: "bg-red-50 text-red-700",
 };
+
+function formatPrice(value) {
+  const price = Number(value);
+
+  if (!Number.isFinite(price)) {
+    return "—";
+  }
+
+  return price.toLocaleString();
+}
+
+function formatText(value, fallback = "—") {
+  if (value === null || value === undefined || value === "") {
+    return fallback;
+  }
+
+  return String(value);
+}
+
+function formatStatus(status) {
+  return formatText(status, "UNKNOWN").replace(/_/g, " ");
+}
 
 export default function SellerProducts() {
   const { shop, shopLoading } = useOutletContext();
-  const { products, loading, error, addProduct, editProduct, removeProduct } =
-    useManagedProducts(Boolean(shop));
+
+  const {
+    products = [],
+    loading,
+    error,
+    addProduct,
+    editProduct,
+    removeProduct,
+  } = useManagedProducts(shop?.id, Boolean(shop?.id));
 
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [actionError, setActionError] = useState('');
+  const [actionError, setActionError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
 
   const openAdd = () => {
     setEditingProduct(null);
-    setShowForm(true);
-  };
-  const openEdit = (product) => {
-    setEditingProduct(product);
+    setActionError("");
     setShowForm(true);
   };
 
-  // the modal shows any error thrown here and stays open
+  const openEdit = (product) => {
+    setEditingProduct(product);
+    setActionError("");
+    setShowForm(true);
+  };
+
   const handleSave = async (data) => {
-    if (editingProduct) {
-      await editProduct(editingProduct.id, data);
-    } else {
-      await addProduct(data);
+    setActionError("");
+
+    try {
+      if (editingProduct) {
+        await editProduct(editingProduct.id, data);
+      } else {
+        await addProduct(data);
+      }
+
+      setShowForm(false);
+      setEditingProduct(null);
+    } catch (err) {
+      setActionError(
+        err?.message || "Could not save the product."
+      );
+      throw err;
     }
-    setShowForm(false);
   };
 
   const handleDelete = async (product) => {
-    if (!window.confirm(`Delete "${product.name}"?`)) return;
-    setActionError('');
+    const productName = formatText(product.name, "this product");
+
+    if (!window.confirm(`Delete "${productName}"?`)) {
+      return;
+    }
+
+    setActionError("");
+    setDeletingId(product.id);
+
     try {
       await removeProduct(product.id);
     } catch (err) {
-      setActionError(err.message);
+      setActionError(
+        err?.message || "Could not delete the product."
+      );
+    } finally {
+      setDeletingId(null);
     }
   };
 
   if (shopLoading) {
-    return <p className="text-sm text-gray-500">Loading…</p>;
+    return (
+      <p className="text-sm text-gray-500">
+        Loading store...
+      </p>
+    );
   }
 
   if (!shop) {
     return (
-      <div>
-        <h1 className="mb-2 text-2xl font-bold text-gray-900">My Products</h1>
-        <p className="mb-4 text-sm text-gray-500">Create your shop before adding products.</p>
-        <Link to="/seller" className="text-sm font-medium text-blue-600 hover:underline">
+      <div className="space-y-3">
+        <h1 className="text-2xl font-bold text-gray-900">
+          My Products
+        </h1>
+
+        <p className="text-sm text-gray-500">
+          Create or select a store before managing products.
+        </p>
+
+        <Link
+          to="/seller"
+          className="inline-block text-sm font-medium text-blue-600 hover:underline"
+        >
           Go to dashboard
         </Link>
       </div>
     );
   }
 
+  const displayedError = actionError || error;
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Products</h1>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            My Products
+          </h1>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Manage products for {formatText(shop.name, "your store")}.
+          </p>
+        </div>
+
         <button
+          type="button"
           onClick={openAdd}
-          className="bg-black text-white text-xs font-semibold px-4 py-2 rounded hover:bg-gray-800 transition cursor-pointer"
+          className="self-start rounded bg-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800"
         >
           + Add Product
         </button>
       </div>
 
-      {(error || actionError) && (
-        <p className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-          ⚠ {error || actionError}
-        </p>
+      {displayedError && (
+        <div
+          role="alert"
+          className="rounded border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-700"
+        >
+          <p className="font-medium">
+            Something went wrong
+          </p>
+          <p className="mt-1">{displayedError}</p>
+        </div>
       )}
 
-      <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+      <div className="overflow-x-auto rounded-lg border border-gray-100 bg-white shadow-sm">
+        <table className="w-full min-w-[720px] text-sm">
+          <thead className="bg-gray-50 text-xs uppercase text-gray-500">
             <tr>
-              <th className="text-left px-4 py-3">Product</th>
-              <th className="text-left px-4 py-3">Category</th>
-              <th className="text-left px-4 py-3">Price</th>
-              <th className="text-left px-4 py-3">Stock</th>
-              <th className="text-left px-4 py-3">Status</th>
-              <th className="text-right px-4 py-3">Actions</th>
+              <th className="px-4 py-3 text-left">Product</th>
+              <th className="px-4 py-3 text-left">Category</th>
+              <th className="px-4 py-3 text-left">Price</th>
+              <th className="px-4 py-3 text-left">Stock</th>
+              <th className="px-4 py-3 text-left">Status</th>
+              <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="px-4 py-6 text-center text-gray-400">Loading...</td></tr>
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-4 py-8 text-center text-gray-400"
+                >
+                  Loading products...
+                </td>
+              </tr>
             ) : products.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-6 text-center text-gray-400">No products yet. Add your first one.</td></tr>
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-4 py-8 text-center text-gray-500"
+                >
+                  No products found for this store.
+                  <p className="mt-1 text-xs text-gray-400">
+                    Add a product to get started.
+                  </p>
+                </td>
+              </tr>
             ) : (
-              products.map((p) => (
-                <tr key={p.id} className="border-t border-gray-100">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      {p.image ? (
-                        <img src={p.image} alt={p.name} className="w-10 h-10 object-contain bg-gray-50 rounded" />
-                      ) : (
-                        <div className="w-10 h-10 rounded bg-gray-100" />
-                      )}
-                      <span className="line-clamp-1 max-w-xs">{p.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {p.category.replace(/_/g, ' ')}
-                    <span className="block text-[11px] text-gray-400">{p.audience}</span>
-                  </td>
-                  <td className="px-4 py-3 font-semibold">
-                    {p.discountPrice > 0 && p.discountPrice < p.price ? (
-                      <>
-                        Nrs {p.discountPrice.toLocaleString()}
-                        <span className="ml-1 text-xs font-normal text-gray-400 line-through">
-                          {p.price.toLocaleString()}
+              products.map((product, index) => {
+                const id = product.id ?? product._id ?? index;
+                const price = Number(product.price);
+                const discountPrice = Number(product.discountPrice);
+
+                const hasDiscount =
+                  Number.isFinite(price) &&
+                  Number.isFinite(discountPrice) &&
+                  discountPrice > 0 &&
+                  discountPrice < price;
+
+                const status = formatText(
+                  product.status,
+                  "UNKNOWN"
+                ).toUpperCase();
+
+                return (
+                  <tr
+                    key={id}
+                    className="border-t border-gray-100"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        {product.image ? (
+                          <img
+                            src={product.image}
+                            alt={formatText(product.name, "Product")}
+                            className="h-10 w-10 rounded bg-gray-50 object-contain"
+                          />
+                        ) : (
+                          <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-100">
+                            <span className="text-xs text-gray-400">
+                              N/A
+                            </span>
+                          </div>
+                        )}
+
+                        <span className="line-clamp-2 max-w-xs">
+                          {formatText(product.name, "Unnamed product")}
                         </span>
-                      </>
-                    ) : (
-                      <>Nrs {p.price.toLocaleString()}</>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{p.totalStock}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-[2px] text-[11px] font-medium ${STATUS_STYLES[p.status] || 'bg-gray-100 text-gray-600'}`}>
-                      {p.status.replace(/_/g, ' ')}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right space-x-3 whitespace-nowrap">
-                    <button onClick={() => openEdit(p)} className="text-blue-600 hover:underline text-xs font-medium cursor-pointer">Edit</button>
-                    <button onClick={() => handleDelete(p)} className="text-red-600 hover:underline text-xs font-medium cursor-pointer">Delete</button>
-                  </td>
-                </tr>
-              ))
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-3 text-gray-500">
+                      {formatText(
+                        product.category,
+                        "Uncategorized"
+                      ).replace(/_/g, " ")}
+
+                      <span className="block text-[11px] text-gray-400">
+                        {formatText(
+                          product.audience,
+                          "All audiences"
+                        )}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-3 font-semibold">
+                      {hasDiscount ? (
+                        <>
+                          Nrs {formatPrice(discountPrice)}
+                          <span className="ml-1 text-xs font-normal text-gray-400 line-through">
+                            {formatPrice(price)}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          {Number.isFinite(price)
+                            ? `Nrs ${formatPrice(price)}`
+                            : "Price unavailable"}
+                        </>
+                      )}
+                    </td>
+
+                    <td className="px-4 py-3 text-gray-600">
+                      {formatText(product.totalStock)}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      <span
+                        className={`rounded-full px-2 py-1 text-[11px] font-medium ${
+                          STATUS_STYLES[status] ||
+                          "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {formatStatus(status)}
+                      </span>
+                    </td>
+
+                    <td className="whitespace-nowrap px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(product)}
+                        className="mr-3 cursor-pointer text-xs font-medium text-blue-600 hover:underline"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(product)}
+                        disabled={deletingId === product.id}
+                        className="cursor-pointer text-xs font-medium text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {deletingId === product.id
+                          ? "Deleting..."
+                          : "Delete"}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -147,8 +323,13 @@ export default function SellerProducts() {
       {showForm && (
         <ProductFormModal
           initialData={editingProduct}
+          storeId={shop.id}
           onSave={handleSave}
-          onClose={() => setShowForm(false)}
+          onClose={() => {
+            setShowForm(false);
+            setEditingProduct(null);
+            setActionError("");
+          }}
         />
       )}
     </div>

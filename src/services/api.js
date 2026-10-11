@@ -1,171 +1,108 @@
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = import.meta.env.VITE_API_URL
 
-const ACCESS_KEY = "yanzee_token";
-const REFRESH_KEY = "yanzee_refresh_token";
+const ACCESS_KEY = "yanzee_token"
+const REFRESH_KEY = "yanzee_refresh_token"
 
-const NETWORK_ERROR = "Cannot reach the server. Please try again.";
+const NETWORK_ERROR = "Cannot reach the server. Please try again."
 
-let refreshPromise = null;
+let refreshPromise = null
 
 function clearSession() {
-  localStorage.removeItem(ACCESS_KEY);
-  localStorage.removeItem(REFRESH_KEY);
-  localStorage.removeItem("yanzee_user");
+  localStorage.removeItem(ACCESS_KEY)
+  localStorage.removeItem(REFRESH_KEY)
+  localStorage.removeItem("yanzee_user")
 }
 
-// Calls /auth/refresh with the refresh token.
+// Calls /auth/refresh with the refresh token as a Bearer token.
 async function refreshTokens() {
-  const refreshToken = localStorage.getItem(REFRESH_KEY);
+  const refreshToken = localStorage.getItem(REFRESH_KEY)
 
-  let res;
-
+  let res
   try {
     res = await fetch(`${BASE_URL}/auth/refresh`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ refreshToken }),
-    });
+  method: "POST",
+  credentials: "include",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ refreshToken }),
+});
   } catch {
-    throw new Error(NETWORK_ERROR);
+    throw new Error(NETWORK_ERROR) // network problem, not a rejected session
   }
 
-  const json = await res.json().catch(() => null);
+  const json = await res.json().catch(() => null)
 
   if (!res.ok || !json?.data?.accessToken) {
-    const error = new Error(json?.message || "Session expired");
-    error.rejected = true;
-    throw error;
+    const error = new Error(json?.message || "Session expired")
+    error.rejected = true // the server refused the refresh token
+    throw error
   }
 
-  localStorage.setItem(ACCESS_KEY, json.data.accessToken);
-
+  localStorage.setItem(ACCESS_KEY, json.data.accessToken)
   if (json.data.refreshToken) {
-    localStorage.setItem(REFRESH_KEY, json.data.refreshToken);
+    localStorage.setItem(REFRESH_KEY, json.data.refreshToken)
   }
-
-  return json.data.accessToken;
+  return json.data.accessToken
 }
 
-// Many requests can fail at once;
-// they all share one refresh call.
+// Many requests can fail at once; they all share ONE refresh call.
 function refreshOnce() {
   if (!refreshPromise) {
     refreshPromise = refreshTokens().finally(() => {
-      refreshPromise = null;
-    });
+      refreshPromise = null
+    })
   }
-
-  return refreshPromise;
+  return refreshPromise
 }
 
-async function sendRequest(
-  path,
-  { method, body, auth, headers: customHeaders },
-  tokenOverride
-) {
-  const token = tokenOverride ?? localStorage.getItem(ACCESS_KEY);
-
-  const isFormData = body instanceof FormData;
-
+// 1. sendRequest: accept extra headers, and don't JSON-encode FormData
+async function sendRequest(path, { method, body, auth, headers }, tokenOverride) {
+  const token = tokenOverride ?? localStorage.getItem(ACCESS_KEY)
+  const isForm = body instanceof FormData
   try {
     return await fetch(`${BASE_URL}${path}`, {
       method,
       credentials: "include",
-
-
       headers: {
-        // Do NOT manually set Content-Type for FormData.
-        // The browser automatically adds the multipart boundary.
-        ...(!isFormData && body
-          ? { "Content-Type": "application/json" }
-          : {}),
-
-        ...(auth && token
-          ? { Authorization: `Bearer ${token}` }
-          : {}),
-
-        // Supports custom headers such as x-store-id.
-        ...customHeaders,
+        ...(body && !isForm ? { "Content-Type": "application/json" } : {}),
+        ...(auth && token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
       },
-
-      body: isFormData
-        ? body
-        : body
-          ? JSON.stringify(body)
-          : undefined,
-    });
-
-
+      body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
+    })
   } catch {
-    throw new Error(NETWORK_ERROR);
+    throw new Error(NETWORK_ERROR)
   }
 }
 
 export async function apiRequest(
   path,
-  { method = "GET", body, auth = true, headers = {} } = {}
+  { method = "GET", body, auth = true, headers} = {}
 ) {
-  const options = {
-    method,
-    body,
-    auth,
-    headers,
-  };
+  const options = { method, body, auth, headers }
 
-  let res = await sendRequest(path, options);
+  let res = await sendRequest(path, options)
 
-  // Access token expired:
-  // refresh once, then retry the original request once.
-  if (
-    res.status === 401 &&
-    auth &&
-    localStorage.getItem(REFRESH_KEY)
-  ) {
+  // Access token expired: refresh once, then retry the original request once.
+  if (res.status === 401 && auth && localStorage.getItem(REFRESH_KEY)) {
     try {
-      const newToken = await refreshOnce();
-
-
-      res = await sendRequest(
-        path,
-        options,
-        newToken
-      );
+      const newToken = await refreshOnce()
+      res = await sendRequest(path, options, newToken)
     } catch (err) {
       if (err.rejected) {
-        clearSession();
-
-        window.dispatchEvent(
-          new Event("auth:logout")
-        );
-
-        throw new Error(
-          "Session expired. Please log in again.",
-          { cause: err }
-        );
+        clearSession()
+        window.dispatchEvent(new Event("auth:logout"))
+        throw new Error("Session expired. Please log in again.", { cause: err })
       }
-
-      throw err;
+      throw err
     }
-
-
   }
 
-  const data = await res.json().catch(() => null);
+  const data = await res.json().catch(() => null)
 
   if (!res.ok) {
-    const error = new Error(
-      data?.message || `Request failed (${res.status})`
-    );
-
-
-    error.status = res.status;
-
-    throw error;
-
+    const error = new Error(data?.message || `Request failed (${res.status})`)
+    error.status = res.status
+    throw error
   }
-
-  return data;
+  return data
 }

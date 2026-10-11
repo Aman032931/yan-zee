@@ -1,49 +1,47 @@
-import { useState, useEffect } from "react"
-import { apiRequest } from "../services/api"
+import { useState, useEffect } from "react";
+import { apiRequest } from "../services/api";
 
-const MONTHS = ["Apr", "May", "Jun", "Jul", "Aug", "Sep"]
+const MONTHS = ["Apr", "May", "Jun", "Jul", "Aug", "Sep"];
 
-export function useDashboardMetrics() {
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+export function useDashboardMetrics(storeId) {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(Boolean(storeId));
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const loadProducts = async () => {
+    let cancelled = false;
+
+    async function loadProducts() {
+      // Do not request products without a selected store.
+      if (!storeId) {
+        setProducts([]);
+        setError("");
+        setLoading(false);
+        return;
+      }
+
       try {
-        setLoading(true)
-        setError("")
+        setLoading(true);
+        setError("");
 
         const response = await apiRequest("/products", {
           method: "GET",
           auth: true,
-        })
+          headers: {
+            "x-store-id": String(storeId),
+          },
+        });
 
-        /*
-          Support common backend response structures:
-
-          {
-            data: [...]
-          }
-
-          or
-
-          {
-            products: [...]
-          }
-
-          or directly:
-
-          [...]
-        */
-        const productList =
-          Array.isArray(response)
-            ? response
+        // Support common backend response structures.
+        const productList = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.data?.products)
+            ? response.data.products
             : Array.isArray(response?.data)
               ? response.data
               : Array.isArray(response?.products)
                 ? response.products
-                : []
+                : [];
 
         const formatted = productList.map((item) => ({
           id: item.id,
@@ -60,30 +58,38 @@ export function useDashboardMetrics() {
           status: item.status,
           audience: item.audience,
           variants: item.variants || [],
-        }))
+        }));
 
-        setProducts(formatted)
+        if (!cancelled) {
+          setProducts(formatted);
+        }
       } catch (err) {
-        setError(
-          err.message ||
-            "Unable to load seller products."
-        )
-
-        setProducts([])
+        if (!cancelled) {
+          setError(
+            err.message || "Unable to load seller products."
+          );
+          setProducts([]);
+        }
       } finally {
-        setLoading(false)
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
-    loadProducts()
-  }, [])
+    loadProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeId]);
 
   const buckets = MONTHS.map((month, i) =>
     products.filter(
       (product) =>
         Number(product.id || 0) % MONTHS.length === i
     )
-  )
+  );
 
   const revenueTrend = MONTHS.map((month, i) => ({
     month,
@@ -91,12 +97,12 @@ export function useDashboardMetrics() {
       (sum, product) => sum + product.price,
       0
     ),
-  }))
+  }));
 
   const ordersTrend = MONTHS.map((month, i) => ({
     month,
     orders: buckets[i].length,
-  }))
+  }));
 
   return {
     products,
@@ -104,5 +110,5 @@ export function useDashboardMetrics() {
     error,
     revenueTrend,
     ordersTrend,
-  }
+  };
 }

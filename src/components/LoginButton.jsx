@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, LogOut, UserRound } from "lucide-react";
@@ -13,7 +14,6 @@ const LoginButton = () => {
 
   const currentPage = location.pathname + location.search;
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -28,13 +28,13 @@ const LoginButton = () => {
     };
   }, []);
 
-  // ---------- LOGGED OUT ----------
+  // LOGGED OUT
   if (!currentUser) {
     return (
       <Link
         to="/login"
         state={{
-          from: currentPage ,
+          from: currentPage,
           backgroundLocation: location,
         }}
         className="flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-2.5 text-[13px] font-semibold uppercase tracking-wide text-white no-underline transition-colors duration-200 hover:bg-red-700"
@@ -46,12 +46,11 @@ const LoginButton = () => {
     );
   }
 
-  // ---------- LOGGED IN ----------
+  // LOGGED IN
   const fullName =
     currentUser.fullName || currentUser.name || "Account";
 
   const firstName = fullName.split(" ")[0];
-
   const role = (currentUser.role || "").toLowerCase();
 
   const handleLogout = () => {
@@ -94,23 +93,43 @@ const LoginButton = () => {
       {isOpen && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-[1100] mt-2 w-60 overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-lg"
+          className="absolute right-0 top-full z-[1100] mt-2 w-72 overflow-hidden rounded-xl border border-[#e5e5e5] bg-white shadow-lg"
         >
           {/* User Information */}
-          <div className="border-b border-[#eee] px-4 py-3">
-            <p className="m-0 truncate text-[14px] font-semibold text-[#111]">
-              {fullName}
-            </p>
-
-            <p className="m-0 truncate text-[12px] text-[#777]">
-              {currentUser.email}
-            </p>
-
-            {role && (
-              <span className="mt-2 inline-block rounded-full bg-slate-100 px-2 py-[2px] text-[11px] font-medium capitalize text-slate-700">
-                {role}
-              </span>
+          <div className="flex items-center gap-3 border-b border-[#eee] px-4 py-3">
+            {currentUser.profileImg ? (
+              <img
+                src={currentUser.profileImg}
+                alt={fullName}
+                className="h-10 w-10 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[14px] font-semibold text-slate-700">
+                {fullName.charAt(0).toUpperCase()}
+              </div>
             )}
+
+            <div className="min-w-0">
+              <p className="m-0 truncate text-[14px] font-semibold text-[#111]">
+                {fullName}
+              </p>
+
+              <p className="m-0 truncate text-[12px] text-[#777]">
+                {currentUser.email}
+              </p>
+
+              {currentUser.phone && (
+                <p className="m-0 truncate text-[12px] text-[#777]">
+                  {currentUser.phone}
+                </p>
+              )}
+
+              {role && (
+                <span className="mt-1.5 inline-block rounded-full bg-slate-100 px-2 py-[2px] text-[11px] font-medium capitalize text-slate-700">
+                  {role}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Profile */}

@@ -1,15 +1,11 @@
 import { useState, useRef } from "react"
-
 import { Link, useNavigate, useLocation } from "react-router-dom"
-
 import "../styles/auth.css"
-
 import { useAuth } from "../context/useAuth"
 
 function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-
   const { login } = useAuth()
 
   const [formData, setFormData] = useState({
@@ -24,47 +20,13 @@ function Login() {
 
   const videoRef = useRef(null)
 
-  /*
-   * =========================
-   * GET USER HOME PAGE
-   * =========================
-   */
-
-  const getUserHome = (user) => {
-    if (user?.role === "SHOP_OWNER") {
-      return "/shop-owner/setup-shop"
-    }
-
-    if (user?.role === "ADMIN") {
-      return "/admin"
-    }
-
-    // CUSTOMER
-    // Return to the page where login was opened
-    return location.state?.from || "/"
-  }
-
-  /*
-   * =========================
-   * CLOSE LOGIN
-   * =========================
-   */
-
   const handleClose = () => {
-    navigate(
-      location.state?.from || "/",
-      {
-        replace: true,
-      }
-    )
+    navigate(location.state?.from || "/", { replace: true })
   }
 
-  /*
-   * =========================
-   * INPUT CHANGE
-   * =========================
-   */
-
+  // =========================
+  // INPUT CHANGE
+  // =========================
   const handleChange = (e) => {
     const { name, value } = e.target
 
@@ -76,30 +38,20 @@ function Login() {
     setError("")
   }
 
-  /*
-   * =========================
-   * LOGIN SUBMIT
-   * =========================
-   */
-
+  // =========================
+  // LOGIN SUBMIT
+  // =========================
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     setError("")
 
-    /*
-     * Empty validation
-     */
-
+    // Empty validation
     if (!formData.email || !formData.password) {
       setError("Please enter your email and password.")
       return
     }
 
-    /*
-     * Email validation
-     */
-
+    // Email validation
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
       setError("Please enter a valid email address.")
       return
@@ -107,70 +59,20 @@ function Login() {
 
     setIsLoading(true)
 
-    try {
-      /*
-       * =========================
-       * LOGIN
-       * =========================
-       */
+    const result = await login(formData.email.trim(), formData.password)
+    setIsLoading(false)
 
-      const result = await login(
-        formData.email.trim(),
-        formData.password
-      )
-
-      /*
-       * =========================
-       * LOGIN FAILED
-       * =========================
-       */
-
-      if (!result.success) {
-        setError(
-          result.error ||
-            "Invalid email or password."
-        )
-
-        return
-      }
-
-      /*
-       * =========================
-       * GET USER
-       * =========================
-       */
-
-      const user = result.user
-
-      /*
-       * =========================
-       * ROLE-BASED REDIRECTION
-       * =========================
-       */
-
-      const destination = getUserHome(user)
-
-      navigate(destination, {
-        replace: true,
-      })
-    } catch (err) {
-      setError(
-        err.message ||
-          "Something went wrong while logging in."
-      )
-    } finally {
-      setIsLoading(false)
+    if (!result.success) {
+      setError(result.error)
+      return
     }
+
+    navigate(location.state?.from || "/", { replace: true })
   }
 
   return (
     <div className="auth-page">
       <div className="auth-card">
-
-        {/* =========================
-            CLOSE BUTTON
-        ========================== */}
-
         <button
           type="button"
           className="auth-close"
@@ -181,183 +83,116 @@ function Login() {
         </button>
 
         {/* =================================================
-            LEFT SIDE - AI VIDEO
-        ================================================== */}
+                    LEFT SIDE - AI VIDEO
+                ================================================== */}
 
         <div className="auth-visual">
-
           {/* Poster / fallback image */}
-
           <img
             src="/assets/yanzee-poster.jpg"
             alt="YanZee Collection Banner"
             className={`auth-visual-poster ${
-              isVideoLoaded
-                ? "fade-out"
-                : "fade-in"
+              isVideoLoaded ? "fade-out" : "fade-in"
             }`}
           />
 
           {/* AI VIDEO */}
-
           <video
             ref={videoRef}
             className={`auth-visual-video ${
-              isVideoLoaded
-                ? "fade-in"
-                : "hidden"
+              isVideoLoaded ? "fade-in" : "hidden"
             }`}
             autoPlay
             loop
             muted
             playsInline
-            onLoadedData={() =>
-              setIsVideoLoaded(true)
-            }
+            onLoadedData={() => setIsVideoLoaded(true)}
             poster="/assets/yanzee-poster.jpg"
           >
-            <source
-              src="/assets/yanzee-bg.mp4"
-              type="video/mp4"
-            />
+            <source src="/assets/yanzee-bg.mp4" type="video/mp4" />
           </video>
 
           {/* Dark overlay */}
-
           <div className="auth-visual-overlay"></div>
 
           {/* Video text */}
-
           <div className="auth-visual-content">
-            <div className="auth-seal">
-              Y
-            </div>
+            <div className="auth-seal">Y</div>
 
-            <h2>
-              YanZee Collection
-            </h2>
+            <h2>YanZee Collection</h2>
 
-            <p>
-              Fashion, beauty, and more —
-              delivered your way.
-            </p>
+            <p>Fashion, beauty, and more — delivered your way.</p>
           </div>
 
           {/* Bottom content */}
-
           <div className="auth-visual-bottom">
-
             <div className="auth-testimonial">
               <p>
-                "New arrivals land every week,
-                created for Nepal and beyond."
+                "New arrivals land every week, created for Nepal and beyond."
               </p>
 
-              <span>
-                — The YanZee Collection team
-              </span>
+              <span>— The YanZee Collection team</span>
             </div>
 
             <div className="auth-help">
               Need help?{" "}
-
-              <a href="mailto:support@yanzee.com">
-                support@yanzee.com
-              </a>
+              <a href="mailto:support@yanzee.com">support@yanzee.com</a>
             </div>
-
           </div>
         </div>
 
         {/* =================================================
-            RIGHT SIDE - LOGIN FORM
-        ================================================== */}
+                    RIGHT SIDE - LOGIN FORM
+                ================================================== */}
 
         <div className="auth-form-panel">
           <div className="auth-form-inner">
-
             {/* Mobile brand */}
-
             <div className="mobile-brand">
-              <div className="mobile-brand-seal">
-                Y
-              </div>
+              <div className="mobile-brand-seal">Y</div>
 
-              <span>
-                YanZee Collection
-              </span>
+              <span>YanZee Collection</span>
             </div>
 
             {/* Heading */}
-
             <div className="auth-heading">
-              <h1>
-                Welcome back
-              </h1>
+              <h1>Welcome back</h1>
 
-              <p>
-                Sign in to your YanZee Collection
-                account
-              </p>
+              <p>Sign in to your YanZee Collection account</p>
             </div>
 
             {/* Login / Signup tabs */}
-
             <div className="auth-tabs">
-
-              <Link
-                to="/login"
-                state={{
-                  from:
-                    location.state?.from || "/",
-                  backgroundLocation:
-                    location.state
-                      ?.backgroundLocation,
-                }}
-                className="auth-tab active"
-              >
+              <Link to="/login" className="auth-tab active">
                 Login
               </Link>
 
               <Link
                 to="/signup"
                 state={{
-                  from:
-                    location.state?.from || "/",
-                  backgroundLocation:
-                    location.state
-                      ?.backgroundLocation,
+                  from: location.state?.from || "/",
                 }}
                 className="auth-tab"
               >
                 Signup
               </Link>
-
             </div>
 
             {/* Login form */}
-
-            <form
-              className="auth-form"
-              onSubmit={handleSubmit}
-            >
-
+            <form className="auth-form" onSubmit={handleSubmit}>
               {/* Error */}
-
-              {error && (
-                <div className="auth-error">
-                  ⚠ {error}
-                </div>
-              )}
+              {error && <div className="auth-error">⚠ {error}</div>}
 
               {/* ================= EMAIL ================= */}
 
               <div className="auth-form-group">
-                <label htmlFor="email">
-                  Email address
-                </label>
+                <label htmlFor="email">Email address</label>
 
                 <div className="auth-input-wrapper">
+                  {/* <span className="auth-input-icon">
+                                        ✉
+                                    </span> */}
+
                   <input
                     id="email"
                     type="email"
@@ -374,18 +209,16 @@ function Login() {
               {/* ================= PASSWORD ================= */}
 
               <div className="auth-form-group">
-                <label htmlFor="password">
-                  Password
-                </label>
+                <label htmlFor="password">Password</label>
 
                 <div className="auth-input-wrapper">
+                  {/* <span className="auth-input-icon">
+                                        🔒
+                                    </span> */}
+
                   <input
                     id="password"
-                    type={
-                      showPassword
-                        ? "text"
-                        : "password"
-                    }
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
                     placeholder="Enter your password"
@@ -397,20 +230,12 @@ function Login() {
                   <button
                     type="button"
                     className="password-toggle"
-                    onClick={() =>
-                      setShowPassword(
-                        (prev) => !prev
-                      )
-                    }
+                    onClick={() => setShowPassword(!showPassword)}
                     aria-label={
-                      showPassword
-                        ? "Hide password"
-                        : "Show password"
+                      showPassword ? "Hide password" : "Show password"
                     }
                   >
-                    {showPassword
-                      ? "👁"
-                      : "⌣"}
+                    {showPassword ? "👁" : "⌣"}
                   </button>
                 </div>
               </div>
@@ -418,9 +243,7 @@ function Login() {
               {/* ================= FORGOT PASSWORD ================= */}
 
               <div className="auth-forgot">
-                <Link to="/forgot-password">
-                  Forgot password?
-                </Link>
+                <Link to="/forgot-password">Forgot password?</Link>
               </div>
 
               {/* ================= LOGIN BUTTON ================= */}
@@ -430,37 +253,28 @@ function Login() {
                 className="auth-submit"
                 disabled={isLoading}
               >
-                {isLoading
-                  ? "Logging in..."
-                  : "Login"}
+                {isLoading ? "Logging in..." : "Login"}
               </button>
 
               {/* ================= SIGNUP ================= */}
 
               <p className="auth-switch">
                 Don't have an account?{" "}
-
                 <Link
                   to="/signup"
                   state={{
-                    from:
-                      location.state?.from || "/",
-                    backgroundLocation:
-                      location.state
-                        ?.backgroundLocation,
+                    from: location.state?.from || "/",
                   }}
                 >
                   Create account
                 </Link>
               </p>
-
             </form>
           </div>
         </div>
-
       </div>
     </div>
   )
 }
 
-export default Login
+export default Login;

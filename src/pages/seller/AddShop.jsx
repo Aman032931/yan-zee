@@ -18,9 +18,9 @@ import {
 import { useAuth } from "../../context/useAuth"
 
 import {
-  uploadShopImage,
-  createShop,
-} from "../../services/shopService"
+  uploadStoreLogo,
+  createStore,
+} from "../../services/storeService"
 
 export default function AddShop() {
   const navigate = useNavigate()
@@ -173,7 +173,7 @@ export default function AddShop() {
 
       setUploadingImage(true)
 
-      const imageResponse = await uploadShopImage(
+      const imageResponse = await uploadStoreLogo(
         selectedImage
       )
 
@@ -225,7 +225,7 @@ export default function AddShop() {
       // 2. Create shop
       // --------------------------------
 
-      await createShop({
+      await createStore({
         name: formData.name.trim(),
         contactEmail: formData.contactEmail.trim(),
         image: imageUrl,
