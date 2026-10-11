@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useAuth } from "../../context/useAuth"
 import { useCreateStore } from "../../hooks/useStores"
 import { STORE_CATEGORIES } from "../../services/storeService"
@@ -21,7 +21,34 @@ export default function CreateShopForm({ onCreated }) {
     storeAddress: "",
   })
   const [logoFile, setLogoFile] = useState(null)
+  const [preview, setPreview] = useState("")
   const [error, setError] = useState("")
+
+  const fileInputRef = useRef(null)
+  const previewRef = useRef("") // lets us free the preview URL on unmount
+
+  useEffect(() => {
+    return () => {
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current)
+    }
+  }, [])
+
+  const setLogo = (file) => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current)
+    const url = file ? URL.createObjectURL(file) : ""
+    previewRef.current = url
+    setPreview(url)
+    setLogoFile(file)
+  }
+
+  const handleFileChange = (e) => {
+    setLogo(e.target.files?.[0] ?? null)
+  }
+
+  const clearLogo = () => {
+    setLogo(null)
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
 
   const handleChange = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
@@ -85,14 +112,55 @@ export default function CreateShopForm({ onCreated }) {
         <input value={form.storeAddress} onChange={handleChange("storeAddress")} className={inputClass} />
       </div>
 
+      {/* ---------- LOGO UPLOAD ---------- */}
       <div>
         <label className="mb-1 block text-xs font-medium text-gray-600">Logo (optional)</label>
+
         <input
+          ref={fileInputRef}
+          id="store-logo"
           type="file"
           accept="image/*"
-          onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
-          className="block w-full text-xs text-gray-600"
+          onChange={handleFileChange}
+          className="hidden"
         />
+
+        {logoFile ? (
+          <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <img
+              src={preview}
+              alt="Logo preview"
+              className="h-14 w-14 rounded-md border border-gray-200 bg-white object-contain"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-gray-800">{logoFile.name}</p>
+              <p className="text-xs text-gray-500">{(logoFile.size / 1024).toFixed(0)} KB</p>
+            </div>
+            <label
+              htmlFor="store-logo"
+              className="cursor-pointer text-xs font-medium text-blue-600 hover:underline"
+            >
+              Change
+            </label>
+            <button
+              type="button"
+              onClick={clearLogo}
+              className="cursor-pointer text-xs font-medium text-red-600 hover:underline"
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <label
+            htmlFor="store-logo"
+            className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-gray-300 bg-white px-4 py-6 text-center transition hover:border-black hover:bg-gray-50"
+          >
+            <span className="rounded bg-black px-3 py-1.5 text-xs font-semibold text-white">
+              Upload logo
+            </span>
+            <span className="text-xs text-gray-500"> Click to browse</span>
+          </label>
+        )}
       </div>
 
       <button

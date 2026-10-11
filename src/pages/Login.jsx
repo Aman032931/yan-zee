@@ -67,7 +67,21 @@ function Login() {
       return
     }
 
-    navigate(location.state?.from || "/", { replace: true })
+    const role = result.user?.role
+    const from = location.state?.from
+
+    // Owners and admins go to their panel, unless they were sent here
+    // from another dashboard page (e.g. a protected route redirect).
+    const isDashboardPath =
+      from?.startsWith("/seller") || from?.startsWith("/admin")
+
+    let destination = from || "/"
+    if (!isDashboardPath) {
+      if (role === "OWNER") destination = "/seller"
+      else if (role === "ADMIN") destination = "/admin"
+    }
+
+    navigate(destination, { replace: true })
   }
 
   return (
@@ -277,4 +291,4 @@ function Login() {
   )
 }
 
-export default Login;
+export default Login
