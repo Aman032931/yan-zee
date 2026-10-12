@@ -6,6 +6,10 @@ import CreateShopForm from "./CreateShopForm"
 const NAV_ITEMS = [
   { label: "Dashboard", to: "/seller" },
   { label: "My Products", to: "/seller/products" },
+  { label: "Categories", to: "/seller/categories" },
+  { label: "Brands", to: "/seller/brands" },
+  { label: "Orders", to: "/seller/orders" },
+  { label: "Settings", to: "/seller/settings" },
 ]
 
 const STORE_KEY = "yanzee_store_id"

@@ -77,7 +77,7 @@ function Login() {
 
     let destination = from || "/"
     if (!isDashboardPath) {
-      if (role === "OWNER") destination = "/seller"
+      if (role === "OWNER" || role === "SHOP_OWNER") destination = "/seller"
       else if (role === "ADMIN") destination = "/admin"
     }
 
@@ -203,10 +203,6 @@ function Login() {
                 <label htmlFor="email">Email address</label>
 
                 <div className="auth-input-wrapper">
-                  {/* <span className="auth-input-icon">
-                                        ✉
-                                    </span> */}
-
                   <input
                     id="email"
                     type="email"
@@ -226,10 +222,6 @@ function Login() {
                 <label htmlFor="password">Password</label>
 
                 <div className="auth-input-wrapper">
-                  {/* <span className="auth-input-icon">
-                                        🔒
-                                    </span> */}
-
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
