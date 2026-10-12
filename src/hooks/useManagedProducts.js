@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   getMyProducts,
@@ -171,67 +171,18 @@ async function fetchAllMine(storeId) {
 }
 
 export function useManagedProducts(storeId, enabled = true) {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const qc = useQueryClient();
+  const queryKey = ["managedProducts", storeId];
+
+  const query = useQuery({
+    queryKey,
+    queryFn: () => fetchAllMine(storeId),
+    // no store selected (or disabled) = no request, no state juggling
+    enabled: Boolean(storeId) && enabled,
+  });
 
   // Reload products after creating, editing, or deleting.
-  const reload = useCallback(async () => {
-    if (!storeId || !enabled) {
-      setProducts([]);
-      return;
-    }
-
-    setError("");
-
-    try {
-      const items = await fetchAllMine(storeId);
-      setProducts(items);
-    } catch (err) {
-      setError(err?.message || "Unable to load products.");
-      throw err;
-    }
-  }, [storeId, enabled]);
-
-  // Load products whenever the selected store changes.
-  useEffect(() => {
-    let cancelled = false;
-
-    if (!enabled || !storeId) {
-      setProducts([]);
-      setError("");
-      setLoading(false);
-
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    setLoading(true);
-    setError("");
-
-    fetchAllMine(storeId)
-      .then((items) => {
-        if (!cancelled) {
-          setProducts(items);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setProducts([]);
-          setError(err?.message || "Unable to load products.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [storeId, enabled]);
+  const reload = () => qc.invalidateQueries({ queryKey });
 
   // Create a product for the selected store.
   const addProduct = async (payload) => {
@@ -252,9 +203,9 @@ export function useManagedProducts(storeId, enabled = true) {
   };
 
   return {
-    products,
-    loading,
-    error,
+    products: query.data ?? [],
+    loading: query.isLoading,
+    error: query.error?.message ?? "",
     addProduct,
     editProduct,
     removeProduct,
