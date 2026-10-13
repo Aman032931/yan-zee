@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   getMyProducts,
@@ -13,17 +12,11 @@ const PAGE_SIZE = 50;
 
 // Find a usable image URL from the product data.
 function getProductImage(product) {
-  if (
-    typeof product.image === "string" &&
-    product.image.trim()
-  ) {
+  if (typeof product.image === "string" && product.image.trim()) {
     return product.image.trim();
   }
 
-  if (
-    typeof product.imageUrl === "string" &&
-    product.imageUrl.trim()
-  ) {
+  if (typeof product.imageUrl === "string" && product.imageUrl.trim()) {
     return product.imageUrl.trim();
   }
 
@@ -43,9 +36,7 @@ function getProductImage(product) {
         return item.trim();
       }
 
-      return (
-        typeof item?.url === "string" && item.url.trim()
-      );
+      return typeof item?.url === "string" && item.url.trim();
     });
 
     if (typeof image === "string") {
@@ -63,9 +54,7 @@ function getProductImage(product) {
 // Pull the category out of whichever shape the API returns.
 function readCategory(product) {
   const candidates = [
-    ...(Array.isArray(product.categories)
-      ? product.categories
-      : []),
+    ...(Array.isArray(product.categories) ? product.categories : []),
     product.category,
   ].filter(Boolean);
 
@@ -84,9 +73,7 @@ function readCategory(product) {
     categoryIds = candidates
       .map(
         (category) =>
-          category?.id ??
-          category?.categoryId ??
-          category?.category?.id,
+          category?.id ?? category?.categoryId ?? category?.category?.id,
       )
       .filter(Boolean);
   }
@@ -101,8 +88,7 @@ function readCategory(product) {
 // Convert the backend product format into the format
 // expected by SellerProducts.jsx and ProductFormModal.
 function normalizeProduct(product) {
-  const { name: categoryName, categoryIds } =
-    readCategory(product);
+  const { name: categoryName, categoryIds } = readCategory(product);
 
   return {
     ...product,
@@ -111,19 +97,13 @@ function normalizeProduct(product) {
     name: product.name ?? "Unnamed product",
 
     // Actual selling price.
-    price: Number(
-      product.sellingPrice ?? product.price ?? 0,
-    ),
+    price: Number(product.sellingPrice ?? product.price ?? 0),
 
     // Original/crossed-out price.
-    discountPrice: Number(
-      product.crossedPrice ?? product.discountPrice ?? 0,
-    ),
+    discountPrice: Number(product.crossedPrice ?? product.discountPrice ?? 0),
 
     // Available stock.
-    totalStock: Number(
-      product.quantity ?? product.totalStock ?? 0,
-    ),
+    totalStock: Number(product.quantity ?? product.totalStock ?? 0),
 
     // Use the first valid image URL.
     image: getProductImage(product),
@@ -168,14 +148,12 @@ function extractPage(response) {
 
 // Merge list and detail data without losing existing images
 // when the detail endpoint omits them or returns empty values.
+// TEMPORARY: remove once the backend list response includes categories.
 async function withDetails(items, storeId) {
   return Promise.all(
     items.map(async (item) => {
       try {
-        const response = await getProductById(
-          item.id,
-          storeId,
-        );
+        const response = await getProductById(item.id, storeId);
 
         const full = response?.data?.product ?? {};
 
@@ -191,8 +169,7 @@ async function withDetails(items, storeId) {
 
           // Keep list images if the detail response has none.
           imageUrls:
-            Array.isArray(full.imageUrls) &&
-            full.imageUrls.length > 0
+            Array.isArray(full.imageUrls) && full.imageUrls.length > 0
               ? full.imageUrls
               : item.imageUrls,
         };
@@ -242,9 +219,8 @@ async function fetchAllMine(storeId) {
       ),
     );
 
-    const remainingProducts = remainingResponses.flatMap(
-      (response) =>
-        extractPage(response).products.map(normalizeProduct),
+    const remainingProducts = remainingResponses.flatMap((response) =>
+      extractPage(response).products.map(normalizeProduct),
     );
 
     items = [...items, ...remainingProducts];
@@ -254,71 +230,18 @@ async function fetchAllMine(storeId) {
 }
 
 export function useManagedProducts(storeId, enabled = true) {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const qc = useQueryClient();
+  const queryKey = ["managedProducts", storeId];
+
+  const query = useQuery({
+    queryKey,
+    queryFn: () => fetchAllMine(storeId),
+    // no store selected (or disabled) = no request, no state juggling
+    enabled: Boolean(storeId) && enabled,
+  });
 
   // Reload products after creating, editing, or deleting.
-  const reload = useCallback(async () => {
-    if (!storeId || !enabled) {
-      setProducts([]);
-      return;
-    }
-
-    setError("");
-
-    try {
-      const items = await fetchAllMine(storeId);
-      setProducts(items);
-    } catch (err) {
-      setError(
-        err?.message || "Unable to load products.",
-      );
-      throw err;
-    }
-  }, [storeId, enabled]);
-
-  // Load products whenever the selected store changes.
-  useEffect(() => {
-    let cancelled = false;
-
-    if (!enabled || !storeId) {
-      setProducts([]);
-      setError("");
-      setLoading(false);
-
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    setLoading(true);
-    setError("");
-
-    fetchAllMine(storeId)
-      .then((items) => {
-        if (!cancelled) {
-          setProducts(items);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setProducts([]);
-          setError(
-            err?.message || "Unable to load products.",
-          );
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [storeId, enabled]);
+  const reload = () => qc.invalidateQueries({ queryKey });
 
   // Create a product for the selected store.
   const addProduct = async (payload) => {
@@ -339,9 +262,9 @@ export function useManagedProducts(storeId, enabled = true) {
   };
 
   return {
-    products,
-    loading,
-    error,
+    products: query.data ?? [],
+    loading: query.isLoading,
+    error: query.error?.message ?? "",
     addProduct,
     editProduct,
     removeProduct,

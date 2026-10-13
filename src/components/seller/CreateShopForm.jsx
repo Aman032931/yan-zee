@@ -15,7 +15,7 @@ const categoryLabel = (category) =>
     .map((word) => word[0] + word.slice(1).toLowerCase())
     .join(" ")
 
-export default function CreateShopForm({ onCreated }) {
+export default function CreateShopForm({ onCreated, onCancel }) {
   const { currentUser } = useAuth()
   const createStore = useCreateStore()
 
