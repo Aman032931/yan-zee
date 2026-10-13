@@ -69,7 +69,7 @@ function DetailField({ label, children }) {
         {label}
       </p>
 
-      <div className="break-words text-sm text-gray-800">
+      <div className="wrap-break-word text-sm text-gray-800">
         {children}
       </div>
     </div>
