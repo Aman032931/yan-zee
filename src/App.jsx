@@ -42,6 +42,7 @@ import SellerProducts from "./pages/seller/SellerProducts"
 import SellerCategories from "./pages/seller/SellerCategories"
 import SellerBrands from "./pages/seller/SellerBrands"
 import SellerOrders from "./pages/seller/SellerOrders"
+import SellerShops from "./pages/seller/SellerShops"
 import SellerSettings from "./pages/seller/SellerSettings"
 
 import Profile from "./pages/Profile"
@@ -162,6 +163,7 @@ function App() {
             { path: "categories", element: <SellerCategories /> },
             { path: "brands", element: <SellerBrands /> },
             { path: "orders", element: <SellerOrders /> },
+            { path: "shops", element: <SellerShops /> },
             { path: "settings", element: <SellerSettings /> },
             { path: "*", element: <NotFound /> },
           ],
