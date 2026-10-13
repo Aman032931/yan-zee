@@ -9,7 +9,7 @@ const inputClass =
 const categoryLabel = (c) =>
   c.split("_").map((w) => w[0] + w.slice(1).toLowerCase()).join(" ")
 
-export default function CreateShopForm({ onCreated }) {
+export default function CreateShopForm({ onCreated, onCancel }) {
   const { currentUser } = useAuth()
   const createStore = useCreateStore()
 
@@ -158,18 +158,32 @@ export default function CreateShopForm({ onCreated }) {
             <span className="rounded bg-black px-3 py-1.5 text-xs font-semibold text-white">
               Upload logo
             </span>
-            <span className="text-xs text-gray-500"> Click to browse</span>
+            <span className="text-xs text-gray-500">PNG, JPG or WebP. Click to browse.</span>
           </label>
         )}
       </div>
 
-      <button
-        type="submit"
-        disabled={createStore.isPending}
-        className="cursor-pointer rounded bg-black px-4 py-2 text-xs font-semibold text-white transition hover:bg-gray-800 disabled:opacity-60"
-      >
-        {createStore.isPending ? "Creating shop..." : "Create shop"}
-      </button>
+      {/* ---------- ACTIONS: Create first, Cancel beside it ---------- */}
+      <div className="flex items-center gap-2">
+        <button
+          type="submit"
+          disabled={createStore.isPending}
+          className="cursor-pointer rounded bg-black px-4 py-2 text-xs font-semibold text-white transition hover:bg-gray-800 disabled:opacity-60"
+        >
+          {createStore.isPending ? "Creating shop..." : "Create shop"}
+        </button>
+
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={createStore.isPending}
+            className="cursor-pointer rounded border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </form>
   )
 }
