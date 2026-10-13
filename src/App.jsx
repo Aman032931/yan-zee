@@ -39,10 +39,13 @@ import AdminUsers from "./pages/admin/AdminUsers"
 import SellerLayout from "./components/seller/SellerLayout"
 import SellerDashboard from "./pages/seller/SellerDashboard"
 import SellerProducts from "./pages/seller/SellerProducts"
+import SellerProductDetail from "./pages/seller/SellerProductDetail"
 import SellerCategories from "./pages/seller/SellerCategories"
 import SellerBrands from "./pages/seller/SellerBrands"
 import SellerOrders from "./pages/seller/SellerOrders"
 import SellerSettings from "./pages/seller/SellerSettings"
+import SellerCategoryDetail from "./pages/seller/SellerCategoryDetails"
+
 
 import Profile from "./pages/Profile"
 
@@ -159,7 +162,9 @@ function App() {
           children: [
             { index: true, element: <SellerDashboard /> },
             { path: "products", element: <SellerProducts /> },
+            { path: "products/:id", element: <SellerProductDetail /> },
             { path: "categories", element: <SellerCategories /> },
+            { path: "categories/:id", element: <SellerCategoryDetail/>},
             { path: "brands", element: <SellerBrands /> },
             { path: "orders", element: <SellerOrders /> },
             { path: "settings", element: <SellerSettings /> },

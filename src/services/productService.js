@@ -1,58 +1,91 @@
-import { apiRequest } from "./api"
+
+import { apiRequest } from "./api";
 
 const toQuery = (params = {}) => {
-  const query = new URLSearchParams()
+  const query = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") {
-      query.set(key, value)
+      query.set(key, value);
     }
-  })
+  });
 
-  const qs = query.toString()
-  return qs ? `?${qs}` : ""
-}
+  const qs = query.toString();
+  return qs ? `?${qs}` : "";
+};
 
 const storeHeaders = (storeId) => {
   if (!storeId) {
-    throw new Error("Please select a store before managing products.")
+    throw new Error("Please select a store before managing products.");
   }
 
-  return { "x-store-id": String(storeId) }
-}
+  return { "x-store-id": String(storeId) };
+};
 
-// Public listing: this endpoint must exist in the backend
-// before the homepage can use it.
+// Public product listing.
 export const getPublicProducts = (params) =>
-  apiRequest(`/products/public${toQuery(params)}`, { auth: false })
+  apiRequest(`/products/public${toQuery(params)}`, {
+    auth: false,
+  });
 
-// Seller operations: all require the selected store ID.
+// Seller product operations.
 export const getMyProducts = (params, storeId) =>
   apiRequest(`/products${toQuery(params)}`, {
     headers: storeHeaders(storeId),
-  })
+  });
 
 export const getProductById = (id, storeId) =>
   apiRequest(`/products/${id}`, {
     headers: storeHeaders(storeId),
-  })
+  });
 
+
+// Upload a product image file to the backend.
+export const uploadProductImage = async (file, storeId) => {
+  if (!(file instanceof File)) {
+    throw new Error("Please choose an image file.");
+  }
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const response = await apiRequest("/images/products", {
+    method: "POST",
+    body: formData,
+    headers: storeHeaders(storeId),
+  });
+
+  if (response?.success !== true || !response?.data?.url) {
+    throw new Error(
+      response?.error?.message ||
+        response?.message ||
+        "Image upload failed. Please try again."
+    );
+  }
+
+  return response;
+};
+
+
+// Create a product.
 export const createProduct = (payload, storeId) =>
   apiRequest("/products", {
     method: "POST",
     body: payload,
     headers: storeHeaders(storeId),
-  })
+  });
 
+// Update a product.
 export const updateProduct = (id, payload, storeId) =>
-  apiRequest(`/products/${id}`, {
+  apiRequest(`/products/${id}/general`, {
     method: "PATCH",
     body: payload,
     headers: storeHeaders(storeId),
-  })
+  });
 
+// Delete a product.
 export const deleteProduct = (id, storeId) =>
   apiRequest(`/products/${id}`, {
     method: "DELETE",
     headers: storeHeaders(storeId),
-  })
+  });

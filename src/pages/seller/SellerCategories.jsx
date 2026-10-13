@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
-import { useOutletContext } from "react-router-dom"
-import { Plus, Layers, Trash2, Pencil } from "lucide-react"
+import { Link, useOutletContext } from "react-router-dom"
+import { Plus, Layers, Trash2, Pencil, Eye } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -19,6 +19,7 @@ const inputClass =
   "w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-black bg-white"
 
 /* ---------------- Add / Edit form ---------------- */
+
 function CategoryForm({ storeId, category, onDone }) {
   const isEdit = Boolean(category)
   const create = useCreateCategory(storeId)
@@ -27,7 +28,9 @@ function CategoryForm({ storeId, category, onDone }) {
 
   const [name, setName] = useState(category?.name ?? "")
   const [description, setDescription] = useState(category?.description ?? "")
-  const [isAvailable, setIsAvailable] = useState(category?.isAvailable ?? true)
+  const [isAvailable, setIsAvailable] = useState(
+    category?.isAvailable ?? true
+  )
   const [imageFile, setImageFile] = useState(null)
   const [preview, setPreview] = useState("")
   const [error, setError] = useState("")
@@ -37,13 +40,19 @@ function CategoryForm({ storeId, category, onDone }) {
 
   useEffect(() => {
     return () => {
-      if (previewRef.current) URL.revokeObjectURL(previewRef.current)
+      if (previewRef.current) {
+        URL.revokeObjectURL(previewRef.current)
+      }
     }
   }, [])
 
   const setImage = (file) => {
-    if (previewRef.current) URL.revokeObjectURL(previewRef.current)
+    if (previewRef.current) {
+      URL.revokeObjectURL(previewRef.current)
+    }
+
     const url = file ? URL.createObjectURL(file) : ""
+
     previewRef.current = url
     setPreview(url)
     setImageFile(file)
@@ -51,16 +60,20 @@ function CategoryForm({ storeId, category, onDone }) {
 
   const clearImage = () => {
     setImage(null)
-    if (fileInputRef.current) fileInputRef.current.value = ""
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
   }
 
-  // show the new file if chosen, otherwise the category's current image
   const shownImage = preview || category?.image || ""
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
+
     const trimmed = name.trim()
+
     if (!trimmed) {
       setError("Category name is required.")
       return
@@ -85,9 +98,10 @@ function CategoryForm({ storeId, category, onDone }) {
           ...(desc ? { description: desc } : {}),
         })
       }
+
       onDone()
     } catch (err) {
-      setError(err.message)
+      setError(err.message || "Unable to save category.")
     }
   }
 
@@ -98,10 +112,14 @@ function CategoryForm({ storeId, category, onDone }) {
           {isEdit ? `Edit ${category.name}` : "Add a category"}
         </CardTitle>
       </CardHeader>
+
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            <div
+              role="alert"
+              className="rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+            >
               ⚠ {error}
             </div>
           )}
@@ -110,6 +128,7 @@ function CategoryForm({ storeId, category, onDone }) {
             <label className="mb-1 block text-xs font-medium text-gray-600">
               Category name *
             </label>
+
             <input
               required
               value={name}
@@ -123,6 +142,7 @@ function CategoryForm({ storeId, category, onDone }) {
             <label className="mb-1 block text-xs font-medium text-gray-600">
               Description (optional)
             </label>
+
             <textarea
               rows={3}
               value={description}
@@ -153,22 +173,26 @@ function CategoryForm({ storeId, category, onDone }) {
                   alt="Category preview"
                   className="h-14 w-14 rounded-md border border-gray-200 bg-white object-cover"
                 />
+
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-gray-800">
                     {imageFile ? imageFile.name : "Current image"}
                   </p>
+
                   {imageFile && (
                     <p className="text-xs text-gray-500">
                       {(imageFile.size / 1024).toFixed(0)} KB
                     </p>
                   )}
                 </div>
+
                 <label
                   htmlFor="category-image"
                   className="cursor-pointer text-xs font-medium text-blue-600 hover:underline"
                 >
                   Change
                 </label>
+
                 {imageFile && (
                   <button
                     type="button"
@@ -187,6 +211,7 @@ function CategoryForm({ storeId, category, onDone }) {
                 <span className="rounded bg-black px-3 py-1.5 text-xs font-semibold text-white">
                   Upload image
                 </span>
+
                 <span className="text-xs text-gray-500">
                   PNG, JPG or WebP. Click to browse.
                 </span>
@@ -206,9 +231,19 @@ function CategoryForm({ storeId, category, onDone }) {
 
           <div className="flex gap-2">
             <Button type="submit" disabled={saving}>
-              {saving ? "Saving..." : isEdit ? "Save changes" : "Create category"}
+              {saving
+                ? "Saving..."
+                : isEdit
+                  ? "Save changes"
+                  : "Create category"}
             </Button>
-            <Button type="button" variant="outline" onClick={onDone} disabled={saving}>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onDone}
+              disabled={saving}
+            >
               Cancel
             </Button>
           </div>
@@ -218,15 +253,20 @@ function CategoryForm({ storeId, category, onDone }) {
   )
 }
 
-/* ---------------- Page ---------------- */
+/* ---------------- Categories page ---------------- */
+
 export default function SellerCategories() {
   const { shop } = useOutletContext()
 
-  const { data: categories = [], isLoading, error } = useCategories(shop.id)
+  const {
+    data: categories = [],
+    isLoading,
+    error,
+  } = useCategories(shop.id)
+
   const toggle = useToggleCategoryAvailability(shop.id)
   const remove = useDeleteCategory(shop.id)
 
-  // null = form closed, {} = add, category object = edit
   const [formCategory, setFormCategory] = useState(null)
   const [actionError, setActionError] = useState("")
   const [busyId, setBusyId] = useState(null)
@@ -234,20 +274,25 @@ export default function SellerCategories() {
   const run = async (id, fn) => {
     setActionError("")
     setBusyId(id)
+
     try {
       await fn()
     } catch (err) {
-      setActionError(err.message)
+      setActionError(err.message || "The action could not be completed.")
     } finally {
       setBusyId(null)
     }
   }
 
-  const handleToggle = (category) =>
+  const handleToggle = (category) => {
     run(category.id, () => toggle.mutateAsync(category.id))
+  }
 
   const handleDelete = (category) => {
-    if (!window.confirm(`Delete "${category.name}"?`)) return
+    if (!window.confirm(`Delete "${category.name}"?`)) {
+      return
+    }
+
     run(category.id, () => remove.mutateAsync(category.id))
   }
 
@@ -258,12 +303,17 @@ export default function SellerCategories() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Categories</h1>
+
           <p className="mt-1 text-sm text-muted-foreground">
             Manage categories for {shop.name}.
           </p>
         </div>
+
         {!formCategory && (
-          <Button onClick={() => setFormCategory({})} className="self-start">
+          <Button
+            onClick={() => setFormCategory({})}
+            className="self-start"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add category
           </Button>
@@ -293,6 +343,7 @@ export default function SellerCategories() {
           <CardTitle className="flex items-center gap-2 text-lg">
             <Layers className="h-5 w-5" />
             All categories
+
             {!isLoading && (
               <span className="text-sm font-normal text-muted-foreground">
                 ({categories.length})
@@ -311,7 +362,9 @@ export default function SellerCategories() {
           ) : categories.length === 0 ? (
             <div className="py-8 text-center">
               <Layers className="mx-auto h-9 w-9 text-muted-foreground" />
+
               <h3 className="mt-3 font-medium">No categories yet</h3>
+
               <p className="mt-1 text-sm text-muted-foreground">
                 Add your first category to organise your products.
               </p>
@@ -327,29 +380,48 @@ export default function SellerCategories() {
                     <th className="px-3 py-2 text-right">Actions</th>
                   </tr>
                 </thead>
+
                 <tbody>
                   {categories.map((category) => {
                     const busy = busyId === category.id
+
                     return (
-                      <tr key={category.id} className="border-b last:border-0">
+                      <tr
+                        key={category.id}
+                        className="border-b last:border-0"
+                      >
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-3">
-                            {category.image ? (
-                              <img
-                                src={category.image}
-                                alt={category.name}
-                                className="h-10 w-10 rounded border bg-white object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-10 w-10 items-center justify-center rounded border bg-gray-50">
+                            <Link
+                              to={`/seller/categories/${category.id}`}
+                              state={{ category }}
+                              aria-label={`View ${category.name} details`}
+                              className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded border bg-gray-50 transition hover:border-black"
+                            >
+                              {category.image ? (
+                                <img
+                                  src={category.image}
+                                  alt={category.name}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
                                 <Layers className="h-4 w-4 text-gray-400" />
-                              </div>
-                            )}
+                              )}
+                            </Link>
+
                             <div className="min-w-0">
-                              <p className="truncate font-medium">{category.name}</p>
+                              <Link
+                                to={`/seller/categories/${category.id}`}
+                                state={{ category }}
+                                className="truncate font-medium text-gray-900 hover:underline"
+                              >
+                                {category.name}
+                              </Link>
+
                               <p className="truncate text-xs text-gray-400">
-                                {category.slug}
+                                {category.slug || "No slug"}
                               </p>
+
                               {category.description && (
                                 <p className="line-clamp-1 text-xs text-gray-500">
                                   {category.description}
@@ -358,17 +430,39 @@ export default function SellerCategories() {
                             </div>
                           </div>
                         </td>
+
                         <td className="px-3 py-3 text-gray-600">
                           {category._count?.products ?? 0}
                         </td>
+
                         <td className="px-3 py-3">
                           <Badge
-                            variant={category.isAvailable ? "secondary" : "outline"}
+                            variant={
+                              category.isAvailable ? "secondary" : "outline"
+                            }
                           >
-                            {category.isAvailable ? "Available" : "Unavailable"}
+                            {category.isAvailable
+                              ? "Available"
+                              : "Unavailable"}
                           </Badge>
                         </td>
+
                         <td className="whitespace-nowrap px-3 py-3 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                            disabled={busy}
+                          >
+                            <Link
+                              to={`/seller/categories/${category.id}`}
+                              state={{ category }}
+                            >
+                              <Eye className="mr-1 h-4 w-4" />
+                              View
+                            </Link>
+                          </Button>
+
                           <Button
                             variant="ghost"
                             size="sm"
@@ -377,20 +471,24 @@ export default function SellerCategories() {
                           >
                             {category.isAvailable ? "Disable" : "Enable"}
                           </Button>
+
                           <Button
                             variant="ghost"
                             size="sm"
                             disabled={busy}
                             onClick={() => setFormCategory(category)}
+                            aria-label={`Edit ${category.name}`}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
+
                           <Button
                             variant="ghost"
                             size="sm"
                             disabled={busy}
                             onClick={() => handleDelete(category)}
                             className="text-red-600 hover:text-red-700"
+                            aria-label={`Delete ${category.name}`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

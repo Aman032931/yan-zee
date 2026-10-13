@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 
 import {
@@ -10,15 +11,66 @@ import {
 
 const PAGE_SIZE = 50;
 
-// Pull the category out of whichever shape the API returns:
-// category / categories[] / categories[{ category }] / categoryIds[]
+// Find a usable image URL from the product data.
+function getProductImage(product) {
+  if (
+    typeof product.image === "string" &&
+    product.image.trim()
+  ) {
+    return product.image.trim();
+  }
+
+  if (
+    typeof product.imageUrl === "string" &&
+    product.imageUrl.trim()
+  ) {
+    return product.imageUrl.trim();
+  }
+
+  if (Array.isArray(product.imageUrls)) {
+    const image = product.imageUrls.find(
+      (url) => typeof url === "string" && url.trim(),
+    );
+
+    if (image) {
+      return image.trim();
+    }
+  }
+
+  if (Array.isArray(product.images)) {
+    const image = product.images.find((item) => {
+      if (typeof item === "string") {
+        return item.trim();
+      }
+
+      return (
+        typeof item?.url === "string" && item.url.trim()
+      );
+    });
+
+    if (typeof image === "string") {
+      return image.trim();
+    }
+
+    if (image?.url) {
+      return image.url.trim();
+    }
+  }
+
+  return "";
+}
+
+// Pull the category out of whichever shape the API returns.
 function readCategory(product) {
   const candidates = [
-    ...(Array.isArray(product.categories) ? product.categories : []),
+    ...(Array.isArray(product.categories)
+      ? product.categories
+      : []),
     product.category,
   ].filter(Boolean);
 
   const first = candidates[0];
+
   const name =
     typeof first === "string"
       ? first
@@ -30,7 +82,12 @@ function readCategory(product) {
 
   if (categoryIds.length === 0) {
     categoryIds = candidates
-      .map((c) => c?.id ?? c?.categoryId ?? c?.category?.id)
+      .map(
+        (category) =>
+          category?.id ??
+          category?.categoryId ??
+          category?.category?.id,
+      )
       .filter(Boolean);
   }
 
@@ -44,7 +101,8 @@ function readCategory(product) {
 // Convert the backend product format into the format
 // expected by SellerProducts.jsx and ProductFormModal.
 function normalizeProduct(product) {
-  const { name: categoryName, categoryIds } = readCategory(product);
+  const { name: categoryName, categoryIds } =
+    readCategory(product);
 
   return {
     ...product,
@@ -52,19 +110,25 @@ function normalizeProduct(product) {
     id: product.id ?? product._id,
     name: product.name ?? "Unnamed product",
 
-    // sellingPrice is the actual selling price.
-    price: Number(product.sellingPrice ?? product.price ?? 0),
+    // Actual selling price.
+    price: Number(
+      product.sellingPrice ?? product.price ?? 0,
+    ),
 
-    // crossedPrice is the original/crossed-out price.
-    discountPrice: Number(product.crossedPrice ?? product.discountPrice ?? 0),
+    // Original/crossed-out price.
+    discountPrice: Number(
+      product.crossedPrice ?? product.discountPrice ?? 0,
+    ),
 
-    // quantity is the available stock.
-    totalStock: Number(product.quantity ?? product.totalStock ?? 0),
+    // Available stock.
+    totalStock: Number(
+      product.quantity ?? product.totalStock ?? 0,
+    ),
 
-    // imageUrls is an array.
-    image: product.image ?? product.imageUrls?.[0] ?? "",
+    // Use the first valid image URL.
+    image: getProductImage(product),
 
-    // empty name means the page should resolve it from categoryIds
+    // Resolve category names from category IDs when needed.
     category: categoryName,
     categoryIds,
 
@@ -73,12 +137,7 @@ function normalizeProduct(product) {
   };
 }
 
-// Supports common API response formats:
-// { success: true, data: { products: [], pagination: {} } }
-// { data: { products: [], pagination: {} } }
-// { products: [], pagination: {} }
-// { data: [] }
-// []
+// Extract products and pagination from common API response formats.
 function extractPage(response) {
   const payload = response?.data ?? response;
 
@@ -107,18 +166,41 @@ function extractPage(response) {
   };
 }
 
-// The list endpoint does not include categories, weight or descriptions,
-// so fill them in from the detail endpoint.
-// TEMPORARY: remove this once the backend list response includes categories.
+// Merge list and detail data without losing existing images
+// when the detail endpoint omits them or returns empty values.
 async function withDetails(items, storeId) {
   return Promise.all(
     items.map(async (item) => {
       try {
-        const res = await getProductById(item.id, storeId);
-        const full = res?.data?.product ?? {};
-        return normalizeProduct({ ...item, ...full });
+        const response = await getProductById(
+          item.id,
+          storeId,
+        );
+
+        const full = response?.data?.product ?? {};
+
+        const listImage = getProductImage(item);
+        const detailImage = getProductImage(full);
+
+        const mergedProduct = {
+          ...item,
+          ...full,
+
+          // Prefer the detail image, then the list image.
+          image: detailImage || listImage,
+
+          // Keep list images if the detail response has none.
+          imageUrls:
+            Array.isArray(full.imageUrls) &&
+            full.imageUrls.length > 0
+              ? full.imageUrls
+              : item.imageUrls,
+        };
+
+        return normalizeProduct(mergedProduct);
       } catch {
-        return item; // keep the list data if the detail call fails
+        // Keep the list product if fetching details fails.
+        return normalizeProduct(item);
       }
     }),
   );
@@ -160,8 +242,9 @@ async function fetchAllMine(storeId) {
       ),
     );
 
-    const remainingProducts = remainingResponses.flatMap((response) =>
-      extractPage(response).products.map(normalizeProduct),
+    const remainingProducts = remainingResponses.flatMap(
+      (response) =>
+        extractPage(response).products.map(normalizeProduct),
     );
 
     items = [...items, ...remainingProducts];
@@ -188,7 +271,9 @@ export function useManagedProducts(storeId, enabled = true) {
       const items = await fetchAllMine(storeId);
       setProducts(items);
     } catch (err) {
-      setError(err?.message || "Unable to load products.");
+      setError(
+        err?.message || "Unable to load products.",
+      );
       throw err;
     }
   }, [storeId, enabled]);
@@ -219,7 +304,9 @@ export function useManagedProducts(storeId, enabled = true) {
       .catch((err) => {
         if (!cancelled) {
           setProducts([]);
-          setError(err?.message || "Unable to load products.");
+          setError(
+            err?.message || "Unable to load products.",
+          );
         }
       })
       .finally(() => {
