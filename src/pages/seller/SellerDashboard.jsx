@@ -1,4 +1,4 @@
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom"
 import {
   Package,
   CheckCircle2,
@@ -6,22 +6,17 @@ import {
   Plus,
   ArrowUpRight,
   Store,
-} from "lucide-react";
+} from "lucide-react"
 
-import { useDashboardMetrics } from "../../hooks/useDashboardMetrics";
+import { useDashboardMetrics } from "../../hooks/useDashboardMetrics"
 
-import {
-  Card,
-  CardContent,
-} from "../../components/ui/card";
-
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
+import { Card, CardContent } from "../../components/ui/card"
+import { Button } from "../../components/ui/button"
 
 function getProductStatus(product) {
   return String(product.status || "")
     .toUpperCase()
-    .replaceAll(" ", "_");
+    .replaceAll(" ", "_")
 }
 
 function StatCard({ title, value, icon: Icon, loading, accent }) {
@@ -30,9 +25,7 @@ function StatCard({ title, value, icon: Icon, loading, accent }) {
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-gray-600">
-              {title}
-            </p>
+            <p className="text-sm font-medium text-gray-600">{title}</p>
 
             <p className="mt-3 text-3xl font-semibold tracking-tight text-gray-900">
               {loading ? "—" : value}
@@ -52,34 +45,28 @@ function StatCard({ title, value, icon: Icon, loading, accent }) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 export default function SellerDashboard() {
-  const navigate = useNavigate();
-  const { shop, shopError } = useOutletContext();
+  const navigate = useNavigate()
+  const { shop, shopError } = useOutletContext()
 
-  const {
-    products = [],
-    loading,
-    error,
-  } = useDashboardMetrics(shop?.id);
+  const { products = [], loading, error } = useDashboardMetrics(shop?.id)
 
   const activeCount = products.filter((product) =>
     ["ACTIVE", "PUBLISHED"].includes(getProductStatus(product))
-  ).length;
+  ).length
 
   const outOfStockCount = products.filter((product) =>
-    ["OUT_OF_STOCK", "OUTOFSTOCK"].includes(
-      getProductStatus(product)
-    )
-  ).length;
+    ["OUT_OF_STOCK", "OUTOFSTOCK"].includes(getProductStatus(product))
+  ).length
 
   const today = new Date().toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
-  });
+  })
 
   return (
     <div className="min-h-full space-y-6 bg-[#f8f9fb] p-4 sm:p-6 lg:p-8">
@@ -92,9 +79,7 @@ export default function SellerDashboard() {
 
           <p className="mt-1 text-sm text-gray-500">
             Here's your shop overview for{" "}
-            <span className="font-medium text-brand-red-600">
-              {today}
-            </span>
+            <span className="font-medium text-brand-red-600">{today}</span>
           </p>
         </div>
 
@@ -141,16 +126,12 @@ export default function SellerDashboard() {
           />
         </div>
 
-        {error && (
-          <p className="mt-3 text-sm text-red-600">{error}</p>
-        )}
+        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
       </section>
 
       {/* Shop */}
       <section>
-        <h2 className="mb-3 text-base font-semibold text-gray-900">
-          My Shop
-        </h2>
+        <h2 className="mb-3 text-base font-semibold text-gray-900">My Shop</h2>
 
         <Card className="rounded-xl border border-[#e9e5ef] bg-white shadow-none">
           <CardContent className="flex items-center gap-4 p-5">
@@ -176,10 +157,16 @@ export default function SellerDashboard() {
               )}
             </div>
 
-            {shop?.status && (
-              <Badge variant="outline" className="shrink-0 font-normal">
-                {shop.status}
-              </Badge>
+            {shop && (
+              <span
+                className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                  shop.isPublished
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
+                {shop.isPublished ? "Active" : "Inactive"}
+              </span>
             )}
           </CardContent>
         </Card>
@@ -202,9 +189,7 @@ export default function SellerDashboard() {
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="font-medium text-gray-900">
-                Manage Products
-              </p>
+              <p className="font-medium text-gray-900">Manage Products</p>
               <p className="mt-1 text-sm text-gray-500">
                 View and update your products.
               </p>
@@ -223,9 +208,7 @@ export default function SellerDashboard() {
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="font-medium text-gray-900">
-                Add a Product
-              </p>
+              <p className="font-medium text-gray-900">Add a Product</p>
               <p className="mt-1 text-sm text-gray-500">
                 Add a product to your catalog.
               </p>
@@ -236,5 +219,5 @@ export default function SellerDashboard() {
         </div>
       </section>
     </div>
-  );
+  )
 }

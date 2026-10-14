@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { NavLink, Outlet, Link } from "react-router-dom";
+import { useState, useEffect } from "react"
+import { NavLink, Outlet, Link } from "react-router-dom"
 import {
   LayoutDashboard,
   Package,
@@ -15,10 +15,10 @@ import {
   Plus,
   Check,
   X,
-} from "lucide-react";
+} from "lucide-react"
 
-import { useMyStores } from "../../hooks/useStores";
-import CreateShopForm from "./CreateShopForm";
+import { useMyStores } from "../../hooks/useStores"
+import CreateShopForm from "./CreateShopForm"
 
 const NAV_ITEMS = [
   { label: "Dashboard", to: "/seller", icon: LayoutDashboard },
@@ -26,94 +26,103 @@ const NAV_ITEMS = [
   { label: "Categories", to: "/seller/categories", icon: Tags },
   { label: "Brands", to: "/seller/brands", icon: Tag },
   { label: "Orders", to: "/seller/orders", icon: ShoppingBag },
+  { label: "Shops", to: "/seller/shops", icon: Store },
   { label: "Settings", to: "/seller/settings", icon: Settings },
-];
+]
 
-const STORE_KEY = "yanzee_store_id";
+const STORE_KEY = "yanzee_store_id"
 
 const readSavedStoreId = () => {
   try {
-    return localStorage.getItem(STORE_KEY);
+    return localStorage.getItem(STORE_KEY)
   } catch {
-    return null;
+    return null
   }
-};
+}
 
 export default function SellerLayout() {
-  const { data: stores = [], isLoading, error } = useMyStores();
+  const { data: stores = [], isLoading, error } = useMyStores()
 
-  const [selectedId, setSelectedId] = useState(readSavedStoreId);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [storeMenuOpen, setStoreMenuOpen] = useState(false);
-  const [addingStore, setAddingStore] = useState(false);
-
-  const storeMenuRef = useRef(null);
+  const [selectedId, setSelectedId] = useState(readSavedStoreId)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [storeMenuOpen, setStoreMenuOpen] = useState(false)
+  const [addingStore, setAddingStore] = useState(false)
 
   const shop =
-    stores.find((store) => store.id === selectedId) ??
-    stores[0] ??
-    null;
+    stores.find((store) => store.id === selectedId) ?? stores[0] ?? null
 
   useEffect(() => {
-    if (!storeMenuOpen) return;
+    if (!storeMenuOpen) return
 
+    // The sidebar is rendered twice (mobile drawer + desktop column), so one
+    // ref can only point at one of them. Instead, look for the menu from the
+    // element that was clicked, which works for both copies.
     const handleOutsideClick = (event) => {
+      const target = event.target
+
       if (
-        storeMenuRef.current &&
-        !storeMenuRef.current.contains(event.target)
+        !(target instanceof Element) ||
+        !target.closest("[data-store-menu]")
       ) {
-        setStoreMenuOpen(false);
+        setStoreMenuOpen(false)
       }
-    };
+    }
 
     const handleEscape = (event) => {
       if (event.key === "Escape") {
-        setStoreMenuOpen(false);
+        setStoreMenuOpen(false)
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleOutsideClick);
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("mousedown", handleOutsideClick)
+    document.addEventListener("keydown", handleEscape)
 
     return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [storeMenuOpen]);
+      document.removeEventListener("mousedown", handleOutsideClick)
+      document.removeEventListener("keydown", handleEscape)
+    }
+  }, [storeMenuOpen])
 
   useEffect(() => {
-    if (!addingStore) return;
+    if (!addingStore) return
 
     const handleEscape = (event) => {
       if (event.key === "Escape") {
-        setAddingStore(false);
+        setAddingStore(false)
       }
-    };
+    }
 
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("keydown", handleEscape)
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [addingStore]);
+      document.removeEventListener("keydown", handleEscape)
+    }
+  }, [addingStore])
 
   const selectStore = (id) => {
     try {
-      localStorage.setItem(STORE_KEY, id);
+      localStorage.setItem(STORE_KEY, id)
     } catch {
       // Keep the selection for the current session.
     }
 
-    setSelectedId(id);
-    setStoreMenuOpen(false);
-    setAddingStore(false);
-  };
+    setSelectedId(id)
+    setStoreMenuOpen(false)
+    setAddingStore(false)
+  }
 
   const handleStoreCreated = (newStore) => {
     if (newStore?.id) {
-      selectStore(newStore.id);
+      selectStore(newStore.id)
     }
-  };
+  }
+
+  // Lets any seller page (for example Shops) open the Add Store popup.
+  const openAddStore = () => {
+    setStoreMenuOpen(false)
+    setMobileOpen(false)
+    setAddingStore(true)
+  }
 
   if (isLoading) {
     return (
@@ -125,7 +134,7 @@ export default function SellerLayout() {
           </p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -141,7 +150,7 @@ export default function SellerLayout() {
           </p>
         </div>
       </div>
-    );
+    )
   }
 
   // Keep the original onboarding screen for sellers without any stores.
@@ -182,11 +191,11 @@ export default function SellerLayout() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   const sidebar = (
-    <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-yz-border bg-white">
+    <aside className="flex h-full w-65 shrink-0 flex-col overflow-hidden border-r border-yz-border bg-white">
       <Link
         to="/"
         className="flex items-center gap-3 border-b border-yz-border px-5 py-5"
@@ -208,11 +217,11 @@ export default function SellerLayout() {
 
       {/* Store switcher */}
       <div className="border-b border-yz-border p-4">
-        <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+        <p className="mb-2 px-1 text-[10px] font-bold tracking-[0.16em] text-zinc-500 uppercase">
           Your store
         </p>
 
-        <div className="relative" ref={storeMenuRef}>
+        <div className="relative" data-store-menu>
           <button
             type="button"
             aria-label="Choose store or add a store"
@@ -246,20 +255,23 @@ export default function SellerLayout() {
           </button>
 
           {storeMenuOpen && (
-            <div className="absolute left-0 right-0 top-full z-[60] mt-2 overflow-hidden rounded-xl border border-yz-border bg-white p-1.5 shadow-lg">
-              <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
+            <div className="absolute top-full right-0 left-0 z-[60] mt-2 overflow-hidden rounded-xl border border-yz-border bg-white p-1.5 shadow-lg">
+              <p className="px-3 py-2 text-[10px] font-bold tracking-[0.14em] text-zinc-400 uppercase">
                 Switch store
               </p>
 
               <div className="max-h-56 overflow-y-auto">
                 {stores.map((store) => {
-                  const isSelected = store.id === shop?.id;
+                  const isSelected = store.id === shop?.id
 
                   return (
                     <button
                       key={store.id}
                       type="button"
-                      onClick={() => selectStore(store.id)}
+                      onClick={() => {
+                        selectStore(store.id)
+                        setMobileOpen(false)
+                      }}
                       className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
                         isSelected
                           ? "bg-red-50 text-brand-red-600"
@@ -272,11 +284,9 @@ export default function SellerLayout() {
                         {store.name || "My Store"}
                       </span>
 
-                      {isSelected && (
-                        <Check size={16} className="shrink-0" />
-                      )}
+                      {isSelected && <Check size={16} className="shrink-0" />}
                     </button>
-                  );
+                  )
                 })}
               </div>
 
@@ -284,11 +294,7 @@ export default function SellerLayout() {
 
               <button
                 type="button"
-                onClick={() => {
-                  setStoreMenuOpen(false);
-                  setMobileOpen(false);
-                  setAddingStore(true);
-                }}
+                onClick={openAddStore}
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-brand-red-600 transition-colors hover:bg-red-50"
               >
                 <Plus size={17} />
@@ -301,12 +307,12 @@ export default function SellerLayout() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5">
-        <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+        <p className="mb-3 px-3 text-[10px] font-bold tracking-[0.16em] text-zinc-500 uppercase">
           Workspace
         </p>
 
         {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
+          const Icon = item.icon
 
           return (
             <NavLink
@@ -342,7 +348,7 @@ export default function SellerLayout() {
                 </>
               )}
             </NavLink>
-          );
+          )
         })}
       </nav>
 
@@ -368,10 +374,10 @@ export default function SellerLayout() {
         </div>
       </div>
     </aside>
-  );
+  )
 
   return (
-    <div className="min-h-screen bg-yz-bg">
+    <div className="flex h-screen flex-col overflow-hidden bg-yz-bg">
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <button
@@ -391,14 +397,14 @@ export default function SellerLayout() {
         {sidebar}
       </div>
 
-      <div className="flex min-h-screen">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Desktop sidebar */}
-        <div className="hidden lg:sticky lg:top-0 lg:block lg:h-screen">
+        <div className="hidden h-full shrink-0 lg:block">
           {sidebar}
         </div>
 
-        <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-yz-border bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <header className="z-30 flex h-[68px] shrink-0 items-center justify-between border-b border-yz-border bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8">
             <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
@@ -438,13 +444,14 @@ export default function SellerLayout() {
             </div>
           </header>
 
-          <main className="min-w-0 p-4 sm:p-6 lg:p-8">
+          <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 lg:p-8">
             <Outlet
               context={{
                 shop,
                 setShop: (store) => store && selectStore(store.id),
                 stores,
                 selectStore,
+                openAddStore,
                 shopLoading: false,
                 shopError: "",
               }}
@@ -459,7 +466,7 @@ export default function SellerLayout() {
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
-              setAddingStore(false);
+              setAddingStore(false)
             }
           }}
         >
@@ -499,5 +506,5 @@ export default function SellerLayout() {
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -1,35 +1,37 @@
+import { useState } from "react"
+import { ShoppingBag } from "lucide-react"
 
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+  DataCard,
+  EmptyState,
+  PageHeader,
+  PageShell,
+} from "../../components/seller/SellerUI"
 
+// There is no orders API yet, so this page only has the final layout.
 export default function SellerOrders() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Orders
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your orders.
-        </p>
-      </div>
+  const [query, setQuery] = useState("")
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Order Management</CardTitle>
-          <CardDescription>
-            Manage categories using the existing backend API.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          Category management will be implemented here.
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return (
+    <PageShell>
+      <PageHeader title="Orders" subtitle="Manage your orders." />
+
+      <DataCard
+        icon={ShoppingBag}
+        title="All orders"
+        count={0}
+        search={{
+          value: query,
+          onChange: setQuery,
+          placeholder: "Search orders",
+        }}
+      >
+        <EmptyState
+          icon={ShoppingBag}
+          title="No orders yet"
+          text="Orders will appear here once the orders API is connected."
+        />
+      </DataCard>
+    </PageShell>
+  )
 }
