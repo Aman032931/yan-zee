@@ -36,7 +36,7 @@ export function SecondaryButton({ children, className = "", type = "button", ...
 /* ---------- Page structure ---------- */
 // One width for every seller list page.
 export function PageShell({ children }) {
-  return <div className="mx-auto w-full max-w-5xl space-y-6">{children}</div>
+  return <div className="w-full space-y-6 xl:px-10 2xl:px-[118px]">{children}</div>
 }
 
 export function PageHeader({ title, subtitle, action }) {

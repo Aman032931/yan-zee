@@ -17,7 +17,7 @@ import {
 import { STORE_CATEGORIES } from "../../services/storeService"
 
 const inputClass =
-  "w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-black bg-white"
+  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-brand-red-600 focus:ring-2 focus:ring-brand-red-600/10"
 
 const categoryLabel = (c) =>
   c
@@ -30,8 +30,9 @@ function Message({ type, children }) {
     type === "error"
       ? "border-red-200 bg-red-50 text-red-700"
       : "border-green-200 bg-green-50 text-green-700"
+
   return (
-    <div className={`rounded border px-3 py-2 text-xs ${styles}`}>
+    <div className={`rounded-lg border px-3 py-2 text-xs ${styles}`}>
       {children}
     </div>
   )
@@ -56,6 +57,7 @@ function DetailsForm({ store }) {
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
     setSaved(false)
+    setError("")
   }
 
   const handleSubmit = async (e) => {
@@ -63,11 +65,14 @@ function DetailsForm({ store }) {
     setError("")
     setSaved(false)
 
-    // send only what changed
     const changes = {}
+
     for (const key of Object.keys(form)) {
       const value = form[key].trim()
-      if (value !== initial[key] && value !== "") changes[key] = value
+
+      if (value !== initial[key] && value !== "") {
+        changes[key] = value
+      }
     }
 
     if (Object.keys(changes).length === 0) {
@@ -79,35 +84,40 @@ function DetailsForm({ store }) {
       await update.mutateAsync({ storeId: store.id, changes })
       setSaved(true)
     } catch (err) {
-      setError(err.message)
+      setError(err.message || "Unable to save store details.")
     }
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-fit rounded-2xl border-yz-border shadow-sm">
+      <CardHeader className="pb-4">
         <CardTitle className="text-lg">Store details</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Update your store information.
+        </p>
       </CardHeader>
+
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {error && <Message type="error">⚠ {error}</Message>}
           {saved && <Message type="success">Store details saved.</Message>}
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600">
-              Store name *
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              Store name <span className="text-red-500">*</span>
             </label>
             <input
               required
               value={form.name}
               onChange={handleChange("name")}
               className={inputClass}
+              placeholder="Enter store name"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600">
-              Category *
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              Category <span className="text-red-500">*</span>
             </label>
             <select
               value={form.category}
@@ -124,45 +134,52 @@ function DetailsForm({ store }) {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600">
-                Contact email *
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Contact email <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
                 value={form.contactEmail}
                 onChange={handleChange("contactEmail")}
-                placeholder="Leave blank to keep the current email"
+                placeholder="Contact email"
                 className={inputClass}
               />
             </div>
+
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
                 Contact phone
               </label>
               <input
                 value={form.contactPhone}
                 onChange={handleChange("contactPhone")}
-                placeholder="Leave blank to keep the current phone"
+                placeholder="Contact phone"
                 className={inputClass}
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">
               Store address
             </label>
             <input
               value={form.storeAddress}
               onChange={handleChange("storeAddress")}
-              placeholder="Leave blank to keep the current address"
+              placeholder="Enter store address"
               className={inputClass}
             />
           </div>
 
-          <Button type="submit" disabled={update.isPending}>
-            {update.isPending ? "Saving..." : "Save changes"}
-          </Button>
+          <div className="border-t border-yz-border pt-4">
+            <Button
+              type="submit"
+              disabled={update.isPending}
+              className="bg-brand-red-600 text-white hover:bg-brand-red-700"
+            >
+              {update.isPending ? "Saving..." : "Save changes"}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>
@@ -176,52 +193,62 @@ function LogoCard({ store }) {
 
   const handleFile = async (e) => {
     const file = e.target.files?.[0]
-    e.target.value = "" // allow choosing the same file again
+    e.target.value = ""
+
     if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file.")
+      return
+    }
+
     setError("")
+
     try {
       await upload.mutateAsync({ storeId: store.id, file })
     } catch (err) {
-      setError(err.message)
+      setError(err.message || "Unable to upload logo.")
     }
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="rounded-2xl border-yz-border shadow-sm">
+      <CardHeader className="pb-3">
         <CardTitle className="text-lg">Store logo</CardTitle>
       </CardHeader>
+
       <CardContent className="space-y-3">
         {error && <Message type="error">⚠ {error}</Message>}
 
-        <div className="flex items-center gap-4">
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-muted">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-yz-border bg-yz-bg">
             {store.logo ? (
               <img
                 src={store.logo}
-                alt={store.name}
-                className="h-full w-full object-cover"
+                alt={`${store.name} logo`}
+                className="h-full w-full object-contain p-1"
               />
             ) : (
               <Store className="h-8 w-8 text-muted-foreground" />
             )}
           </div>
 
-          <div>
+          <div className="min-w-0 flex-1">
             <input
-              id="settings-logo"
+              id={`settings-logo-${store.id}`}
               type="file"
-              accept="image/*"
+              accept="image/png,image/jpeg,image/webp"
               onChange={handleFile}
               disabled={upload.isPending}
               className="hidden"
             />
+
             <label
-              htmlFor="settings-logo"
-              className={`inline-flex items-center gap-2 rounded bg-black px-3 py-2 text-xs font-semibold text-white transition ${
+              htmlFor={`settings-logo-${store.id}`}
+              className={`inline-flex items-center gap-2 rounded-lg bg-brand-red-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-red-700 ${
                 upload.isPending
                   ? "cursor-not-allowed opacity-60"
-                  : "cursor-pointer hover:bg-gray-800"
+                  : "cursor-pointer"
               }`}
             >
               <Upload className="h-4 w-4" />
@@ -231,8 +258,9 @@ function LogoCard({ store }) {
                   ? "Change logo"
                   : "Upload logo"}
             </label>
-            <p className="mt-2 text-xs text-gray-500">
-              PNG, JPG or WebP. It uploads as soon as you choose a file.
+
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              PNG, JPG or WebP. Uploads automatically when selected.
             </p>
           </div>
         </div>
@@ -248,34 +276,39 @@ function PublishCard({ store }) {
 
   const handleToggle = async () => {
     setError("")
+
     try {
       await toggle.mutateAsync(store.id)
     } catch (err) {
-      setError(err.message)
+      setError(err.message || "Unable to update store visibility.")
     }
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
+    <Card className="rounded-2xl border-yz-border shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex flex-wrap items-center gap-2 text-lg">
           Visibility
           <Badge variant={store.isPublished ? "secondary" : "outline"}>
             {store.isPublished ? "Published" : "Unpublished"}
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+
+      <CardContent className="space-y-4">
         {error && <Message type="error">⚠ {error}</Message>}
-        <p className="text-sm text-muted-foreground">
+
+        <p className="text-sm leading-6 text-muted-foreground">
           {store.isPublished
             ? "Your store is visible to customers."
             : "Your store is hidden from customers until you publish it."}
         </p>
+
         <Button
           variant="outline"
           onClick={handleToggle}
           disabled={toggle.isPending}
+          className="w-full sm:w-auto"
         >
           {toggle.isPending
             ? "Updating..."
@@ -294,28 +327,34 @@ function DeleteCard({ store }) {
   const [error, setError] = useState("")
 
   const handleDelete = async () => {
-    if (!window.confirm(`Delete "${store.name}"? This cannot be undone.`))
+    if (!window.confirm(`Delete "${store.name}"? This cannot be undone.`)) {
       return
+    }
+
     setError("")
+
     try {
       await remove.mutateAsync(store.id)
-      // SellerLayout reacts to the refreshed list: it switches to another
-      // store, or back to the create-store screen if this was the last one.
     } catch (err) {
-      setError(err.message)
+      setError(err.message || "Unable to delete store.")
     }
   }
 
   return (
-    <Card className="border-red-200">
-      <CardHeader>
-        <CardTitle className="text-lg text-red-700">Delete store</CardTitle>
+    <Card className="rounded-2xl border-red-200 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg text-red-700">
+          Delete store
+        </CardTitle>
       </CardHeader>
+
       <CardContent className="space-y-3">
         {error && <Message type="error">⚠ {error}</Message>}
-        <p className="text-sm text-muted-foreground">
+
+        <p className="text-sm leading-6 text-muted-foreground">
           Permanently delete this store. This cannot be undone.
         </p>
+
         <Button
           variant="outline"
           onClick={handleDelete}
@@ -334,11 +373,12 @@ export default function SellerSettings() {
   const { shop } = useOutletContext()
   const { data, isLoading, error } = useStore(shop.id)
 
-  // fall back to the list item while the full record loads
+  // Use the selected store while the full record loads.
   const store = { ...shop, ...(data ?? {}) }
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6">
+    <div className="mx-auto w-full max-w-[1400px] space-y-6">
+      {/* Page heading */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -349,18 +389,27 @@ export default function SellerSettings() {
       {error && <Message type="error">⚠ {error.message}</Message>}
 
       {isLoading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-28 w-full" />
+        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
+          <Skeleton className="h-[420px] w-full rounded-2xl" />
+          <div className="space-y-6">
+            <Skeleton className="h-44 w-full rounded-2xl" />
+            <Skeleton className="h-48 w-full rounded-2xl" />
+          </div>
         </div>
       ) : (
-        <>
-          {/* key remounts the form when you switch stores */}
-          <DetailsForm key={store.id} store={store} />
-          <LogoCard store={store} />
-          <PublishCard store={store} />
-          <DeleteCard store={store} />
-        </>
+        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
+          {/* Left column */}
+          <div className="min-w-0">
+            <DetailsForm key={store.id} store={store} />
+          </div>
+
+          {/* Right column */}
+          <div className="min-w-0 space-y-6">
+            <LogoCard store={store} />
+            <PublishCard store={store} />
+            <DeleteCard store={store} />
+          </div>
+        </div>
       )}
     </div>
   )
