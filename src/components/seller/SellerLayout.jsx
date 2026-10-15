@@ -16,6 +16,7 @@ import {
   Plus,
   Check,
   X,
+  MapPin,
 } from "lucide-react"
 
 import { useMyStores } from "../../hooks/useStores"
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { label: "My Products", to: "/seller/products", icon: Package },
   { label: "Categories", to: "/seller/categories", icon: Tags },
   { label: "Brands", to: "/seller/brands", icon: Tag },
+  { label: "Outlets", to: "/seller/outlets", icon: MapPin },
   { label: "Orders", to: "/seller/orders", icon: ShoppingBag },
   { label: "Shops", to: "/seller/shops", icon: Store },
   { label: "Settings", to: "/seller/settings", icon: Settings },
@@ -427,9 +429,7 @@ export default function SellerLayout() {
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Desktop sidebar */}
-        <div className="hidden h-full shrink-0 lg:block">
-          {sidebar}
-        </div>
+        <div className="hidden h-full shrink-0 lg:block">{sidebar}</div>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <header className="z-30 flex h-[68px] shrink-0 items-center justify-between border-b border-yz-border bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8">
