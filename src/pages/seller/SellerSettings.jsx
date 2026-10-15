@@ -95,7 +95,8 @@ function DetailsForm({ store }) {
 
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600">
-              Store name *
+              Store name 
+              <span className="text-red-500"> *</span>
             </label>
             <input
               required
@@ -107,7 +108,8 @@ function DetailsForm({ store }) {
 
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600">
-              Category *
+              Category
+              <span className="text-red-500"> *</span>
             </label>
             <select
               value={form.category}
@@ -125,7 +127,8 @@ function DetailsForm({ store }) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-600">
-                Contact email *
+                Contact email
+                <span className="text-red-500"> *</span>
               </label>
               <input
                 type="email"

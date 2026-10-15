@@ -177,7 +177,7 @@ export default function SellerDashboard() {
             </div>
 
             {shop?.status && (
-              <Badge variant="outline" className="shrink-0 font-normal">
+              <Badge variant="outline" className="shrink-0 font-normal bg-green-500">
                 {shop.status}
               </Badge>
             )}

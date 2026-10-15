@@ -1,5 +1,7 @@
+
 import { useState, useEffect, useRef } from "react";
 import { NavLink, Outlet, Link } from "react-router-dom";
+
 import {
   LayoutDashboard,
   Package,
@@ -31,6 +33,40 @@ const NAV_ITEMS = [
 
 const STORE_KEY = "yanzee_store_id";
 
+// Displays uploaded store logo or fallback icon.
+function StoreLogo({ store, size = "h-10 w-10" }) {
+  const [imageFailed, setImageFailed] = useState(false);
+
+  const logoUrl =
+    store?.logo ||
+    store?.logoUrl ||
+    store?.logoURL ||
+    store?.image ||
+    store?.imageUrl ||
+    "";
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [logoUrl]);
+
+  return (
+    <span
+      className={`flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-lg border border-yz-border bg-white text-brand-red-600 shadow-sm`}
+    >
+      {logoUrl && !imageFailed ? (
+        <img
+          src={logoUrl}
+          alt={`${store?.name || "Store"} logo`}
+          className="h-full w-full object-contain p-1"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <Store size={19} />
+      )}
+    </span>
+  );
+}
+
 const readSavedStoreId = () => {
   try {
     return localStorage.getItem(STORE_KEY);
@@ -40,7 +76,11 @@ const readSavedStoreId = () => {
 };
 
 export default function SellerLayout() {
-  const { data: stores = [], isLoading, error } = useMyStores();
+  const {
+    data: stores = [],
+    isLoading,
+    error,
+  } = useMyStores();
 
   const [selectedId, setSelectedId] = useState(readSavedStoreId);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -54,6 +94,28 @@ export default function SellerLayout() {
     stores[0] ??
     null;
 
+  // Keep selected store synchronized.
+  useEffect(() => {
+    if (stores.length === 0) return;
+
+    const savedStoreExists = stores.some(
+      (store) => store.id === selectedId
+    );
+
+    if (!savedStoreExists) {
+      const firstStore = stores[0];
+
+      setSelectedId(firstStore.id);
+
+      try {
+        localStorage.setItem(STORE_KEY, firstStore.id);
+      } catch {
+        // Selection remains available in component state.
+      }
+    }
+  }, [stores, selectedId]);
+
+  // Close store dropdown when clicking outside.
   useEffect(() => {
     if (!storeMenuOpen) return;
 
@@ -81,6 +143,7 @@ export default function SellerLayout() {
     };
   }, [storeMenuOpen]);
 
+  // Close Add Store popup using Escape.
   useEffect(() => {
     if (!addingStore) return;
 
@@ -101,7 +164,7 @@ export default function SellerLayout() {
     try {
       localStorage.setItem(STORE_KEY, id);
     } catch {
-      // Keep the selection for the current session.
+      // Keep selection for current session.
     }
 
     setSelectedId(id);
@@ -115,11 +178,13 @@ export default function SellerLayout() {
     }
   };
 
+  // Loading state.
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-yz-bg">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-red-600/20 border-t-brand-red-600" />
+
           <p className="text-sm font-medium text-zinc-500">
             Loading your seller workspace...
           </p>
@@ -128,14 +193,20 @@ export default function SellerLayout() {
     );
   }
 
+  // Error state.
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-yz-bg px-4">
         <div className="w-full max-w-md rounded-2xl border border-red-100 bg-white p-6 text-center shadow-sm">
-          <Store className="mx-auto mb-4 text-brand-red-600" size={28} />
+          <Store
+            className="mx-auto mb-4 text-brand-red-600"
+            size={28}
+          />
+
           <h1 className="text-xl font-semibold text-zinc-900">
             Unable to load your stores
           </h1>
+
           <p className="mt-2 text-sm text-zinc-500">
             {error.message || "Please try again in a moment."}
           </p>
@@ -144,7 +215,7 @@ export default function SellerLayout() {
     );
   }
 
-  // Keep the original onboarding screen for sellers without any stores.
+  // Seller onboarding when there are no stores.
   if (stores.length === 0) {
     return (
       <div className="min-h-screen bg-yz-bg px-4 py-10 sm:px-6 sm:py-16">
@@ -185,11 +256,14 @@ export default function SellerLayout() {
     );
   }
 
+  // Sidebar shared between desktop and mobile.
   const sidebar = (
-    <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-yz-border bg-white">
+    <aside className="flex h-full w-[260px] shrink-0 flex-col overflow-hidden border-r border-yz-border bg-white">
+
+      {/* Logo */}
       <Link
         to="/"
-        className="flex items-center gap-3 border-b border-yz-border px-5 py-5"
+        className="flex shrink-0 items-center gap-3 border-b border-yz-border px-5 py-5"
         onClick={() => setMobileOpen(false)}
       >
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-red-600 text-white shadow-sm">
@@ -200,14 +274,15 @@ export default function SellerLayout() {
           <span className="block text-xl font-bold tracking-tight text-zinc-900">
             YanZee
           </span>
+
           <span className="block text-[10px] font-semibold tracking-[0.18em] text-brand-red-600">
             SELLER STUDIO
           </span>
         </span>
       </Link>
 
-      {/* Store switcher */}
-      <div className="border-b border-yz-border p-4">
+      {/* Store Switcher */}
+      <div className="shrink-0 border-b border-yz-border p-4">
         <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
           Your store
         </p>
@@ -224,14 +299,13 @@ export default function SellerLayout() {
                 : "border-yz-border bg-yz-bg hover:border-brand-red-600/30"
             }`}
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-brand-red-600 shadow-sm">
-              <Store size={19} />
-            </span>
+            <StoreLogo store={shop} />
 
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold text-zinc-900">
                 {shop?.name || "My Store"}
               </span>
+
               <span className="mt-0.5 block text-xs text-zinc-500">
                 Seller workspace
               </span>
@@ -245,6 +319,7 @@ export default function SellerLayout() {
             />
           </button>
 
+          {/* Store Dropdown */}
           {storeMenuOpen && (
             <div className="absolute left-0 right-0 top-full z-[60] mt-2 overflow-hidden rounded-xl border border-yz-border bg-white p-1.5 shadow-lg">
               <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
@@ -266,14 +341,20 @@ export default function SellerLayout() {
                           : "text-zinc-700 hover:bg-zinc-50"
                       }`}
                     >
-                      <Store size={17} className="shrink-0" />
+                      <StoreLogo
+                        store={store}
+                        size="h-9 w-9"
+                      />
 
                       <span className="min-w-0 flex-1 truncate text-sm font-medium">
                         {store.name || "My Store"}
                       </span>
 
                       {isSelected && (
-                        <Check size={16} className="shrink-0" />
+                        <Check
+                          size={16}
+                          className="shrink-0"
+                        />
                       )}
                     </button>
                   );
@@ -299,8 +380,8 @@ export default function SellerLayout() {
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5">
+      {/* Sidebar Navigation */}
+      <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-5">
         <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
           Workspace
         </p>
@@ -334,7 +415,9 @@ export default function SellerLayout() {
                     }
                   />
 
-                  <span className="flex-1">{item.label}</span>
+                  <span className="flex-1">
+                    {item.label}
+                  </span>
 
                   {isActive && (
                     <span className="h-1.5 w-1.5 rounded-full bg-brand-red-600" />
@@ -346,15 +429,19 @@ export default function SellerLayout() {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-yz-border p-3">
+      {/* Sidebar Footer */}
+      <div className="shrink-0 border-t border-yz-border p-3">
         <Link
           to="/"
           onClick={() => setMobileOpen(false)}
           className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-zinc-600 transition-colors hover:bg-red-50 hover:text-brand-red-600"
         >
           <ArrowLeft size={18} />
-          <span className="flex-1">Back to storefront</span>
+
+          <span className="flex-1">
+            Back to storefront
+          </span>
+
           <ExternalLink size={14} />
         </Link>
 
@@ -362,6 +449,7 @@ export default function SellerLayout() {
           <p className="text-xs font-semibold text-zinc-700">
             Selling on YanZee
           </p>
+
           <p className="mt-1 text-[11px] leading-5 text-zinc-500">
             Manage your store from one place.
           </p>
@@ -371,8 +459,10 @@ export default function SellerLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-yz-bg">
-      {/* Mobile sidebar overlay */}
+    // Main layout stays within viewport height.
+    <div className="flex h-screen flex-col overflow-hidden bg-yz-bg">
+
+      {/* Mobile Sidebar Overlay */}
       {mobileOpen && (
         <button
           type="button"
@@ -382,23 +472,31 @@ export default function SellerLayout() {
         />
       )}
 
-      {/* Mobile sidebar */}
+      {/* Mobile Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-50 transition-transform duration-200 lg:hidden ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+          mobileOpen
+            ? "translate-x-0"
+            : "-translate-x-full"
         }`}
       >
         {sidebar}
       </div>
 
-      <div className="flex min-h-screen">
-        {/* Desktop sidebar */}
-        <div className="hidden lg:sticky lg:top-0 lg:block lg:h-screen">
+      {/* Main Layout */}
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+
+        {/* Fixed Desktop Sidebar */}
+        <div className="hidden h-full shrink-0 lg:block">
           {sidebar}
         </div>
 
-        <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-yz-border bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8">
+        {/* Right Side */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+
+          {/* Fixed Top Header */}
+          <header className="z-30 flex h-[68px] shrink-0 items-center justify-between border-b border-yz-border bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8">
+
             <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
@@ -413,6 +511,7 @@ export default function SellerLayout() {
                 <p className="truncate text-sm font-semibold text-zinc-900">
                   Seller workspace
                 </p>
+
                 <p className="hidden truncate text-xs text-zinc-500 sm:block">
                   Welcome back to YanZee
                 </p>
@@ -438,11 +537,13 @@ export default function SellerLayout() {
             </div>
           </header>
 
-          <main className="min-w-0 p-4 sm:p-6 lg:p-8">
+          {/* Only this area scrolls */}
+          <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 lg:p-8">
             <Outlet
               context={{
                 shop,
-                setShop: (store) => store && selectStore(store.id),
+                setShop: (store) =>
+                  store && selectStore(store.id),
                 stores,
                 selectStore,
                 shopLoading: false,
@@ -453,7 +554,7 @@ export default function SellerLayout() {
         </div>
       </div>
 
-      {/* Add Store popup */}
+      {/* Add Store Popup */}
       {addingStore && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
@@ -477,6 +578,7 @@ export default function SellerLayout() {
                 >
                   Add another store
                 </h2>
+
                 <p className="mt-1 text-sm text-zinc-500">
                   Set up another store for your business.
                 </p>
@@ -493,7 +595,9 @@ export default function SellerLayout() {
             </div>
 
             <div className="p-5 sm:p-7">
-              <CreateShopForm onCreated={handleStoreCreated} />
+              <CreateShopForm
+                onCreated={handleStoreCreated}
+              />
             </div>
           </div>
         </div>
