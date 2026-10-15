@@ -1,7 +1,6 @@
 
-import { useState, useEffect, useRef } from "react";
-import { NavLink, Outlet, Link } from "react-router-dom";
-
+import { useState, useEffect } from "react"
+import { NavLink, Outlet, Link } from "react-router-dom"
 import {
   LayoutDashboard,
   Package,
@@ -17,10 +16,10 @@ import {
   Plus,
   Check,
   X,
-} from "lucide-react";
+} from "lucide-react"
 
-import { useMyStores } from "../../hooks/useStores";
-import CreateShopForm from "./CreateShopForm";
+import { useMyStores } from "../../hooks/useStores"
+import CreateShopForm from "./CreateShopForm"
 
 const NAV_ITEMS = [
   { label: "Dashboard", to: "/seller", icon: LayoutDashboard },
@@ -28,26 +27,20 @@ const NAV_ITEMS = [
   { label: "Categories", to: "/seller/categories", icon: Tags },
   { label: "Brands", to: "/seller/brands", icon: Tag },
   { label: "Orders", to: "/seller/orders", icon: ShoppingBag },
+  { label: "Shops", to: "/seller/shops", icon: Store },
   { label: "Settings", to: "/seller/settings", icon: Settings },
-];
+]
 
-const STORE_KEY = "yanzee_store_id";
+const STORE_KEY = "yanzee_store_id"
 
-// Displays uploaded store logo or fallback icon.
+// Display the uploaded logo, or a fallback icon.
 function StoreLogo({ store, size = "h-10 w-10" }) {
-  const [imageFailed, setImageFailed] = useState(false);
-
-  const logoUrl =
-    store?.logo ||
-    store?.logoUrl ||
-    store?.logoURL ||
-    store?.image ||
-    store?.imageUrl ||
-    "";
+  const [imageFailed, setImageFailed] = useState(false)
+  const logoUrl = store?.logo || ""
 
   useEffect(() => {
-    setImageFailed(false);
-  }, [logoUrl]);
+    setImageFailed(false)
+  }, [logoUrl])
 
   return (
     <span
@@ -64,144 +57,115 @@ function StoreLogo({ store, size = "h-10 w-10" }) {
         <Store size={19} />
       )}
     </span>
-  );
+  )
 }
 
 const readSavedStoreId = () => {
   try {
-    return localStorage.getItem(STORE_KEY);
+    return localStorage.getItem(STORE_KEY)
   } catch {
-    return null;
+    return null
   }
-};
+}
 
 export default function SellerLayout() {
-  const {
-    data: stores = [],
-    isLoading,
-    error,
-  } = useMyStores();
+  const { data: stores = [], isLoading, error } = useMyStores()
 
-  const [selectedId, setSelectedId] = useState(readSavedStoreId);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [storeMenuOpen, setStoreMenuOpen] = useState(false);
-  const [addingStore, setAddingStore] = useState(false);
-
-  const storeMenuRef = useRef(null);
+  const [selectedId, setSelectedId] = useState(readSavedStoreId)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [storeMenuOpen, setStoreMenuOpen] = useState(false)
+  const [addingStore, setAddingStore] = useState(false)
 
   const shop =
-    stores.find((store) => store.id === selectedId) ??
-    stores[0] ??
-    null;
+    stores.find((store) => store.id === selectedId) ?? stores[0] ?? null
 
-  // Keep selected store synchronized.
   useEffect(() => {
-    if (stores.length === 0) return;
-
-    const savedStoreExists = stores.some(
-      (store) => store.id === selectedId
-    );
-
-    if (!savedStoreExists) {
-      const firstStore = stores[0];
-
-      setSelectedId(firstStore.id);
-
-      try {
-        localStorage.setItem(STORE_KEY, firstStore.id);
-      } catch {
-        // Selection remains available in component state.
-      }
-    }
-  }, [stores, selectedId]);
-
-  // Close store dropdown when clicking outside.
-  useEffect(() => {
-    if (!storeMenuOpen) return;
+    if (!storeMenuOpen) return
 
     const handleOutsideClick = (event) => {
+      const target = event.target
+
       if (
-        storeMenuRef.current &&
-        !storeMenuRef.current.contains(event.target)
+        !(target instanceof Element) ||
+        !target.closest("[data-store-menu]")
       ) {
-        setStoreMenuOpen(false);
+        setStoreMenuOpen(false)
       }
-    };
+    }
 
     const handleEscape = (event) => {
       if (event.key === "Escape") {
-        setStoreMenuOpen(false);
+        setStoreMenuOpen(false)
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleOutsideClick);
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("mousedown", handleOutsideClick)
+    document.addEventListener("keydown", handleEscape)
 
     return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [storeMenuOpen]);
+      document.removeEventListener("mousedown", handleOutsideClick)
+      document.removeEventListener("keydown", handleEscape)
+    }
+  }, [storeMenuOpen])
 
-  // Close Add Store popup using Escape.
   useEffect(() => {
-    if (!addingStore) return;
+    if (!addingStore) return
 
     const handleEscape = (event) => {
       if (event.key === "Escape") {
-        setAddingStore(false);
+        setAddingStore(false)
       }
-    };
+    }
 
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("keydown", handleEscape)
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [addingStore]);
+      document.removeEventListener("keydown", handleEscape)
+    }
+  }, [addingStore])
 
   const selectStore = (id) => {
     try {
-      localStorage.setItem(STORE_KEY, id);
+      localStorage.setItem(STORE_KEY, id)
     } catch {
-      // Keep selection for current session.
+      // Keep selection in component state.
     }
 
-    setSelectedId(id);
-    setStoreMenuOpen(false);
-    setAddingStore(false);
-  };
+    setSelectedId(id)
+    setStoreMenuOpen(false)
+    setAddingStore(false)
+  }
 
   const handleStoreCreated = (newStore) => {
     if (newStore?.id) {
-      selectStore(newStore.id);
+      selectStore(newStore.id)
     }
-  };
+  }
 
-  // Loading state.
+  const openAddStore = () => {
+    setStoreMenuOpen(false)
+    setMobileOpen(false)
+    setAddingStore(true)
+  }
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-yz-bg">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-red-600/20 border-t-brand-red-600" />
-
           <p className="text-sm font-medium text-zinc-500">
             Loading your seller workspace...
           </p>
         </div>
       </div>
-    );
+    )
   }
 
-  // Error state.
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-yz-bg px-4">
         <div className="w-full max-w-md rounded-2xl border border-red-100 bg-white p-6 text-center shadow-sm">
-          <Store
-            className="mx-auto mb-4 text-brand-red-600"
-            size={28}
-          />
+          <Store className="mx-auto mb-4 text-brand-red-600" size={28} />
 
           <h1 className="text-xl font-semibold text-zinc-900">
             Unable to load your stores
@@ -212,10 +176,9 @@ export default function SellerLayout() {
           </p>
         </div>
       </div>
-    );
+    )
   }
 
-  // Seller onboarding when there are no stores.
   if (stores.length === 0) {
     return (
       <div className="min-h-screen bg-yz-bg px-4 py-10 sm:px-6 sm:py-16">
@@ -253,17 +216,14 @@ export default function SellerLayout() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
-  // Sidebar shared between desktop and mobile.
   const sidebar = (
-    <aside className="flex h-full w-[260px] shrink-0 flex-col overflow-hidden border-r border-yz-border bg-white">
-
-      {/* Logo */}
+    <aside className="flex h-full w-65 shrink-0 flex-col overflow-hidden border-r border-yz-border bg-white">
       <Link
         to="/"
-        className="flex shrink-0 items-center gap-3 border-b border-yz-border px-5 py-5"
+        className="flex items-center gap-3 border-b border-yz-border px-5 py-5"
         onClick={() => setMobileOpen(false)}
       >
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-red-600 text-white shadow-sm">
@@ -281,13 +241,13 @@ export default function SellerLayout() {
         </span>
       </Link>
 
-      {/* Store Switcher */}
-      <div className="shrink-0 border-b border-yz-border p-4">
-        <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+      {/* Store switcher */}
+      <div className="border-b border-yz-border p-4">
+        <p className="mb-2 px-1 text-[10px] font-bold tracking-[0.16em] text-zinc-500 uppercase">
           Your store
         </p>
 
-        <div className="relative" ref={storeMenuRef}>
+        <div className="relative" data-store-menu>
           <button
             type="button"
             aria-label="Choose store or add a store"
@@ -319,45 +279,41 @@ export default function SellerLayout() {
             />
           </button>
 
-          {/* Store Dropdown */}
           {storeMenuOpen && (
-            <div className="absolute left-0 right-0 top-full z-[60] mt-2 overflow-hidden rounded-xl border border-yz-border bg-white p-1.5 shadow-lg">
-              <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
+            <div className="absolute top-full right-0 left-0 z-[60] mt-2 overflow-hidden rounded-xl border border-yz-border bg-white p-1.5 shadow-lg">
+              <p className="px-3 py-2 text-[10px] font-bold tracking-[0.14em] text-zinc-400 uppercase">
                 Switch store
               </p>
 
               <div className="max-h-56 overflow-y-auto">
                 {stores.map((store) => {
-                  const isSelected = store.id === shop?.id;
+                  const isSelected = store.id === shop?.id
 
                   return (
                     <button
                       key={store.id}
                       type="button"
-                      onClick={() => selectStore(store.id)}
+                      onClick={() => {
+                        selectStore(store.id)
+                        setMobileOpen(false)
+                      }}
                       className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
                         isSelected
                           ? "bg-red-50 text-brand-red-600"
                           : "text-zinc-700 hover:bg-zinc-50"
                       }`}
                     >
-                      <StoreLogo
-                        store={store}
-                        size="h-9 w-9"
-                      />
+                      <StoreLogo store={store} size="h-9 w-9" />
 
                       <span className="min-w-0 flex-1 truncate text-sm font-medium">
                         {store.name || "My Store"}
                       </span>
 
                       {isSelected && (
-                        <Check
-                          size={16}
-                          className="shrink-0"
-                        />
+                        <Check size={16} className="shrink-0" />
                       )}
                     </button>
-                  );
+                  )
                 })}
               </div>
 
@@ -365,11 +321,7 @@ export default function SellerLayout() {
 
               <button
                 type="button"
-                onClick={() => {
-                  setStoreMenuOpen(false);
-                  setMobileOpen(false);
-                  setAddingStore(true);
-                }}
+                onClick={openAddStore}
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-brand-red-600 transition-colors hover:bg-red-50"
               >
                 <Plus size={17} />
@@ -380,14 +332,14 @@ export default function SellerLayout() {
         </div>
       </div>
 
-      {/* Sidebar Navigation */}
+      {/* Navigation */}
       <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-5">
-        <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+        <p className="mb-3 px-3 text-[10px] font-bold tracking-[0.16em] text-zinc-500 uppercase">
           Workspace
         </p>
 
         {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
+          const Icon = item.icon
 
           return (
             <NavLink
@@ -415,9 +367,7 @@ export default function SellerLayout() {
                     }
                   />
 
-                  <span className="flex-1">
-                    {item.label}
-                  </span>
+                  <span className="flex-1">{item.label}</span>
 
                   {isActive && (
                     <span className="h-1.5 w-1.5 rounded-full bg-brand-red-600" />
@@ -425,11 +375,11 @@ export default function SellerLayout() {
                 </>
               )}
             </NavLink>
-          );
+          )
         })}
       </nav>
 
-      {/* Sidebar Footer */}
+      {/* Footer */}
       <div className="shrink-0 border-t border-yz-border p-3">
         <Link
           to="/"
@@ -437,11 +387,7 @@ export default function SellerLayout() {
           className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-zinc-600 transition-colors hover:bg-red-50 hover:text-brand-red-600"
         >
           <ArrowLeft size={18} />
-
-          <span className="flex-1">
-            Back to storefront
-          </span>
-
+          <span className="flex-1">Back to storefront</span>
           <ExternalLink size={14} />
         </Link>
 
@@ -456,13 +402,11 @@ export default function SellerLayout() {
         </div>
       </div>
     </aside>
-  );
+  )
 
   return (
-    // Main layout stays within viewport height.
     <div className="flex h-screen flex-col overflow-hidden bg-yz-bg">
-
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <button
           type="button"
@@ -472,31 +416,23 @@ export default function SellerLayout() {
         />
       )}
 
-      {/* Mobile Sidebar */}
+      {/* Mobile sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-50 transition-transform duration-200 lg:hidden ${
-          mobileOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {sidebar}
       </div>
 
-      {/* Main Layout */}
       <div className="flex min-h-0 flex-1 overflow-hidden">
-
-        {/* Fixed Desktop Sidebar */}
+        {/* Desktop sidebar */}
         <div className="hidden h-full shrink-0 lg:block">
           {sidebar}
         </div>
 
-        {/* Right Side */}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-
-          {/* Fixed Top Header */}
           <header className="z-30 flex h-[68px] shrink-0 items-center justify-between border-b border-yz-border bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8">
-
             <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
@@ -537,15 +473,15 @@ export default function SellerLayout() {
             </div>
           </header>
 
-          {/* Only this area scrolls */}
+          {/* Independently scrolling page content */}
           <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 lg:p-8">
             <Outlet
               context={{
                 shop,
-                setShop: (store) =>
-                  store && selectStore(store.id),
+                setShop: (store) => store && selectStore(store.id),
                 stores,
                 selectStore,
+                openAddStore,
                 shopLoading: false,
                 shopError: "",
               }}
@@ -554,13 +490,13 @@ export default function SellerLayout() {
         </div>
       </div>
 
-      {/* Add Store Popup */}
+      {/* Add Store popup */}
       {addingStore && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
-              setAddingStore(false);
+              setAddingStore(false)
             }
           }}
         >
@@ -595,13 +531,11 @@ export default function SellerLayout() {
             </div>
 
             <div className="p-5 sm:p-7">
-              <CreateShopForm
-                onCreated={handleStoreCreated}
-              />
+              <CreateShopForm onCreated={handleStoreCreated} />
             </div>
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }

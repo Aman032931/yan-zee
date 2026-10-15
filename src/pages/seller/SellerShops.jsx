@@ -2,12 +2,29 @@ import { useState } from "react"
 import { useOutletContext } from "react-router-dom"
 import { Plus, Store } from "lucide-react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-
-import CreateShopForm from "../../components/seller/CreateShopForm"
 import { useToggleStorePublish } from "../../hooks/useStores"
+import { useListControls } from "../../hooks/useListControls"
+import {
+  DataCard,
+  DataTable,
+  EmptyState,
+  EntityCell,
+  ErrorBanner,
+  PageHeader,
+  PageShell,
+  PrimaryButton,
+  StatusPill,
+  TableFooter,
+  TableRow,
+  Td,
+} from "../../components/seller/SellerUI"
+
+const COLUMNS = [
+  { label: "Shop Name" },
+  { label: "Category" },
+  { label: "Status" },
+  { label: "Actions", align: "center" },
+]
 
 const categoryLabel = (c = "") =>
   c
@@ -16,10 +33,12 @@ const categoryLabel = (c = "") =>
     .join(" ")
 
 export default function SellerShops() {
-  const { stores, selectStore } = useOutletContext()
+  // openAddStore opens the same popup as "Add Store" in the sidebar dropdown
+  const { stores, openAddStore } = useOutletContext()
   const toggle = useToggleStorePublish()
 
-  const [showForm, setShowForm] = useState(false)
+  const list = useListControls(stores, (s) => `${s.name} ${s.slug ?? ""}`)
+
   const [busyId, setBusyId] = useState(null)
   const [error, setError] = useState("")
 
@@ -35,128 +54,101 @@ export default function SellerShops() {
     }
   }
 
-  // the new store becomes the active one, and the form closes
-  const handleCreated = (store) => {
-    if (store?.id) selectStore(store.id)
-    setShowForm(false)
-  }
-
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">My Shops</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {stores.length === 1
-              ? "You have 1 shop."
-              : `You have ${stores.length} shops.`}{" "}
-            Use the dropdown in the sidebar to switch between them.
-          </p>
-        </div>
-        {!showForm && (
-          <Button onClick={() => setShowForm(true)} className="self-start">
-            <Plus className="mr-2 h-4 w-4" />
-            Add shop
-          </Button>
-        )}
-      </div>
+    <PageShell>
+      <PageHeader
+        title="My Shops"
+        subtitle={`You have ${stores.length} ${
+          stores.length === 1 ? "shop" : "shops"
+        }. Use the store switcher in the sidebar to change shops.`}
+        action={
+          <PrimaryButton onClick={openAddStore}>
+            <Plus className="h-4 w-4" />
+            Add Shop
+          </PrimaryButton>
+        }
+      />
 
-      {error && (
-        <div
-          role="alert"
-          className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-        >
-          ⚠ {error}
-        </div>
-      )}
+      <ErrorBanner>{error}</ErrorBanner>
 
-      {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Add a new shop</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CreateShopForm
-              onCreated={handleCreated}
-              onCancel={() => setShowForm(false)}
-            />
-          </CardContent>
-        </Card>
-      )}
+      <DataCard
+        icon={Store}
+        title="All shops"
+        count={stores.length}
+        search={{
+          value: list.query,
+          onChange: list.setQuery,
+          placeholder: "Search name or slug",
+        }}
+      >
+        {list.total === 0 ? (
+          <EmptyState
+            icon={Store}
+            title={`No results for "${list.query.trim()}"`}
+            text="Try a different name or slug."
+          />
+        ) : (
+          <>
+            <DataTable columns={COLUMNS}>
+              {list.pageItems.map((store) => {
+                const busy = busyId === store.id
 
-      <div className="grid grid-cols-1 gap-4">
-        {stores.map((store) => {
-          const busy = busyId === store.id
-
-          return (
-            <Card key={store.id}>
-              <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-                {/* Left: logo + details */}
-                <div className="flex min-w-0 items-center gap-4">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-muted">
-                    {store.logo ? (
-                      <img
-                        src={store.logo}
-                        alt={store.name}
-                        className="h-full w-full object-cover"
+                return (
+                  <TableRow key={store.id}>
+                    <Td>
+                      <EntityCell
+                        image={store.logo}
+                        icon={Store}
+                        name={store.name}
+                        sub={store.slug}
                       />
-                    ) : (
-                      <Store className="h-7 w-7 text-muted-foreground" />
-                    )}
-                  </div>
+                    </Td>
 
-                  <div className="min-w-0">
-                    <h2 className="truncate text-base font-semibold">
-                      {store.name}
-                    </h2>
-                    <p className="truncate text-xs text-gray-400">
-                      {store.slug}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      {store.category && (
-                        <Badge variant="outline">
-                          {categoryLabel(store.category)}
-                        </Badge>
-                      )}
-                      <Badge
-                        variant="outline"
-                        className={
+                    <Td className="text-zinc-600">
+                      {store.category ? categoryLabel(store.category) : "—"}
+                    </Td>
+
+                    <Td>
+                      <StatusPill tone={store.isPublished ? "green" : "red"}>
+                        {store.isPublished ? "Active" : "Inactive"}
+                      </StatusPill>
+                    </Td>
+
+                    <Td align="center">
+                      {/* fixed width so the button never changes size */}
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => handleToggle(store)}
+                        className={`inline-flex h-[42px] w-[110px] cursor-pointer items-center justify-center rounded-xl border text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
                           store.isPublished
-                            ? "border-green-200 bg-green-100 text-green-700"
-                            : "border-red-200 bg-red-100 text-red-700"
-                        }
+                            ? "border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+                            : "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
+                        }`}
                       >
-                        {store.isPublished ? "Published" : "Unpublished"}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
+                        {busy
+                          ? "Updating..."
+                          : store.isPublished
+                            ? "Unpublish"
+                            : "Publish"}
+                      </button>
+                    </Td>
+                  </TableRow>
+                )
+              })}
+            </DataTable>
 
-                {/* Right: action (fixed width so it never changes size) */}
-                <div className="flex shrink-0 items-center">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className={`h-[42px] w-[100px] text-sm ${
-                      store.isPublished
-                        ? "border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800"
-                        : "border-green-300 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800"
-                    }`}
-                    disabled={busy}
-                    onClick={() => handleToggle(store)}
-                  >
-                    {busy
-                      ? "Updating..."
-                      : store.isPublished
-                        ? "Unpublish"
-                        : "Publish"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-    </div>
+            <TableFooter
+              from={list.from}
+              to={list.to}
+              total={list.total}
+              page={list.page}
+              totalPages={list.totalPages}
+              onPageChange={list.setPage}
+            />
+          </>
+        )}
+      </DataCard>
+    </PageShell>
   )
 }
