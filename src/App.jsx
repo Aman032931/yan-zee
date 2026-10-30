@@ -47,6 +47,7 @@ import SellerShops from "./pages/seller/SellerShops"
 import SellerSettings from "./pages/seller/SellerSettings"
 import SellerCategoryDetail from "./pages/seller/SellerCategoryDetails"
 import SellerOutlets from "./pages/seller/SellerOutlets"
+import SellerInventory from "./pages/seller/SellerInventory"
 
 import Profile from "./pages/Profile"
 
@@ -74,7 +75,8 @@ function App() {
     routeLocation.pathname.startsWith("/seller") ||
     routeLocation.pathname.startsWith("/shop-owner")
 
-  const returnTo = location.state?.from || backgroundLocation?.pathname || "/"
+  const returnTo =
+    location.state?.from || backgroundLocation?.pathname || "/"
 
   const closePopup = React.useCallback(() => {
     navigate(returnTo, { replace: true })
@@ -164,8 +166,9 @@ function App() {
             { index: true, element: <SellerDashboard /> },
             { path: "products", element: <SellerProducts /> },
             { path: "products/:id", element: <SellerProductDetail /> },
+            { path: "inventory", element: <SellerInventory /> },
             { path: "categories", element: <SellerCategories /> },
-            { path: "categories/:id", element: <SellerCategoryDetail/>},
+            { path: "categories/:id", element: <SellerCategoryDetail /> },
             { path: "brands", element: <SellerBrands /> },
             { path: "outlets", element: <SellerOutlets /> },
             { path: "orders", element: <SellerOrders /> },

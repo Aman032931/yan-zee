@@ -230,58 +230,132 @@ export function RowLink({ className = "", ...props }) {
   return <Link className={`${rowBase} ${rowTone(false)} ${className}`} {...props} />
 }
 
-/* ---------- Table footer: "1 - 5 / 5" + pagination ---------- */
-export function TableFooter({ from, to, total, page, totalPages, onPageChange }) {
-  const windowStart = Math.max(1, Math.min(page - 2, totalPages - 4))
-  const last = Math.min(totalPages, windowStart + 4)
-  const pages = []
-  for (let p = windowStart; p <= last; p++) pages.push(p)
 
-  const arrow =
-    "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-yz-border text-zinc-500 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
+/* ---------- Table footer: clean shared pagination ---------- */
+export function TableFooter({
+  from,
+  to,
+  total,
+  page,
+  totalPages,
+  onPageChange,
+}) {
+  const safeTotalPages = Math.max(1, totalPages || 1)
+
+  // Show at most 5 page numbers.
+  const windowStart = Math.max(
+    1,
+    Math.min(page - 2, safeTotalPages - 4),
+  )
+  const last = Math.min(safeTotalPages, windowStart + 4)
+
+  const pages = []
+  for (let p = windowStart; p <= last; p++) {
+    pages.push(p)
+  }
+
+  const arrowBase =
+    "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red-600/30 disabled:cursor-not-allowed disabled:opacity-35"
+
+  const pageBase =
+    "inline-flex h-9 min-w-9 shrink-0 items-center justify-center rounded-lg px-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red-600/30"
 
   return (
-    <div className="flex items-center justify-between border-t border-yz-border px-5 py-3 text-sm text-zinc-900">
-      <span>
-        {from} - {to} / {total}
-      </span>
+    <div className="flex flex-col gap-3 border-t border-yz-border bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      {/* Results information */}
+      <p className="text-xs text-zinc-500 sm:text-sm">
+        {total === 0 ? (
+          "No results"
+        ) : (
+          <>
+            Showing{" "}
+            <span className="font-medium text-zinc-700">{from}–{to}</span>
+            {" "}of{" "}
+            <span className="font-medium text-zinc-700">{total}</span>
+          </>
+        )}
+      </p>
 
-      <div className="flex items-center gap-1">
+      {/* Page controls */}
+      <nav
+        aria-label="Pagination"
+        className="flex items-center justify-between gap-1 sm:justify-end"
+      >
         <button
           type="button"
-          className={arrow}
-          disabled={page <= 1}
+          className={`${arrowBase} border-yz-border text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900`}
+          disabled={page <= 1 || total === 0}
           onClick={() => onPageChange(page - 1)}
-          aria-label="Previous page"
+          aria-label="Go to previous page"
+          title="Previous page"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
+
+        {windowStart > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => onPageChange(1)}
+              className={`${pageBase} border border-yz-border text-zinc-700 hover:bg-zinc-50`}
+              aria-label="Go to page 1"
+            >
+              1
+            </button>
+            {windowStart > 2 && (
+              <span className="px-1 text-sm text-zinc-400" aria-hidden="true">
+                …
+              </span>
+            )}
+          </>
+        )}
 
         {pages.map((p) => (
           <button
             key={p}
             type="button"
             onClick={() => onPageChange(p)}
-            className={`inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-sm font-medium transition ${
+            aria-label={`Go to page ${p}`}
+            aria-current={p === page ? "page" : undefined}
+            className={`${pageBase} ${
               p === page
-                ? "bg-brand-red-600 text-white"
-                : "border border-yz-border text-zinc-700 hover:bg-zinc-50"
+                ? "bg-brand-red-600 text-white shadow-sm"
+                : "border border-yz-border text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
             }`}
           >
             {p}
           </button>
         ))}
 
+        {last < safeTotalPages && (
+          <>
+            {last < safeTotalPages - 1 && (
+              <span className="px-1 text-sm text-zinc-400" aria-hidden="true">
+                …
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => onPageChange(safeTotalPages)}
+              className={`${pageBase} border border-yz-border text-zinc-700 hover:bg-zinc-50`}
+              aria-label={`Go to page ${safeTotalPages}`}
+            >
+              {safeTotalPages}
+            </button>
+          </>
+        )}
+
         <button
           type="button"
-          className={arrow}
-          disabled={page >= totalPages}
+          className={`${arrowBase} border-yz-border text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900`}
+          disabled={page >= safeTotalPages || total === 0}
           onClick={() => onPageChange(page + 1)}
-          aria-label="Next page"
+          aria-label="Go to next page"
+          title="Next page"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
-      </div>
+      </nav>
     </div>
   )
 }

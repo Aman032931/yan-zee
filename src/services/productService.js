@@ -39,8 +39,7 @@ export const getProductById = (id, storeId) =>
     headers: storeHeaders(storeId),
   });
 
-
-// Upload a product image file to the backend.
+// Upload a product image.
 export const uploadProductImage = async (file, storeId) => {
   if (!(file instanceof File)) {
     throw new Error("Please choose an image file.");
@@ -66,7 +65,6 @@ export const uploadProductImage = async (file, storeId) => {
   return response;
 };
 
-
 // Create a product.
 export const createProduct = (payload, storeId) =>
   apiRequest("/products", {
@@ -75,13 +73,42 @@ export const createProduct = (payload, storeId) =>
     headers: storeHeaders(storeId),
   });
 
-// Update a product.
-export const updateProduct = (id, payload, storeId) =>
+// Update general product details.
+export const updateProductGeneral = (id, payload, storeId) =>
   apiRequest(`/products/${id}/general`, {
     method: "PATCH",
     body: payload,
     headers: storeHeaders(storeId),
   });
+
+// Update price, quantity, weight and inventory-related fields.
+export const updateProductInventory = (id, payload, storeId) =>
+  apiRequest(`/products/${id}/inventory`, {
+    method: "PATCH",
+    body: payload,
+    headers: storeHeaders(storeId),
+  });
+
+// Update product status separately.
+export const updateProductStatus = (id, status, storeId) => {
+  const validStatuses = ["ACTIVE", "DRAFT", "ARCHIVED"];
+
+  if (!validStatuses.includes(status)) {
+    throw new Error(
+      `Invalid product status "${status}". Use ACTIVE, DRAFT or ARCHIVED.`
+    );
+  }
+
+  return apiRequest(`/products/${id}/status`, {
+    method: "PATCH",
+    body: { status },
+    headers: storeHeaders(storeId),
+  });
+};
+
+// Keep the existing updateProduct export for compatibility.
+export const updateProduct = (id, payload, storeId) =>
+  updateProductGeneral(id, payload, storeId);
 
 // Delete a product.
 export const deleteProduct = (id, storeId) =>

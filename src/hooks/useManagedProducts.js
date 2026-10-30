@@ -1,16 +1,32 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   getMyProducts,
   getProductById,
   createProduct,
-  updateProduct,
+  updateProductGeneral,
+  updateProductInventory,
+  updateProductStatus,
   deleteProduct,
 } from "../services/productService";
 
 const PAGE_SIZE = 50;
 
-// Find a usable image URL from the product data.
+const INVENTORY_FIELDS = [
+  "sellingPrice",
+  "crossedPrice",
+  "costPrice",
+  "quantity",
+  "weight",
+  "sku",
+  "hsCode",
+  "altBarcode",
+  "isAvailable",
+];
+
+const STATUS_VALUES = ["ACTIVE", "DRAFT", "ARCHIVED"];
+
 function getProductImage(product) {
   if (typeof product.image === "string" && product.image.trim()) {
     return product.image.trim();
@@ -22,36 +38,26 @@ function getProductImage(product) {
 
   if (Array.isArray(product.imageUrls)) {
     const image = product.imageUrls.find(
-      (url) => typeof url === "string" && url.trim(),
+      (url) => typeof url === "string" && url.trim()
     );
 
-    if (image) {
-      return image.trim();
-    }
+    if (image) return image.trim();
   }
 
   if (Array.isArray(product.images)) {
     const image = product.images.find((item) => {
-      if (typeof item === "string") {
-        return item.trim();
-      }
+      if (typeof item === "string") return item.trim();
 
       return typeof item?.url === "string" && item.url.trim();
     });
 
-    if (typeof image === "string") {
-      return image.trim();
-    }
-
-    if (image?.url) {
-      return image.url.trim();
-    }
+    if (typeof image === "string") return image.trim();
+    if (image?.url) return image.url.trim();
   }
 
   return "";
 }
 
-// Pull the category out of whichever shape the API returns.
 function readCategory(product) {
   const candidates = [
     ...(Array.isArray(product.categories) ? product.categories : []),
@@ -63,7 +69,7 @@ function readCategory(product) {
   const name =
     typeof first === "string"
       ? first
-      : (first?.name ?? first?.category?.name ?? "");
+      : first?.name ?? first?.category?.name ?? "";
 
   let categoryIds = Array.isArray(product.categoryIds)
     ? product.categoryIds.filter(Boolean)
@@ -73,7 +79,9 @@ function readCategory(product) {
     categoryIds = candidates
       .map(
         (category) =>
-          category?.id ?? category?.categoryId ?? category?.category?.id,
+          category?.id ??
+          category?.categoryId ??
+          category?.category?.id
       )
       .filter(Boolean);
   }
@@ -85,47 +93,31 @@ function readCategory(product) {
   return { name, categoryIds };
 }
 
-// Convert the backend product format into the format
-// expected by SellerProducts.jsx and ProductFormModal.
 function normalizeProduct(product) {
   const { name: categoryName, categoryIds } = readCategory(product);
 
   return {
     ...product,
-
     id: product.id ?? product._id,
     name: product.name ?? "Unnamed product",
-
-    // Actual selling price.
     price: Number(product.sellingPrice ?? product.price ?? 0),
-
-    // Original/crossed-out price.
-    discountPrice: Number(product.crossedPrice ?? product.discountPrice ?? 0),
-
-    // Available stock.
+    discountPrice: Number(
+      product.crossedPrice ?? product.discountPrice ?? 0
+    ),
     totalStock: Number(product.quantity ?? product.totalStock ?? 0),
-
-    // Use the first valid image URL.
     image: getProductImage(product),
-
-    // Resolve category names from category IDs when needed.
     category: categoryName,
     categoryIds,
-
     status: product.status ?? "UNKNOWN",
     audience: product.audience ?? "ALL",
   };
 }
 
-// Extract products and pagination from common API response formats.
 function extractPage(response) {
   const payload = response?.data ?? response;
 
   if (Array.isArray(payload)) {
-    return {
-      products: payload,
-      pagination: {},
-    };
+    return { products: payload, pagination: {} };
   }
 
   const products = Array.isArray(payload?.products)
@@ -140,21 +132,14 @@ function extractPage(response) {
     response?.pagination ??
     {};
 
-  return {
-    products,
-    pagination,
-  };
+  return { products, pagination };
 }
 
-// Merge list and detail data without losing existing images
-// when the detail endpoint omits them or returns empty values.
-// TEMPORARY: remove once the backend list response includes categories.
 async function withDetails(items, storeId) {
   return Promise.all(
     items.map(async (item) => {
       try {
         const response = await getProductById(item.id, storeId);
-
         const full = response?.data?.product ?? {};
 
         const listImage = getProductImage(item);
@@ -163,11 +148,7 @@ async function withDetails(items, storeId) {
         const mergedProduct = {
           ...item,
           ...full,
-
-          // Prefer the detail image, then the list image.
           image: detailImage || listImage,
-
-          // Keep list images if the detail response has none.
           imageUrls:
             Array.isArray(full.imageUrls) && full.imageUrls.length > 0
               ? full.imageUrls
@@ -176,51 +157,40 @@ async function withDetails(items, storeId) {
 
         return normalizeProduct(mergedProduct);
       } catch {
-        // Keep the list product if fetching details fails.
         return normalizeProduct(item);
       }
-    }),
+    })
   );
 }
 
-// Fetch every page of products belonging to the selected store.
 async function fetchAllMine(storeId) {
-  if (!storeId) {
-    return [];
-  }
+  if (!storeId) return [];
 
   const firstResponse = await getMyProducts(
-    {
-      page: 1,
-      limit: PAGE_SIZE,
-    },
-    storeId,
+    { page: 1, limit: PAGE_SIZE },
+    storeId
   );
 
   const firstPage = extractPage(firstResponse);
-
   let items = firstPage.products.map(normalizeProduct);
 
   const totalPages = Math.max(
     1,
-    Number(firstPage.pagination?.totalPages) || 1,
+    Number(firstPage.pagination?.totalPages) || 1
   );
 
   if (totalPages > 1) {
     const remainingResponses = await Promise.all(
       Array.from({ length: totalPages - 1 }, (_, index) =>
         getMyProducts(
-          {
-            page: index + 2,
-            limit: PAGE_SIZE,
-          },
-          storeId,
-        ),
-      ),
+          { page: index + 2, limit: PAGE_SIZE },
+          storeId
+        )
+      )
     );
 
     const remainingProducts = remainingResponses.flatMap((response) =>
-      extractPage(response).products.map(normalizeProduct),
+      extractPage(response).products.map(normalizeProduct)
     );
 
     items = [...items, ...remainingProducts];
@@ -236,26 +206,63 @@ export function useManagedProducts(storeId, enabled = true) {
   const query = useQuery({
     queryKey,
     queryFn: () => fetchAllMine(storeId),
-    // no store selected (or disabled) = no request, no state juggling
     enabled: Boolean(storeId) && enabled,
   });
 
-  // Reload products after creating, editing, or deleting.
   const reload = () => qc.invalidateQueries({ queryKey });
 
-  // Create a product for the selected store.
   const addProduct = async (payload) => {
     await createProduct(payload, storeId);
     await reload();
   };
 
-  // Update a product belonging to the selected store.
+  // Update general details, inventory and status separately.
   const editProduct = async (id, payload) => {
-    await updateProduct(id, payload, storeId);
+    const {
+      status,
+      ...remainingPayload
+    } = payload;
+
+    const inventoryPayload = {};
+    const generalPayload = {};
+
+    Object.entries(remainingPayload).forEach(([key, value]) => {
+      if (INVENTORY_FIELDS.includes(key)) {
+        // Keep null values so optional fields can be cleared if supported.
+        if (value !== undefined) {
+          inventoryPayload[key] = value;
+        }
+      } else if (value !== undefined) {
+        generalPayload[key] = value;
+      }
+    });
+
+    // General details such as name and category.
+    if (Object.keys(generalPayload).length > 0) {
+      await updateProductGeneral(id, generalPayload, storeId);
+    }
+
+    // Price and stock fields.
+    if (Object.keys(inventoryPayload).length > 0) {
+      await updateProductInventory(id, inventoryPayload, storeId);
+    }
+
+    // Product status has its own endpoint and accepted values.
+    if (status !== undefined && status !== null && status !== "") {
+      const normalizedStatus = String(status).toUpperCase();
+
+      if (!STATUS_VALUES.includes(normalizedStatus)) {
+        throw new Error(
+          "Invalid product status. Choose Active, Draft or Archived."
+        );
+      }
+
+      await updateProductStatus(id, normalizedStatus, storeId);
+    }
+
     await reload();
   };
 
-  // Delete a product belonging to the selected store.
   const removeProduct = async (id) => {
     await deleteProduct(id, storeId);
     await reload();

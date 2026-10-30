@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from "react"
 import { NavLink, Outlet, Link } from "react-router-dom"
 import {
   LayoutDashboard,
   Package,
+  Boxes,
   Tags,
   Tag,
   ShoppingBag,
@@ -16,7 +16,6 @@ import {
   Plus,
   Check,
   X,
-  MapPin,
 } from "lucide-react"
 
 import { useMyStores } from "../../hooks/useStores"
@@ -25,9 +24,9 @@ import CreateShopForm from "./CreateShopForm"
 const NAV_ITEMS = [
   { label: "Dashboard", to: "/seller", icon: LayoutDashboard },
   { label: "My Products", to: "/seller/products", icon: Package },
+  { label: "Inventory", to: "/seller/inventory", icon: Boxes },
   { label: "Categories", to: "/seller/categories", icon: Tags },
   { label: "Brands", to: "/seller/brands", icon: Tag },
-  { label: "Outlets", to: "/seller/outlets", icon: MapPin },
   { label: "Orders", to: "/seller/orders", icon: ShoppingBag },
   { label: "Shops", to: "/seller/shops", icon: Store },
   { label: "Settings", to: "/seller/settings", icon: Settings },
@@ -155,6 +154,7 @@ export default function SellerLayout() {
       <div className="flex min-h-screen items-center justify-center bg-yz-bg">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-red-600/20 border-t-brand-red-600" />
+
           <p className="text-sm font-medium text-zinc-500">
             Loading your seller workspace...
           </p>
@@ -167,7 +167,10 @@ export default function SellerLayout() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-yz-bg px-4">
         <div className="w-full max-w-md rounded-2xl border border-red-100 bg-white p-6 text-center shadow-sm">
-          <Store className="mx-auto mb-4 text-brand-red-600" size={28} />
+          <Store
+            className="mx-auto mb-4 text-brand-red-600"
+            size={28}
+          />
 
           <h1 className="text-xl font-semibold text-zinc-900">
             Unable to load your stores
@@ -429,7 +432,9 @@ export default function SellerLayout() {
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Desktop sidebar */}
-        <div className="hidden h-full shrink-0 lg:block">{sidebar}</div>
+        <div className="hidden h-full shrink-0 lg:block">
+          {sidebar}
+        </div>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <header className="z-30 flex h-[68px] shrink-0 items-center justify-between border-b border-yz-border bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8">

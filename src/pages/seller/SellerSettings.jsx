@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { useOutletContext } from "react-router-dom"
 import { Store, Upload } from "lucide-react"
@@ -278,9 +277,18 @@ function PublishCard({ store }) {
   const handleToggle = async () => {
     setError("")
 
+    console.log("Before publish toggle:", {
+      storeId: store.id,
+      storeName: store.name,
+      isPublished: store.isPublished,
+    })
+
     try {
-      await toggle.mutateAsync(store.id)
+      const result = await toggle.mutateAsync(store.id)
+
+      console.log("Publish toggle API result:", result)
     } catch (err) {
+      console.error("Publish toggle failed:", err)
       setError(err.message || "Unable to update store visibility.")
     }
   }
@@ -306,6 +314,7 @@ function PublishCard({ store }) {
         </p>
 
         <Button
+          type="button"
           variant="outline"
           onClick={handleToggle}
           disabled={toggle.isPending}
@@ -357,6 +366,7 @@ function DeleteCard({ store }) {
         </p>
 
         <Button
+          type="button"
           variant="outline"
           onClick={handleDelete}
           disabled={remove.isPending}
@@ -377,9 +387,9 @@ export default function SellerSettings() {
   // Use the selected store while the full record loads.
   const store = { ...shop, ...(data ?? {}) }
 
+  
   return (
     <div className="mx-auto w-full max-w-[1400px] space-y-6">
-      {/* Page heading */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -399,12 +409,10 @@ export default function SellerSettings() {
         </div>
       ) : (
         <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
-          {/* Left column */}
           <div className="min-w-0">
             <DetailsForm key={store.id} store={store} />
           </div>
 
-          {/* Right column */}
           <div className="min-w-0 space-y-6">
             <LogoCard store={store} />
             <PublishCard store={store} />
