@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
-import { ChevronLeft, ChevronRight, Search } from "lucide-react"
+import { ChevronLeft, ChevronRight, Search, X } from "lucide-react"
 
 /* ---------- Shared classes ---------- */
 export const inputClass =
@@ -9,7 +9,12 @@ export const inputClass =
 export const labelClass = "mb-1 block text-xs font-medium text-zinc-600"
 
 /* ---------- Buttons ---------- */
-export function PrimaryButton({ children, className = "", type = "button", ...props }) {
+export function PrimaryButton({
+  children,
+  className = "",
+  type = "button",
+  ...props
+}) {
   return (
     <button
       type={type}
@@ -21,7 +26,12 @@ export function PrimaryButton({ children, className = "", type = "button", ...pr
   )
 }
 
-export function SecondaryButton({ children, className = "", type = "button", ...props }) {
+export function SecondaryButton({
+  children,
+  className = "",
+  type = "button",
+  ...props
+}) {
   return (
     <button
       type={type}
@@ -36,14 +46,18 @@ export function SecondaryButton({ children, className = "", type = "button", ...
 /* ---------- Page structure ---------- */
 // One width for every seller list page.
 export function PageShell({ children }) {
-  return <div className="w-full space-y-6 xl:px-10 2xl:px-[118px]">{children}</div>
+  return (
+    <div className="w-full space-y-6 xl:px-10 2xl:px-[118px]">{children}</div>
+  )
 }
 
 export function PageHeader({ title, subtitle, action }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">{title}</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+          {title}
+        </h1>
         {subtitle && <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>}
       </div>
       {action && <div className="self-start">{action}</div>}
@@ -72,17 +86,69 @@ export function FormCard({ title, children }) {
   )
 }
 
+
+/* ---------- Popup form ---------- */
+export function FormModal({ title, onClose, busy = false, children }) {
+  // Escape closes the popup (but not while a save is running)
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key === "Escape" && !busy) onClose()
+    }
+
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [onClose, busy])
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
+      onMouseDown={(event) => {
+        // clicking the dark area outside the popup closes it
+        if (event.target === event.currentTarget && !busy) onClose()
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-yz-border bg-white p-6 shadow-xl"
+      >
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <h2 className="text-lg font-bold text-zinc-900">{title}</h2>
+
+          <button
+            type="button"
+            aria-label="Close"
+            disabled={busy}
+            onClick={onClose}
+            className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-50"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {children}
+      </div>
+    </div>
+  )
+}
+
+
 /* ---------- Search ---------- */
-export function SearchInput({ value, onChange, placeholder = "Search name or slug" }) {
+export function SearchInput({
+  value,
+  onChange,
+  placeholder = "Search name or slug",
+}) {
   return (
     <div className="relative w-full sm:max-w-xs">
-      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+      <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
       <input
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-yz-border bg-white py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-brand-red-600 focus:ring-1 focus:ring-brand-red-600"
+        className="w-full rounded-xl border border-yz-border bg-white py-2.5 pr-3 pl-9 text-sm transition outline-none focus:border-brand-red-600 focus:ring-1 focus:ring-brand-red-600"
       />
     </div>
   )
@@ -117,7 +183,7 @@ export function DataTable({ columns, minWidth = "min-w-[640px]", children }) {
     <div className="overflow-x-auto">
       <table className={`w-full text-sm ${minWidth}`}>
         <thead>
-          <tr className="border-y border-yz-border bg-white text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          <tr className="border-y border-yz-border bg-white text-xs font-semibold tracking-wide text-zinc-500 uppercase">
             {columns.map((col) => (
               <th
                 key={col.label}
@@ -216,7 +282,12 @@ const rowBase =
 const rowTone = (danger) =>
   danger ? "text-red-600 hover:bg-red-50" : "text-zinc-700 hover:bg-zinc-100"
 
-export function RowButton({ danger = false, className = "", type = "button", ...props }) {
+export function RowButton({
+  danger = false,
+  className = "",
+  type = "button",
+  ...props
+}) {
   return (
     <button
       type={type}
@@ -227,11 +298,20 @@ export function RowButton({ danger = false, className = "", type = "button", ...
 }
 
 export function RowLink({ className = "", ...props }) {
-  return <Link className={`${rowBase} ${rowTone(false)} ${className}`} {...props} />
+  return (
+    <Link className={`${rowBase} ${rowTone(false)} ${className}`} {...props} />
+  )
 }
 
 /* ---------- Table footer: "1 - 5 / 5" + pagination ---------- */
-export function TableFooter({ from, to, total, page, totalPages, onPageChange }) {
+export function TableFooter({
+  from,
+  to,
+  total,
+  page,
+  totalPages,
+  onPageChange,
+}) {
   const windowStart = Math.max(1, Math.min(page - 2, totalPages - 4))
   const last = Math.min(totalPages, windowStart + 4)
   const pages = []
@@ -301,7 +381,10 @@ export function LoadingRows({ rows = 3 }) {
   return (
     <div className="space-y-3 border-t border-yz-border p-5">
       {Array.from({ length: rows }, (_, i) => (
-        <div key={i} className="h-12 w-full animate-pulse rounded-lg bg-zinc-100" />
+        <div
+          key={i}
+          className="h-12 w-full animate-pulse rounded-lg bg-zinc-100"
+        />
       ))}
     </div>
   )

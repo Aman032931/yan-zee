@@ -16,7 +16,7 @@ import {
   EmptyState,
   EntityCell,
   ErrorBanner,
-  FormCard,
+  FormModal,
   LoadingRows,
   PageHeader,
   PageShell,
@@ -38,7 +38,7 @@ const COLUMNS = [
   { label: "Actions", align: "right" },
 ]
 
-/* ---------------- Add / Edit form ---------------- */
+/* ---------------- Add / Edit form (popup) ---------------- */
 function OutletForm({ storeId, outlet, onDone }) {
   const isEdit = Boolean(outlet)
   const create = useCreateOutlet(storeId)
@@ -85,7 +85,11 @@ function OutletForm({ storeId, outlet, onDone }) {
   }
 
   return (
-    <FormCard title={isEdit ? `Edit ${outlet.name}` : "Add an outlet"}>
+    <FormModal
+      title={isEdit ? `Edit ${outlet.name}` : "Add an outlet"}
+      onClose={onDone}
+      busy={saving}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <ErrorBanner>{error}</ErrorBanner>
 
@@ -131,16 +135,16 @@ function OutletForm({ storeId, outlet, onDone }) {
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <PrimaryButton type="submit" disabled={saving}>
-            {saving ? "Saving..." : isEdit ? "Save changes" : "Create outlet"}
-          </PrimaryButton>
+        <div className="flex justify-end gap-2 pt-2">
           <SecondaryButton onClick={onDone} disabled={saving}>
             Cancel
           </SecondaryButton>
+          <PrimaryButton type="submit" disabled={saving}>
+            {saving ? "Saving..." : isEdit ? "Save changes" : "Create outlet"}
+          </PrimaryButton>
         </div>
       </form>
-    </FormCard>
+    </FormModal>
   )
 }
 
@@ -157,7 +161,7 @@ export default function SellerOutlets() {
     (o) => `${o.name} ${o.address ?? ""} ${o.contactPerson ?? ""}`,
   )
 
-  // null = form closed, {} = add, outlet object = edit
+  // null = popup closed, {} = add, outlet object = edit
   const [formOutlet, setFormOutlet] = useState(null)
   const [actionError, setActionError] = useState("")
   const [busyId, setBusyId] = useState(null)
@@ -185,25 +189,14 @@ export default function SellerOutlets() {
         title="Outlets"
         subtitle={`Manage the outlets of ${shop.name}.`}
         action={
-          !formOutlet && (
-            <PrimaryButton onClick={() => setFormOutlet({})}>
-              <Plus className="h-4 w-4" />
-              Add outlet
-            </PrimaryButton>
-          )
+          <PrimaryButton onClick={() => setFormOutlet({})}>
+            <Plus className="h-4 w-4" />
+            Add outlet
+          </PrimaryButton>
         }
       />
 
       <ErrorBanner>{actionError || error?.message}</ErrorBanner>
-
-      {formOutlet && (
-        <OutletForm
-          key={formOutlet.id ?? "new"}
-          storeId={shop.id}
-          outlet={formOutlet.id ? formOutlet : null}
-          onDone={() => setFormOutlet(null)}
-        />
-      )}
 
       <DataCard
         icon={MapPin}
@@ -313,6 +306,16 @@ export default function SellerOutlets() {
           </>
         )}
       </DataCard>
+
+      {/* Add / Edit popup */}
+      {formOutlet && (
+        <OutletForm
+          key={formOutlet.id ?? "new"}
+          storeId={shop.id}
+          outlet={formOutlet.id ? formOutlet : null}
+          onDone={() => setFormOutlet(null)}
+        />
+      )}
     </PageShell>
   )
 }
