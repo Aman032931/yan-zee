@@ -30,6 +30,7 @@ const EDIT_ENABLED = true
 const STATUS_TONES = {
   ACTIVE: "green",
   DRAFT: "gray",
+  ARCHIVED: "gray",
   OUT_OF_STOCK: "red",
 }
 
@@ -84,12 +85,12 @@ export default function SellerProducts() {
   })
 
   const categoryNames = Object.fromEntries(
-    categories.map((category) => [category.id, category.name]),
+    categories.map((category) => [category.id, category.name])
   )
 
   const list = useListControls(
     products,
-    (p) => `${p.name ?? ""} ${p.category ?? ""}`,
+    (p) => `${p.name ?? ""} ${p.category ?? ""}`
   )
 
   const [showForm, setShowForm] = useState(false)
@@ -116,14 +117,18 @@ export default function SellerProducts() {
     setActionError("")
 
     try {
+      let result
+
       if (editingProduct) {
-        await editProduct(editingProduct.id, data)
+        result = await editProduct(editingProduct.id, data)
       } else {
-        await addProduct(data)
+        result = await addProduct(data)
       }
 
       setShowForm(false)
       setEditingProduct(null)
+
+      if (result?.warning) setActionError(result.warning)
     } catch (err) {
       setActionError(err?.message || "Could not save the product.")
       throw err
@@ -202,7 +207,10 @@ export default function SellerProducts() {
                   discountPrice > 0 &&
                   discountPrice < price
 
-                const status = formatText(product.status, "UNKNOWN").toUpperCase()
+                const status = formatText(
+                  product.status,
+                  "UNKNOWN"
+                ).toUpperCase()
 
                 // Resolve the product's category name.
                 const categoryName =
@@ -266,7 +274,10 @@ export default function SellerProducts() {
                           Edit
                         </RowButton>
                       ) : (
-                        <RowButton disabled title="Editing is not available yet">
+                        <RowButton
+                          disabled
+                          title="Editing is not available yet"
+                        >
                           Edit
                         </RowButton>
                       )}

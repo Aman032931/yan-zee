@@ -49,6 +49,7 @@ import SellerCategoryDetail from "./pages/seller/SellerCategoryDetails"
 import SellerOutlets from "./pages/seller/SellerOutlets"
 
 import Profile from "./pages/Profile"
+import SellerCustomers from "./pages/seller/SellerCustomers"
 
 function App() {
   const location = useLocation()
@@ -165,9 +166,10 @@ function App() {
             { path: "products", element: <SellerProducts /> },
             { path: "products/:id", element: <SellerProductDetail /> },
             { path: "categories", element: <SellerCategories /> },
-            { path: "categories/:id", element: <SellerCategoryDetail/>},
+            { path: "categories/:id", element: <SellerCategoryDetail /> },
             { path: "brands", element: <SellerBrands /> },
             { path: "outlets", element: <SellerOutlets /> },
+            { path: "customers", element: <SellerCustomers /> },
             { path: "orders", element: <SellerOrders /> },
             { path: "shops", element: <SellerShops /> },
             { path: "settings", element: <SellerSettings /> },

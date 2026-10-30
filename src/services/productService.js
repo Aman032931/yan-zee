@@ -1,4 +1,3 @@
-
 import { apiRequest } from "./api";
 
 const toQuery = (params = {}) => {
@@ -39,9 +38,8 @@ export const getProductById = (id, storeId) =>
     headers: storeHeaders(storeId),
   });
 
-
-// Upload a product image file to the backend.
-export const uploadProductImage = async (file, storeId) => {
+// Shared image upload: POST (multipart) -> { success, data: { url } }
+const uploadImage = async (path, file, storeId) => {
   if (!(file instanceof File)) {
     throw new Error("Please choose an image file.");
   }
@@ -49,7 +47,7 @@ export const uploadProductImage = async (file, storeId) => {
   const formData = new FormData();
   formData.append("image", file);
 
-  const response = await apiRequest("/images/products", {
+  const response = await apiRequest(path, {
     method: "POST",
     body: formData,
     headers: storeHeaders(storeId),
@@ -66,8 +64,15 @@ export const uploadProductImage = async (file, storeId) => {
   return response;
 };
 
+// Product gallery image.
+export const uploadProductImage = (file, storeId) =>
+  uploadImage("/images/products", file, storeId);
 
-// Create a product.
+// Image used for the product's SEO preview.
+export const uploadProductSeoImage = (file, storeId) =>
+  uploadImage("/images/product-seo", file, storeId);
+
+// Create a product (variants, tags, images...). -> { data: { product: { id, name, slug } } }
 export const createProduct = (payload, storeId) =>
   apiRequest("/products", {
     method: "POST",
@@ -75,9 +80,34 @@ export const createProduct = (payload, storeId) =>
     headers: storeHeaders(storeId),
   });
 
-// Update a product.
+// General info: name, channel, audience, isAvailable, brandId, categoryIds,
+// productDescription, longDescription, slug, imageUrls.
 export const updateProduct = (id, payload, storeId) =>
   apiRequest(`/products/${id}/general`, {
+    method: "PATCH",
+    body: payload,
+    headers: storeHeaders(storeId),
+  });
+
+// Status: ACTIVE | DRAFT | OUT_OF_STOCK
+export const updateProductStatus = (id, status, storeId) =>
+  apiRequest(`/products/${id}/status`, {
+    method: "PATCH",
+    body: { status },
+    headers: storeHeaders(storeId),
+  });
+
+// Custom data: tags, releaseDate, similarProductIds.
+export const updateProductCustom = (id, payload, storeId) =>
+  apiRequest(`/products/${id}/custom`, {
+    method: "PATCH",
+    body: payload,
+    headers: storeHeaders(storeId),
+  });
+
+// SEO: seoTitle, seoDescription, seoImage.
+export const updateProductSeo = (id, payload, storeId) =>
+  apiRequest(`/products/${id}/seo`, {
     method: "PATCH",
     body: payload,
     headers: storeHeaders(storeId),
@@ -89,3 +119,5 @@ export const deleteProduct = (id, storeId) =>
     method: "DELETE",
     headers: storeHeaders(storeId),
   });
+
+// TODO: updateProductInventory (PATCH /products/:id/inventory) once the 500 is fixed.
