@@ -50,6 +50,7 @@ import SellerOutlets from "./pages/seller/SellerOutlets"
 import SellerInventory from "./pages/seller/SellerInventory"
 
 import Profile from "./pages/Profile"
+import SellerCustomers from "./pages/seller/SellerCustomers"
 
 function App() {
   const location = useLocation()
@@ -171,6 +172,7 @@ function App() {
             { path: "categories/:id", element: <SellerCategoryDetail /> },
             { path: "brands", element: <SellerBrands /> },
             { path: "outlets", element: <SellerOutlets /> },
+            { path: "customers", element: <SellerCustomers /> },
             { path: "orders", element: <SellerOrders /> },
             { path: "shops", element: <SellerShops /> },
             { path: "settings", element: <SellerSettings /> },

@@ -16,7 +16,7 @@ import {
   EmptyState,
   EntityCell,
   ErrorBanner,
-  FormCard,
+  FormModal,
   ImageUploadField,
   LoadingRows,
   PageHeader,
@@ -40,7 +40,7 @@ const COLUMNS = [
   { label: "Actions", align: "right" },
 ]
 
-/* ---------------- Add / Edit form ---------------- */
+/* ---------------- Add / Edit form (popup) ---------------- */
 function CategoryForm({ storeId, category, onDone }) {
   const isEdit = Boolean(category)
   const create = useCreateCategory(storeId)
@@ -90,7 +90,11 @@ function CategoryForm({ storeId, category, onDone }) {
   }
 
   return (
-    <FormCard title={isEdit ? `Edit ${category.name}` : "Add a category"}>
+    <FormModal
+      title={isEdit ? `Edit ${category.name}` : "Add a category"}
+      onClose={onDone}
+      busy={saving}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <ErrorBanner>{error}</ErrorBanner>
 
@@ -135,16 +139,16 @@ function CategoryForm({ storeId, category, onDone }) {
           Available to use on products
         </label>
 
-        <div className="flex gap-2">
-          <PrimaryButton type="submit" disabled={saving}>
-            {saving ? "Saving..." : isEdit ? "Save changes" : "Create category"}
-          </PrimaryButton>
+        <div className="flex justify-end gap-2 pt-2">
           <SecondaryButton onClick={onDone} disabled={saving}>
             Cancel
           </SecondaryButton>
+          <PrimaryButton type="submit" disabled={saving}>
+            {saving ? "Saving..." : isEdit ? "Save changes" : "Create category"}
+          </PrimaryButton>
         </div>
       </form>
-    </FormCard>
+    </FormModal>
   )
 }
 
@@ -159,7 +163,7 @@ export default function SellerCategories() {
 
   const list = useListControls(categories, (c) => `${c.name} ${c.slug ?? ""}`)
 
-  // null = form closed, {} = add, category object = edit
+  // null = popup closed, {} = add, category object = edit
   const [formCategory, setFormCategory] = useState(null)
   const [actionError, setActionError] = useState("")
   const [busyId, setBusyId] = useState(null)
@@ -192,25 +196,14 @@ export default function SellerCategories() {
         title="Categories"
         subtitle={`Manage categories for ${shop.name}.`}
         action={
-          !formCategory && (
-            <PrimaryButton onClick={() => setFormCategory({})}>
-              <Plus className="h-4 w-4" />
-              Add category
-            </PrimaryButton>
-          )
+          <PrimaryButton onClick={() => setFormCategory({})}>
+            <Plus className="h-4 w-4" />
+            Add category
+          </PrimaryButton>
         }
       />
 
       <ErrorBanner>{actionError || error?.message}</ErrorBanner>
-
-      {formCategory && (
-        <CategoryForm
-          key={formCategory.id ?? "new"}
-          storeId={shop.id}
-          category={formCategory.id ? formCategory : null}
-          onDone={() => setFormCategory(null)}
-        />
-      )}
 
       <DataCard
         icon={Layers}
@@ -319,6 +312,16 @@ export default function SellerCategories() {
           </>
         )}
       </DataCard>
+
+      {/* Add / Edit popup */}
+      {formCategory && (
+        <CategoryForm
+          key={formCategory.id ?? "new"}
+          storeId={shop.id}
+          category={formCategory.id ? formCategory : null}
+          onDone={() => setFormCategory(null)}
+        />
+      )}
     </PageShell>
   )
 }

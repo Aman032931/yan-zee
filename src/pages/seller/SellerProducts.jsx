@@ -1,3 +1,4 @@
+
 import { useMemo, useState } from "react"
 import { useOutletContext } from "react-router-dom"
 import { Package, Plus, SlidersHorizontal } from "lucide-react"
@@ -6,6 +7,7 @@ import { useManagedProducts } from "../../hooks/useManagedProducts"
 import { useCategories } from "../../hooks/useCategories"
 import { useListControls } from "../../hooks/useListControls"
 import ProductFormModal from "../../components/shared/ProductFormModal"
+
 import {
   DataCard,
   DataTable,
@@ -30,6 +32,7 @@ const STATUS_TONES = {
   ACTIVE: "green",
   DRAFT: "gray",
   ARCHIVED: "red",
+  OUT_OF_STOCK: "red",
 }
 
 const COLUMNS = [
@@ -44,7 +47,9 @@ const COLUMNS = [
 
 function formatPrice(value) {
   const price = Number(value)
+
   if (!Number.isFinite(price)) return "—"
+
   return price.toLocaleString()
 }
 
@@ -81,7 +86,6 @@ function getProductCategoryId(product) {
 }
 
 function getProductPrice(product) {
-  // Match the price shown in the product table.
   const price = Number(product.price)
   const discountPrice = Number(product.discountPrice)
 
@@ -96,8 +100,8 @@ function getProductPrice(product) {
 
   if (Number.isFinite(price)) return price
 
-  // Fallback for products using API field names.
   const sellingPrice = Number(product.sellingPrice)
+
   return Number.isFinite(sellingPrice) ? sellingPrice : null
 }
 
@@ -130,12 +134,12 @@ export default function SellerProducts() {
         categories.map((category) => [
           String(category.id),
           category.name,
-        ]),
+        ])
       ),
-    [categories],
+    [categories]
   )
 
-  // Filter selections.
+  // Product filters.
   const [statusFilter, setStatusFilter] = useState("ALL")
   const [categoryFilter, setCategoryFilter] = useState("ALL")
   const [stockFilter, setStockFilter] = useState("ALL")
@@ -146,30 +150,27 @@ export default function SellerProducts() {
   const [actionError, setActionError] = useState("")
   const [deletingId, setDeletingId] = useState(null)
 
+  // Apply filters and sorting.
   const filteredProducts = useMemo(() => {
     let result = [...products]
 
-    // 1. Filter by status.
     if (statusFilter !== "ALL") {
       result = result.filter(
-        (product) => getProductStatus(product) === statusFilter,
+        (product) => getProductStatus(product) === statusFilter
       )
     }
 
-    // 2. Filter by category.
     if (categoryFilter !== "ALL") {
       result = result.filter(
         (product) =>
-          String(getProductCategoryId(product)) === categoryFilter,
+          String(getProductCategoryId(product)) === categoryFilter
       )
     }
 
-    // 3. Filter by stock.
     if (stockFilter !== "ALL") {
       result = result.filter((product) => {
         const stock = getProductStock(product)
 
-        // Unknown stock is not assumed to be in stock.
         if (stock === null) return false
 
         if (stockFilter === "IN_STOCK") return stock > 0
@@ -179,13 +180,11 @@ export default function SellerProducts() {
       })
     }
 
-    // 4. Sort by displayed product price.
     if (priceSort !== "DEFAULT") {
       result.sort((a, b) => {
         const priceA = getProductPrice(a)
         const priceB = getProductPrice(b)
 
-        // Products with unknown prices go to the end.
         if (priceA === null && priceB === null) return 0
         if (priceA === null) return 1
         if (priceB === null) return -1
@@ -197,15 +196,21 @@ export default function SellerProducts() {
     }
 
     return result
-  }, [products, statusFilter, categoryFilter, stockFilter, priceSort])
+  }, [
+    products,
+    statusFilter,
+    categoryFilter,
+    stockFilter,
+    priceSort,
+  ])
 
-  // Search and pagination work on the filtered products.
+  // Search and pagination use the filtered products.
   const list = useListControls(
     filteredProducts,
     (product) =>
       `${product.name ?? ""} ${product.category ?? ""} ${
         categoryNames[String(getProductCategoryId(product))] ?? ""
-      }`,
+      }`
   )
 
   const hasActiveFilters =
@@ -237,14 +242,20 @@ export default function SellerProducts() {
     setActionError("")
 
     try {
+      let result
+
       if (editingProduct) {
-        await editProduct(editingProduct.id, data)
+        result = await editProduct(editingProduct.id, data)
       } else {
-        await addProduct(data)
+        result = await addProduct(data)
       }
 
       setShowForm(false)
       setEditingProduct(null)
+
+      if (result?.warning) {
+        setActionError(result.warning)
+      }
     } catch (err) {
       setActionError(err?.message || "Could not save the product.")
       throw err
@@ -274,7 +285,7 @@ export default function SellerProducts() {
         title="My Products"
         subtitle={`Manage products for ${formatText(
           shop?.name,
-          "your store",
+          "your store"
         )}.`}
         action={
           <PrimaryButton onClick={openAdd}>
@@ -304,11 +315,11 @@ export default function SellerProducts() {
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {/* Status filter */}
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-zinc-500">
                 Status
               </span>
+
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
@@ -318,20 +329,22 @@ export default function SellerProducts() {
                 <option value="ACTIVE">Active</option>
                 <option value="DRAFT">Draft</option>
                 <option value="ARCHIVED">Archived</option>
+                <option value="OUT_OF_STOCK">Out of stock</option>
               </select>
             </label>
 
-            {/* Category filter */}
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-zinc-500">
                 Category
               </span>
+
               <select
                 value={categoryFilter}
                 onChange={(event) => setCategoryFilter(event.target.value)}
                 className="h-10 w-full rounded-lg border border-yz-border bg-white px-3 text-sm text-zinc-700 outline-none focus:border-brand-red-600 focus:ring-2 focus:ring-brand-red-600/10"
               >
                 <option value="ALL">All categories</option>
+
                 {categories.map((category) => (
                   <option key={category.id} value={String(category.id)}>
                     {formatText(category.name, "Unnamed category")}
@@ -340,11 +353,11 @@ export default function SellerProducts() {
               </select>
             </label>
 
-            {/* Stock filter */}
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-zinc-500">
                 Stock
               </span>
+
               <select
                 value={stockFilter}
                 onChange={(event) => setStockFilter(event.target.value)}
@@ -356,11 +369,11 @@ export default function SellerProducts() {
               </select>
             </label>
 
-            {/* Price sorting */}
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-zinc-500">
                 Sort by price
               </span>
+
               <select
                 value={priceSort}
                 onChange={(event) => setPriceSort(event.target.value)}
@@ -423,6 +436,7 @@ export default function SellerProducts() {
                 const status = getProductStatus(product)
 
                 const categoryId = getProductCategoryId(product)
+
                 const categoryName =
                   product.category?.name ??
                   (typeof product.category === "string"
@@ -462,6 +476,7 @@ export default function SellerProducts() {
                       {hasDiscount ? (
                         <>
                           Nrs {formatPrice(discountPrice)}
+
                           <span className="ml-1 text-xs font-normal text-zinc-400 line-through">
                             {formatPrice(price)}
                           </span>
@@ -506,7 +521,9 @@ export default function SellerProducts() {
                         disabled={deletingId === product.id}
                         onClick={() => handleDelete(product)}
                       >
-                        {deletingId === product.id ? "Deleting..." : "Delete"}
+                        {deletingId === product.id
+                          ? "Deleting..."
+                          : "Delete"}
                       </RowButton>
                     </Td>
                   </TableRow>
@@ -526,7 +543,7 @@ export default function SellerProducts() {
         )}
       </DataCard>
 
-      {/* Add / Edit modal */}
+      {/* Add / Edit product modal */}
       {showForm && (
         <ProductFormModal
           initialData={editingProduct}

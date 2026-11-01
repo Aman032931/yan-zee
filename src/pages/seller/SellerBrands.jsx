@@ -16,7 +16,7 @@ import {
   EmptyState,
   EntityCell,
   ErrorBanner,
-  FormCard,
+  FormModal,
   ImageUploadField,
   LoadingRows,
   PageHeader,
@@ -39,7 +39,7 @@ const COLUMNS = [
   { label: "Actions", align: "right" },
 ]
 
-/* ---------------- Add / Edit form ---------------- */
+/* ---------------- Add / Edit form (popup) ---------------- */
 function BrandForm({ storeId, brand, onDone }) {
   const isEdit = Boolean(brand)
   const create = useCreateBrand(storeId)
@@ -74,12 +74,16 @@ function BrandForm({ storeId, brand, onDone }) {
       }
       onDone()
     } catch (err) {
-      setError(err.message)
+      setError(err.message || "Unable to save brand.")
     }
   }
 
   return (
-    <FormCard title={isEdit ? `Edit ${brand.name}` : "Add a brand"}>
+    <FormModal
+      title={isEdit ? `Edit ${brand.name}` : "Add a brand"}
+      onClose={onDone}
+      busy={saving}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <ErrorBanner>{error}</ErrorBanner>
 
@@ -114,16 +118,16 @@ function BrandForm({ storeId, brand, onDone }) {
           Available to use on products
         </label>
 
-        <div className="flex gap-2">
-          <PrimaryButton type="submit" disabled={saving}>
-            {saving ? "Saving..." : isEdit ? "Save changes" : "Create brand"}
-          </PrimaryButton>
+        <div className="flex justify-end gap-2 pt-2">
           <SecondaryButton onClick={onDone} disabled={saving}>
             Cancel
           </SecondaryButton>
+          <PrimaryButton type="submit" disabled={saving}>
+            {saving ? "Saving..." : isEdit ? "Save changes" : "Create brand"}
+          </PrimaryButton>
         </div>
       </form>
-    </FormCard>
+    </FormModal>
   )
 }
 
@@ -137,7 +141,7 @@ export default function SellerBrands() {
 
   const list = useListControls(brands, (b) => `${b.name} ${b.slug ?? ""}`)
 
-  // null = form closed, {} = add, brand object = edit
+  // null = popup closed, {} = add, brand object = edit
   const [formBrand, setFormBrand] = useState(null)
   const [actionError, setActionError] = useState("")
   const [busyId, setBusyId] = useState(null)
@@ -168,25 +172,14 @@ export default function SellerBrands() {
         title="Brands"
         subtitle={`Manage brands for ${shop.name}.`}
         action={
-          !formBrand && (
-            <PrimaryButton onClick={() => setFormBrand({})}>
-              <Plus className="h-4 w-4" />
-              Add brand
-            </PrimaryButton>
-          )
+          <PrimaryButton onClick={() => setFormBrand({})}>
+            <Plus className="h-4 w-4" />
+            Add brand
+          </PrimaryButton>
         }
       />
 
       <ErrorBanner>{actionError || error?.message}</ErrorBanner>
-
-      {formBrand && (
-        <BrandForm
-          key={formBrand.id ?? "new"}
-          storeId={shop.id}
-          brand={formBrand.id ? formBrand : null}
-          onDone={() => setFormBrand(null)}
-        />
-      )}
 
       <DataCard
         icon={Tag}
@@ -281,6 +274,16 @@ export default function SellerBrands() {
           </>
         )}
       </DataCard>
+
+      {/* Add / Edit popup */}
+      {formBrand && (
+        <BrandForm
+          key={formBrand.id ?? "new"}
+          storeId={shop.id}
+          brand={formBrand.id ? formBrand : null}
+          onDone={() => setFormBrand(null)}
+        />
+      )}
     </PageShell>
   )
 }

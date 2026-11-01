@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import { NavLink, Outlet, Link } from "react-router-dom"
 import {
@@ -16,6 +17,8 @@ import {
   Plus,
   Check,
   X,
+  MapPin,
+  Users,
 } from "lucide-react"
 
 import { useMyStores } from "../../hooks/useStores"
@@ -27,6 +30,8 @@ const NAV_ITEMS = [
   { label: "Inventory", to: "/seller/inventory", icon: Boxes },
   { label: "Categories", to: "/seller/categories", icon: Tags },
   { label: "Brands", to: "/seller/brands", icon: Tag },
+  { label: "Outlets", to: "/seller/outlets", icon: MapPin },
+  { label: "Customers", to: "/seller/customers", icon: Users },
   { label: "Orders", to: "/seller/orders", icon: ShoppingBag },
   { label: "Shops", to: "/seller/shops", icon: Store },
   { label: "Settings", to: "/seller/settings", icon: Settings },

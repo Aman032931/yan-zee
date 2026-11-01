@@ -1,6 +1,7 @@
+
 import { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
-import { ChevronLeft, ChevronRight, Search } from "lucide-react"
+import { ChevronLeft, ChevronRight, Search, X } from "lucide-react"
 
 /* ---------- Shared classes ---------- */
 export const inputClass =
@@ -9,11 +10,16 @@ export const inputClass =
 export const labelClass = "mb-1 block text-xs font-medium text-zinc-600"
 
 /* ---------- Buttons ---------- */
-export function PrimaryButton({ children, className = "", type = "button", ...props }) {
+export function PrimaryButton({
+  children,
+  className = "",
+  type = "button",
+  ...props
+}) {
   return (
     <button
       type={type}
-      className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+      className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-red-700 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
       {...props}
     >
       {children}
@@ -21,7 +27,12 @@ export function PrimaryButton({ children, className = "", type = "button", ...pr
   )
 }
 
-export function SecondaryButton({ children, className = "", type = "button", ...props }) {
+export function SecondaryButton({
+  children,
+  className = "",
+  type = "button",
+  ...props
+}) {
   return (
     <button
       type={type}
@@ -34,18 +45,27 @@ export function SecondaryButton({ children, className = "", type = "button", ...
 }
 
 /* ---------- Page structure ---------- */
-// One width for every seller list page.
 export function PageShell({ children }) {
-  return <div className="w-full space-y-6 xl:px-10 2xl:px-[118px]">{children}</div>
+  return (
+    <div className="w-full space-y-6 xl:px-10 2xl:px-[118px]">
+      {children}
+    </div>
+  )
 }
 
 export function PageHeader({ title, subtitle, action }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>}
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+          {title}
+        </h1>
+
+        {subtitle && (
+          <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>
+        )}
       </div>
+
       {action && <div className="self-start">{action}</div>}
     </div>
   )
@@ -53,6 +73,7 @@ export function PageHeader({ title, subtitle, action }) {
 
 export function ErrorBanner({ children }) {
   if (!children) return null
+
   return (
     <div
       role="alert"
@@ -72,24 +93,72 @@ export function FormCard({ title, children }) {
   )
 }
 
+/* ---------- Popup form ---------- */
+export function FormModal({ title, onClose, busy = false, children }) {
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key === "Escape" && !busy) onClose()
+    }
+
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [onClose, busy])
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !busy) onClose()
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-yz-border bg-white p-6 shadow-xl"
+      >
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <h2 className="text-lg font-bold text-zinc-900">{title}</h2>
+
+          <button
+            type="button"
+            aria-label="Close"
+            disabled={busy}
+            onClick={onClose}
+            className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-50"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {children}
+      </div>
+    </div>
+  )
+}
+
 /* ---------- Search ---------- */
-export function SearchInput({ value, onChange, placeholder = "Search name or slug" }) {
+export function SearchInput({
+  value,
+  onChange,
+  placeholder = "Search name or slug",
+}) {
   return (
     <div className="relative w-full sm:max-w-xs">
-      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+      <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+
       <input
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-yz-border bg-white py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-brand-red-600 focus:ring-1 focus:ring-brand-red-600"
+        className="w-full rounded-xl border border-yz-border bg-white py-2.5 pr-3 pl-9 text-sm transition outline-none focus:border-brand-red-600 focus:ring-1 focus:ring-brand-red-600"
       />
     </div>
   )
 }
 
-/* ---------- List card: "All categories (3)" + search ---------- */
-// search: { value, onChange, placeholder }
+/* ---------- List card ---------- */
 export function DataCard({ icon: Icon, title, count, search, children }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-yz-border bg-white shadow-sm">
@@ -97,27 +166,35 @@ export function DataCard({ icon: Icon, title, count, search, children }) {
         <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900">
           {Icon && <Icon className="h-5 w-5" />}
           {title}
+
           {count !== undefined && (
-            <span className="text-sm font-normal text-zinc-500">({count})</span>
+            <span className="text-sm font-normal text-zinc-500">
+              ({count})
+            </span>
           )}
         </h2>
+
         {search && <SearchInput {...search} />}
       </div>
+
       {children}
     </section>
   )
 }
 
 /* ---------- Table ---------- */
-const ALIGN = { left: "text-left", center: "text-center", right: "text-right" }
+const ALIGN = {
+  left: "text-left",
+  center: "text-center",
+  right: "text-right",
+}
 
-// columns: [{ label, align? }]
 export function DataTable({ columns, minWidth = "min-w-[640px]", children }) {
   return (
     <div className="overflow-x-auto">
       <table className={`w-full text-sm ${minWidth}`}>
         <thead>
-          <tr className="border-y border-yz-border bg-white text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          <tr className="border-y border-yz-border bg-white text-xs font-semibold tracking-wide text-zinc-500 uppercase">
             {columns.map((col) => (
               <th
                 key={col.label}
@@ -128,6 +205,7 @@ export function DataTable({ columns, minWidth = "min-w-[640px]", children }) {
             ))}
           </tr>
         </thead>
+
         <tbody>{children}</tbody>
       </table>
     </div>
@@ -150,7 +228,7 @@ export function Td({ align = "left", className = "", children }) {
   )
 }
 
-// Thumbnail + name + small text. Pass `to` to make the name/thumbnail a link.
+/* ---------- Entity cell ---------- */
 export function EntityCell({
   image,
   icon: Icon,
@@ -167,7 +245,9 @@ export function EntityCell({
         <img
           src={image}
           alt={name}
-          className={`h-full w-full ${fit === "contain" ? "object-contain" : "object-cover"}`}
+          className={`h-full w-full ${
+            fit === "contain" ? "object-contain" : "object-cover"
+          }`}
         />
       ) : Icon ? (
         <Icon className="h-5 w-5 text-zinc-400" />
@@ -202,6 +282,7 @@ export function EntityCell({
         ) : (
           <p className="truncate font-semibold text-zinc-900">{name}</p>
         )}
+
         {sub && <p className="truncate text-xs text-zinc-500">{sub}</p>}
         {extra}
       </div>
@@ -214,9 +295,16 @@ const rowBase =
   "inline-flex h-8 cursor-pointer items-center gap-1 rounded-lg px-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
 
 const rowTone = (danger) =>
-  danger ? "text-red-600 hover:bg-red-50" : "text-zinc-700 hover:bg-zinc-100"
+  danger
+    ? "text-red-600 hover:bg-red-50"
+    : "text-zinc-700 hover:bg-zinc-100"
 
-export function RowButton({ danger = false, className = "", type = "button", ...props }) {
+export function RowButton({
+  danger = false,
+  className = "",
+  type = "button",
+  ...props
+}) {
   return (
     <button
       type={type}
@@ -227,9 +315,10 @@ export function RowButton({ danger = false, className = "", type = "button", ...
 }
 
 export function RowLink({ className = "", ...props }) {
-  return <Link className={`${rowBase} ${rowTone(false)} ${className}`} {...props} />
+  return (
+    <Link className={`${rowBase} ${rowTone(false)} ${className}`} {...props} />
+  )
 }
-
 
 /* ---------- Table footer: clean shared pagination ---------- */
 export function TableFooter({
@@ -242,11 +331,11 @@ export function TableFooter({
 }) {
   const safeTotalPages = Math.max(1, totalPages || 1)
 
-  // Show at most 5 page numbers.
   const windowStart = Math.max(
     1,
-    Math.min(page - 2, safeTotalPages - 4),
+    Math.min(page - 2, safeTotalPages - 4)
   )
+
   const last = Math.min(safeTotalPages, windowStart + 4)
 
   const pages = []
@@ -262,21 +351,21 @@ export function TableFooter({
 
   return (
     <div className="flex flex-col gap-3 border-t border-yz-border bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-      {/* Results information */}
       <p className="text-xs text-zinc-500 sm:text-sm">
         {total === 0 ? (
           "No results"
         ) : (
           <>
             Showing{" "}
-            <span className="font-medium text-zinc-700">{from}–{to}</span>
-            {" "}of{" "}
+            <span className="font-medium text-zinc-700">
+              {from}–{to}
+            </span>{" "}
+            of{" "}
             <span className="font-medium text-zinc-700">{total}</span>
           </>
         )}
       </p>
 
-      {/* Page controls */}
       <nav
         aria-label="Pagination"
         className="flex items-center justify-between gap-1 sm:justify-end"
@@ -302,6 +391,7 @@ export function TableFooter({
             >
               1
             </button>
+
             {windowStart > 2 && (
               <span className="px-1 text-sm text-zinc-400" aria-hidden="true">
                 …
@@ -334,6 +424,7 @@ export function TableFooter({
                 …
               </span>
             )}
+
             <button
               type="button"
               onClick={() => onPageChange(safeTotalPages)}
@@ -365,7 +456,9 @@ export function EmptyState({ icon: Icon, title, text }) {
   return (
     <div className="border-t border-yz-border px-4 py-12 text-center">
       {Icon && <Icon className="mx-auto h-9 w-9 text-zinc-300" />}
+
       <h3 className="mt-3 font-medium text-zinc-900">{title}</h3>
+
       {text && <p className="mt-1 text-sm text-zinc-500">{text}</p>}
     </div>
   )
@@ -375,7 +468,10 @@ export function LoadingRows({ rows = 3 }) {
   return (
     <div className="space-y-3 border-t border-yz-border p-5">
       {Array.from({ length: rows }, (_, i) => (
-        <div key={i} className="h-12 w-full animate-pulse rounded-lg bg-zinc-100" />
+        <div
+          key={i}
+          className="h-12 w-full animate-pulse rounded-lg bg-zinc-100"
+        />
       ))}
     </div>
   )
@@ -391,15 +487,16 @@ const TONES = {
 export function StatusPill({ tone = "gray", children }) {
   return (
     <span
-      className={`inline-block rounded-full px-2.5 py-1 text-[11px] font-medium ${TONES[tone] ?? TONES.gray}`}
+      className={`inline-block rounded-full px-2.5 py-1 text-[11px] font-medium ${
+        TONES[tone] ?? TONES.gray
+      }`}
     >
       {children}
     </span>
   )
 }
 
-/* ---------- Image upload (logo / category image) ---------- */
-// The parent keeps the chosen File; this component handles the preview.
+/* ---------- Image upload ---------- */
 export function ImageUploadField({
   id,
   label = "Image (optional)",
@@ -413,7 +510,6 @@ export function ImageUploadField({
   const previewRef = useRef("")
   const [preview, setPreview] = useState("")
 
-  // free the preview URL when the component goes away
   useEffect(() => {
     return () => {
       if (previewRef.current) URL.revokeObjectURL(previewRef.current)
@@ -422,8 +518,10 @@ export function ImageUploadField({
 
   const pick = (next) => {
     if (previewRef.current) URL.revokeObjectURL(previewRef.current)
+
     const url = next ? URL.createObjectURL(next) : ""
     previewRef.current = url
+
     setPreview(url)
     onChange(next)
   }
@@ -433,7 +531,6 @@ export function ImageUploadField({
     if (inputRef.current) inputRef.current.value = ""
   }
 
-  // the new file if one is chosen, otherwise the current saved image
   const shown = preview || currentUrl || ""
 
   return (
@@ -458,22 +555,26 @@ export function ImageUploadField({
               fit === "contain" ? "object-contain" : "object-cover"
             }`}
           />
+
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-zinc-800">
               {file ? file.name : "Current image"}
             </p>
+
             {file && (
               <p className="text-xs text-zinc-500">
                 {(file.size / 1024).toFixed(0)} KB
               </p>
             )}
           </div>
+
           <label
             htmlFor={id}
             className="cursor-pointer text-xs font-medium text-brand-red-600 hover:underline"
           >
             Change
           </label>
+
           {file && (
             <button
               type="button"
@@ -492,6 +593,7 @@ export function ImageUploadField({
           <span className="rounded-lg bg-brand-red-600 px-3 py-1.5 text-xs font-semibold text-white">
             {uploadText}
           </span>
+
           <span className="text-xs text-zinc-500">
             PNG, JPG or WebP. Click to browse.
           </span>
