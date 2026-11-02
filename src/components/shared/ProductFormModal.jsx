@@ -896,7 +896,7 @@ export default function ProductFormModal({
                   className={inputClass}
                 >
                   <option value="">
-                    {loadingBrands ? "Loading brands..." : "No brand"}
+                    {loadingBrands ? "Loading brands..." : "Select brand"}
                   </option>
 
                   {brands.map((brand) => (
