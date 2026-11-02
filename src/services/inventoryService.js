@@ -1,107 +1,63 @@
 import { apiRequest } from "./api"
 
-const buildParams = ({ page = 1, limit = 20, search = "", status = "", outletId = "" } = {}) => {
-  const params = new URLSearchParams({
-    page: String(page),
-    limit: String(limit),
-  })
+const toQuery = (params = {}) => {
+  const query = new URLSearchParams()
 
-  if (search.trim()) params.set("search", search.trim())
-  if (status) params.set("status", status)
-  if (outletId) params.set("outletId", outletId)
-
-  return params.toString()
-}
-
-export const getInventoryStock = ({
-  storeId,
-  page = 1,
-  limit = 20,
-  search = "",
-  status = "",
-  outletId = "",
-} = {}) => {
-  if (!storeId) {
-    throw new Error("Please select a store first.")
-  }
-
-  const params = buildParams({ page, limit, search, status, outletId })
-
-  return apiRequest(`/inventory/stock?${params}`, {
-    method: "GET",
-    headers: {
-      "x-store-id": storeId,
-    },
-  })
-}
-
-export const getInventoryMovements = ({
-  storeId,
-  page = 1,
-  limit = 20,
-  outletId = "",
-  type = "",
-  from = "",
-  to = "",
-} = {}) => {
-  if (!storeId) {
-    throw new Error("Please select a store first.")
-  }
-
-  const params = new URLSearchParams({
-    page: String(page),
-    limit: String(limit),
-  })
-
-  if (outletId) params.set("outletId", outletId)
-  if (type) params.set("type", type)
-  if (from) params.set("from", from)
-  if (to) params.set("to", to)
-
-  return apiRequest(`/inventory/movements?${params.toString()}`, {
-    method: "GET",
-    headers: {
-      "x-store-id": storeId,
-    },
-  })
-}
-
-export const getProductInventoryBatches = ({
-  storeId,
-  productId,
-  page = 1,
-  limit = 20,
-  variantId = "",
-} = {}) => {
-  if (!storeId) throw new Error("Please select a store first.")
-  if (!productId) throw new Error("Product ID is required.")
-
-  const params = new URLSearchParams({
-    page: String(page),
-    limit: String(limit),
-  })
-
-  if (variantId) params.set("variantId", variantId)
-
-  return apiRequest(
-    `/inventory/items/${encodeURIComponent(productId)}/batches?${params.toString()}`,
-    {
-      method: "GET",
-      headers: {
-        "x-store-id": storeId,
-      },
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.set(key, value)
     }
-  )
+  })
+
+  const qs = query.toString()
+  return qs ? `?${qs}` : ""
 }
 
-export const stockInInventory = (storeId, body) => {
-  if (!storeId) throw new Error("Please select a store first.")
+// Every inventory call is scoped to the selected shop via x-store-id.
+const storeHeaders = (storeId) => {
+  if (!storeId) {
+    throw new Error("Please select a store before managing inventory.")
+  }
+  return { "x-store-id": String(storeId) }
+}
 
-  return apiRequest("/inventory/stock-in", {
-    method: "POST",
-    body,
-    headers: {
-      "x-store-id": storeId,
-    },
+// These return the full API response ({ success, message, data }),
+// which is what SellerInventory reads (response.data...).
+
+// GET /inventory/overview
+export const getInventoryOverview = ({ storeId, ...params } = {}) =>
+  apiRequest(`/inventory/overview${toQuery(params)}`, {
+    headers: storeHeaders(storeId),
+  })
+
+// GET /inventory/stock?page=1&limit=20
+export const getInventoryStock = ({ storeId, ...params } = {}) =>
+  apiRequest(`/inventory/stock${toQuery(params)}`, {
+    headers: storeHeaders(storeId),
+  })
+
+// GET /inventory/items/:productId/batches
+export const getProductBatches = ({ storeId, productId, ...params } = {}) => {
+  if (!productId) throw new Error("Product id is required.")
+
+  return apiRequest(`/inventory/items/${productId}/batches${toQuery(params)}`, {
+    headers: storeHeaders(storeId),
   })
 }
+
+// GET /inventory/movements?page=1&limit=20
+export const getInventoryMovements = ({ storeId, ...params } = {}) =>
+  apiRequest(`/inventory/movements${toQuery(params)}`, {
+    headers: storeHeaders(storeId),
+  })
+
+// POST /inventory/stock-in
+// body: { outletId, referenceNumber?, supplierName?, note?,
+//         items: [{ productId, variantId?, quantity, unitCost,
+//                   supplierLot?, manufactureDate?, expiryDate? }] }
+export const stockIn = (payload, storeId) =>
+  apiRequest("/inventory/stock-in", {
+    method: "POST",
+    body: payload,
+    headers: storeHeaders(storeId),
+  })

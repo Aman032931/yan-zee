@@ -94,7 +94,13 @@ export function FormCard({ title, children }) {
 }
 
 /* ---------- Popup form ---------- */
-export function FormModal({ title, onClose, busy = false, children }) {
+export function FormModal({
+  title,
+  onClose,
+  busy = false,
+  maxWidth = "max-w-lg",
+  children,
+}) {
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === "Escape" && !busy) onClose()
@@ -115,7 +121,7 @@ export function FormModal({ title, onClose, busy = false, children }) {
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-yz-border bg-white p-6 shadow-xl"
+                className={`max-h-[90vh] w-full ${maxWidth} overflow-y-auto rounded-2xl border border-yz-border bg-white p-6 shadow-xl`}
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <h2 className="text-lg font-bold text-zinc-900">{title}</h2>
