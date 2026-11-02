@@ -1,6 +1,14 @@
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
-import { useQuery } from "@tanstack/react-query"
-import { getOrders } from "../services/orderService"
+import {
+  getOrders,
+  getOrderById,
+  updateOrderStatus,
+} from "../services/orderService";
 
 export const useOrders = (filters = {}) => {
   const {
@@ -12,7 +20,7 @@ export const useOrders = (filters = {}) => {
     channel = "",
     from = "",
     to = "",
-  } = filters
+  } = filters;
 
   return useQuery({
     queryKey: [
@@ -39,5 +47,32 @@ export const useOrders = (filters = {}) => {
       }),
     enabled: Boolean(storeId),
     staleTime: 30 * 1000,
-  })
-}
+  });
+};
+
+export const useOrder = (storeId, orderId) =>
+  useQuery({
+    queryKey: ["order", storeId, orderId],
+    queryFn: () => getOrderById(storeId, orderId),
+    enabled: Boolean(storeId && orderId),
+    staleTime: 30 * 1000,
+  });
+
+export const useUpdateOrderStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ storeId, orderId, body }) =>
+      updateOrderStatus(storeId, orderId, body),
+
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["orders", variables.storeId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["order", variables.storeId, variables.orderId],
+      });
+    },
+  });
+};

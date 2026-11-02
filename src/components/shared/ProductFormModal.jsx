@@ -1,8 +1,12 @@
 
 import { useEffect, useRef, useState } from "react";
+
 import { getCategories } from "../../services/categoryService";
+import { getBrands } from "../../services/brandService";
+
 import { useCreateCategory } from "../../hooks/useCategories";
-import { useBrands } from "../../hooks/useBrands";
+import { useBrands, useCreateBrand } from "../../hooks/useBrands";
+
 import {
   uploadProductImage,
   uploadProductSeoImage,
@@ -70,6 +74,15 @@ function extractCreatedCategory(response) {
 
   return category && typeof category === "object" && category.id != null
     ? category
+    : null;
+}
+
+function extractCreatedBrand(response) {
+  const payload = response?.data ?? response;
+  const brand = payload?.brand ?? payload?.data?.brand ?? payload;
+
+  return brand && typeof brand === "object" && brand.id != null
+    ? brand
     : null;
 }
 
@@ -286,6 +299,7 @@ export default function ProductFormModal({
   const isEdit = Boolean(initialData);
 
   const [form, setForm] = useState(() => toForm(initialData));
+
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [categoryError, setCategoryError] = useState("");
@@ -295,13 +309,27 @@ export default function ProductFormModal({
   const [uploadingSeoImage, setUploadingSeoImage] = useState(false);
   const [error, setError] = useState("");
 
-  // Brand data.
-  const { data: brands = [], isLoading: loadingBrands } = useBrands(storeId, {
+  // Brand data and creation.
+  const {
+    data: brands = [],
+    isLoading: loadingBrands,
+  } = useBrands(storeId, {
     page: 1,
     limit: 100,
   });
 
-  // Inline category creation.
+  const createBrandMutation = useCreateBrand(storeId);
+  const creatingBrand = createBrandMutation.isPending;
+
+  const [showNewBrand, setShowNewBrand] = useState(false);
+  const [newBrandName, setNewBrandName] = useState("");
+  const [newBrandImage, setNewBrandImage] = useState(null);
+  const [newBrandPreview, setNewBrandPreview] = useState("");
+  const [newBrandError, setNewBrandError] = useState("");
+
+  const brandFileInputRef = useRef(null);
+
+  // Category creation.
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryDescription, setNewCategoryDescription] = useState("");
@@ -314,9 +342,22 @@ export default function ProductFormModal({
 
   const categoryFileInputRef = useRef(null);
 
-  // Variants are created with new products.
+  // Variants.
   const [hasVariants, setHasVariants] = useState(false);
   const [variants, setVariants] = useState([emptyVariant()]);
+
+  // Brand image preview.
+  useEffect(() => {
+    if (!newBrandImage) {
+      setNewBrandPreview("");
+      return undefined;
+    }
+
+    const objectUrl = URL.createObjectURL(newBrandImage);
+    setNewBrandPreview(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [newBrandImage]);
 
   // Category image preview.
   useEffect(() => {
@@ -331,7 +372,7 @@ export default function ProductFormModal({
     return () => URL.revokeObjectURL(objectUrl);
   }, [newCategoryImage]);
 
-  // Load categories belonging to the selected store.
+  // Load categories.
   useEffect(() => {
     let cancelled = false;
 
@@ -411,6 +452,79 @@ export default function ProductFormModal({
 
     if (categoryFileInputRef.current) {
       categoryFileInputRef.current.value = "";
+    }
+  };
+
+  const resetNewBrandForm = () => {
+    setNewBrandName("");
+    setNewBrandImage(null);
+    setNewBrandError("");
+
+    if (brandFileInputRef.current) {
+      brandFileInputRef.current.value = "";
+    }
+  };
+
+  // Create a brand and automatically select it.
+  const handleCreateBrand = async (event) => {
+    event.preventDefault();
+    setNewBrandError("");
+
+    const name = newBrandName.trim();
+
+    if (!name) {
+      setNewBrandError("Brand name is required.");
+      return;
+    }
+
+    if (!storeId) {
+      setNewBrandError("Store ID is missing. Please select your store.");
+      return;
+    }
+
+    if (newBrandImage) {
+      const problem = checkImage(newBrandImage);
+
+      if (problem) {
+        setNewBrandError(problem);
+        return;
+      }
+    }
+
+    try {
+      const response = await createBrandMutation.mutateAsync({
+        name,
+        logoFile: newBrandImage || undefined,
+        isAvailable: true,
+      });
+
+      let createdBrand = extractCreatedBrand(response);
+
+      const refreshedBrands = await getBrands(storeId, {
+        page: 1,
+        limit: 100,
+      });
+
+      const items = Array.isArray(refreshedBrands) ? refreshedBrands : [];
+
+      if (!createdBrand?.id) {
+        createdBrand = items.find(
+          (brand) =>
+            brand.name?.trim().toLowerCase() === name.toLowerCase(),
+        );
+      }
+
+      if (createdBrand?.id) {
+        setForm((previous) => ({
+          ...previous,
+          brandId: String(createdBrand.id),
+        }));
+      }
+
+      resetNewBrandForm();
+      setShowNewBrand(false);
+    } catch (err) {
+      setNewBrandError(err?.message || "Unable to create brand.");
     }
   };
 
@@ -622,7 +736,6 @@ export default function ProductFormModal({
       return;
     }
 
-    // Validate simple product pricing.
     let simpleProductData = null;
 
     if (!isEdit && !hasVariants) {
@@ -663,7 +776,6 @@ export default function ProductFormModal({
       };
     }
 
-    // Validate variants.
     let builtVariants = null;
 
     if (!isEdit && hasVariants) {
@@ -694,7 +806,6 @@ export default function ProductFormModal({
           "imageUrls",
         ]);
 
-        // These fields cannot be cleared through the API.
         if (!general.brandId) delete general.brandId;
         if (!general.slug) delete general.slug;
 
@@ -778,11 +889,25 @@ export default function ProductFormModal({
   };
 
   const busy =
-    saving || uploadingImage || uploadingSeoImage || creatingCategory;
+    saving ||
+    uploadingImage ||
+    uploadingSeoImage ||
+    creatingCategory ||
+    creatingBrand;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-4">
-      <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-4 shadow-lg sm:p-6">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-4"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !busy) {
+          onClose();
+        }
+      }}
+    >
+      <div
+        className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-4 shadow-lg sm:p-6"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <h2 className="mb-4 text-lg font-bold text-gray-900">
           {isEdit ? "Edit Product" : "Add Product"}
         </h2>
@@ -819,8 +944,10 @@ export default function ProductFormModal({
             </div>
 
             <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+              {/* Brand */}
               <div className="min-w-0">
                 <label className={labelClass}>Brand</label>
+
                 <select
                   value={form.brandId}
                   onChange={handleChange("brandId")}
@@ -833,7 +960,7 @@ export default function ProductFormModal({
                   {brands.map((brand) => (
                     <option
                       key={brand.id}
-                      value={brand.id}
+                      value={String(brand.id)}
                       disabled={brand.isAvailable === false}
                     >
                       {brand.name}
@@ -841,10 +968,25 @@ export default function ProductFormModal({
                     </option>
                   ))}
                 </select>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNewBrand((previous) => !previous);
+                    setNewBrandError("");
+                    setError("");
+                  }}
+                  disabled={!storeId || creatingBrand}
+                  className="mt-2 text-xs font-semibold text-gray-900 hover:text-red-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {showNewBrand ? "− Cancel adding brand" : "+ Add new brand"}
+                </button>
               </div>
 
+              {/* Category */}
               <div className="min-w-0">
                 <label className={labelClass}>Category *</label>
+
                 <select
                   required
                   value={form.categoryId}
@@ -947,6 +1089,157 @@ export default function ProductFormModal({
               Available for sale
             </label>
           </Section>
+
+          {/* Inline brand creation */}
+          {showNewBrand && (
+            <section className="w-full min-w-0 space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-5">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">
+                  Create brand
+                </h3>
+                <p className="mt-1 text-xs text-gray-500">
+                  Enter a brand name and optionally upload its logo.
+                </p>
+              </div>
+
+              <div>
+                <label className={labelClass}>Brand name *</label>
+                <input
+                  autoFocus
+                  required
+                  maxLength={100}
+                  value={newBrandName}
+                  onChange={(event) => setNewBrandName(event.target.value)}
+                  placeholder="e.g. Nike"
+                  className={inputClass}
+                  disabled={creatingBrand}
+                />
+              </div>
+
+              <div>
+                <label className={labelClass}>Brand logo</label>
+
+                <label className="flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-4 transition hover:border-gray-500">
+                  {newBrandPreview ? (
+                    <img
+                      src={newBrandPreview}
+                      alt="Brand logo preview"
+                      className="mb-3 h-24 w-24 rounded-lg border border-gray-200 object-contain"
+                    />
+                  ) : (
+                    <div className="mb-3 flex h-24 w-24 items-center justify-center rounded-lg bg-gray-100 text-gray-400">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="30"
+                        height="30"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <path d="m21 15-5-5L5 21" />
+                      </svg>
+                    </div>
+                  )}
+
+                  <span className="text-sm font-medium text-gray-800">
+                    {newBrandImage ? "Choose another logo" : "Upload logo"}
+                  </span>
+
+                  <span className="mt-1 text-center text-xs text-gray-500">
+                    Optional · Maximum 5 MB
+                  </span>
+
+                  <input
+                    ref={brandFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    disabled={creatingBrand}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+
+                      const problem = checkImage(file);
+
+                      if (problem) {
+                        setNewBrandError(problem);
+                        event.target.value = "";
+                        return;
+                      }
+
+                      setNewBrandError("");
+                      setNewBrandImage(file);
+                    }}
+                  />
+                </label>
+
+                {newBrandImage && (
+                  <div className="mt-3 flex min-w-0 items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-2">
+                    <div className="min-w-0 flex-1">
+                      <p
+                        title={newBrandImage.name}
+                        className="truncate text-xs font-medium text-gray-800"
+                      >
+                        {newBrandImage.name}
+                      </p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {(newBrandImage.size / 1024).toFixed(0)} KB
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewBrandImage(null);
+                        if (brandFileInputRef.current) {
+                          brandFileInputRef.current.value = "";
+                        }
+                      }}
+                      disabled={creatingBrand}
+                      className="shrink-0 rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {newBrandError && (
+                <p role="alert" className="break-words text-xs text-red-600">
+                  {newBrandError}
+                </p>
+              )}
+
+              <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNewBrand(false);
+                    resetNewBrandForm();
+                  }}
+                  disabled={creatingBrand}
+                  className="rounded border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-white disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCreateBrand}
+                  disabled={creatingBrand || !newBrandName.trim() || !storeId}
+                  className="rounded bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {creatingBrand ? "Creating brand..." : "Create brand"}
+                </button>
+              </div>
+            </section>
+          )}
 
           {/* Inline category creation */}
           {showNewCategory && (
@@ -1114,7 +1407,7 @@ export default function ProductFormModal({
                     !newCategoryName.trim() ||
                     !storeId
                   }
-                  className="rounded bg-black px-4 py-2 text-xs font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {creatingCategory ? "Creating category..." : "Create category"}
                 </button>
@@ -1580,15 +1873,17 @@ export default function ProductFormModal({
                 loadingCategories ||
                 Boolean(categoryError)
               }
-              className="cursor-pointer rounded bg-black px-4 py-2 text-xs font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="cursor-pointer rounded bg-brand-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand-red-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {saving
                 ? "Saving..."
                 : uploadingImage || uploadingSeoImage
                   ? "Uploading image..."
-                  : creatingCategory
-                    ? "Creating category..."
-                    : "Save"}
+                  : creatingBrand
+                    ? "Creating brand..."
+                    : creatingCategory
+                      ? "Creating category..."
+                      : "Save"}
             </button>
           </div>
         </form>
@@ -1596,4 +1891,3 @@ export default function ProductFormModal({
     </div>
   );
 }
-

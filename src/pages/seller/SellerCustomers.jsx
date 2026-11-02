@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useOutletContext } from "react-router-dom"
 import { Plus, Users, Pencil, Trash2, X } from "lucide-react"
@@ -8,7 +9,7 @@ import {
   useUpdateCustomer,
   useDeleteCustomer,
 } from "../../hooks/useCustomers"
-import { useListControls } from "../../hooks/useListControls"
+
 import {
   DataCard,
   DataTable,
@@ -47,7 +48,10 @@ function Modal({ title, onClose, children }) {
         className="w-full max-w-md rounded-2xl border border-yz-border bg-white shadow-2xl"
       >
         <div className="flex items-center justify-between border-b border-yz-border px-5 py-4">
-          <h2 className="text-lg font-semibold text-zinc-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-zinc-900">
+            {title}
+          </h2>
+
           <button
             type="button"
             aria-label="Close"
@@ -57,6 +61,7 @@ function Modal({ title, onClose, children }) {
             <X size={20} />
           </button>
         </div>
+
         <div className="p-5">{children}</div>
       </div>
     </div>
@@ -69,6 +74,7 @@ function CustomerForm({ customer, onSubmit, onCancel }) {
     phone: customer?.phone ?? "",
     email: customer?.email ?? "",
   })
+
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
@@ -85,6 +91,7 @@ function CustomerForm({ customer, onSubmit, onCancel }) {
     }
 
     setSaving(true)
+
     try {
       await onSubmit({
         name: values.name.trim(),
@@ -92,7 +99,7 @@ function CustomerForm({ customer, onSubmit, onCancel }) {
         email: values.email.trim(),
       })
     } catch (err) {
-      setError(err.message)
+      setError(err.message || "Something went wrong.")
     } finally {
       setSaving(false)
     }
@@ -106,6 +113,7 @@ function CustomerForm({ customer, onSubmit, onCancel }) {
         <span className="mb-1.5 block text-sm font-medium text-zinc-700">
           Name
         </span>
+
         <input
           className={inputClass}
           value={values.name}
@@ -119,6 +127,7 @@ function CustomerForm({ customer, onSubmit, onCancel }) {
         <span className="mb-1.5 block text-sm font-medium text-zinc-700">
           Phone
         </span>
+
         <input
           className={inputClass}
           value={values.phone}
@@ -132,6 +141,7 @@ function CustomerForm({ customer, onSubmit, onCancel }) {
         <span className="mb-1.5 block text-sm font-medium text-zinc-700">
           Email
         </span>
+
         <input
           className={inputClass}
           type="email"
@@ -149,8 +159,13 @@ function CustomerForm({ customer, onSubmit, onCancel }) {
         >
           Cancel
         </button>
+
         <PrimaryButton type="submit" disabled={saving}>
-          {saving ? "Saving..." : customer ? "Save changes" : "Add customer"}
+          {saving
+            ? "Saving..."
+            : customer
+              ? "Save changes"
+              : "Add customer"}
         </PrimaryButton>
       </div>
     </form>
@@ -161,24 +176,42 @@ export default function SellerCustomers() {
   const { shop } = useOutletContext()
   const storeId = shop?.id
 
-  // fetch one big page and search/paginate on the client, like the Shops page
-  const { data, isLoading, error: loadError } = useCustomers(
-    { page: 1, limit: 50 },
+  // Backend search and pagination.
+  const [search, setSearch] = useState("")
+  const [page, setPage] = useState(1)
+
+  const limit = 10
+
+  const {
+    data,
+    isLoading,
+    error: loadError,
+  } = useCustomers(
+    {
+      page,
+      limit,
+      search: search.trim(),
+    },
     storeId
   )
+
   const customers = data?.customers ?? []
+  const totalCount = data?.pagination?.totalCount ?? 0
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(totalCount / limit)
+  )
 
   const create = useCreateCustomer(storeId)
   const update = useUpdateCustomer(storeId)
   const remove = useDeleteCustomer(storeId)
 
-  const list = useListControls(
-    customers,
-    (c) => `${c.name} ${c.phone ?? ""} ${c.email ?? ""}`
-  )
-
-  // null | { mode: "create" } | { mode: "edit", customer } | { mode: "delete", customer }
+  // null | { mode: "create" }
+  // | { mode: "edit", customer }
+  // | { mode: "delete", customer }
   const [dialog, setDialog] = useState(null)
+
   const [deleteError, setDeleteError] = useState("")
   const [deleting, setDeleting] = useState(false)
 
@@ -187,27 +220,38 @@ export default function SellerCustomers() {
     setDeleteError("")
   }
 
+  const handleSearch = (value) => {
+    setSearch(value)
+    setPage(1)
+  }
+
   const handleSave = async (values) => {
     if (dialog.mode === "edit") {
-      await update.mutateAsync({ id: dialog.customer.id, changes: values })
+      await update.mutateAsync({
+        id: dialog.customer.id,
+        changes: values,
+      })
     } else {
-      // don't send empty fields when creating
+      // Don't send empty fields when creating.
       const payload = Object.fromEntries(
-        Object.entries(values).filter(([, v]) => v)
+        Object.entries(values).filter(([, value]) => value)
       )
+
       await create.mutateAsync(payload)
     }
+
     closeDialog()
   }
 
   const handleDelete = async () => {
     setDeleteError("")
     setDeleting(true)
+
     try {
       await remove.mutateAsync(dialog.customer.id)
       closeDialog()
     } catch (err) {
-      setDeleteError(err.message)
+      setDeleteError(err.message || "Unable to delete customer.")
     } finally {
       setDeleting(false)
     }
@@ -217,11 +261,13 @@ export default function SellerCustomers() {
     <PageShell>
       <PageHeader
         title="Customers"
-        subtitle={`${customers.length} ${
-          customers.length === 1 ? "customer" : "customers"
+        subtitle={`${totalCount} ${
+          totalCount === 1 ? "customer" : "customers"
         } in this shop.`}
         action={
-          <PrimaryButton onClick={() => setDialog({ mode: "create" })}>
+          <PrimaryButton
+            onClick={() => setDialog({ mode: "create" })}
+          >
             <Plus className="h-4 w-4" />
             Add Customer
           </PrimaryButton>
@@ -233,10 +279,10 @@ export default function SellerCustomers() {
       <DataCard
         icon={Users}
         title="All customers"
-        count={customers.length}
+        count={totalCount}
         search={{
-          value: list.query,
-          onChange: list.setQuery,
+          value: search,
+          onChange: handleSearch,
           placeholder: "Search name, phone or email",
         }}
       >
@@ -244,16 +290,16 @@ export default function SellerCustomers() {
           <p className="p-8 text-center text-sm text-zinc-500">
             Loading customers...
           </p>
-        ) : list.total === 0 ? (
+        ) : customers.length === 0 ? (
           <EmptyState
             icon={Users}
             title={
-              list.isSearching
-                ? `No results for "${list.query.trim()}"`
+              search.trim()
+                ? `No results for "${search.trim()}"`
                 : "No customers yet"
             }
             text={
-              list.isSearching
+              search.trim()
                 ? "Try a different name, phone or email."
                 : "Add your first customer to get started."
             }
@@ -261,7 +307,7 @@ export default function SellerCustomers() {
         ) : (
           <>
             <DataTable columns={COLUMNS}>
-              {list.pageItems.map((customer) => (
+              {customers.map((customer) => (
                 <TableRow key={customer.id}>
                   <Td>
                     <EntityCell
@@ -271,11 +317,15 @@ export default function SellerCustomers() {
                     />
                   </Td>
 
-                  <Td className="text-zinc-600">{customer.phone || "—"}</Td>
+                  <Td className="text-zinc-600">
+                    {customer.phone || "—"}
+                  </Td>
 
                   <Td className="text-zinc-600">
                     {customer.createdAt
-                      ? new Date(customer.createdAt).toLocaleDateString()
+                      ? new Date(
+                          customer.createdAt
+                        ).toLocaleDateString()
                       : "—"}
                   </Td>
 
@@ -284,15 +334,26 @@ export default function SellerCustomers() {
                       <button
                         type="button"
                         aria-label={`Edit ${customer.name}`}
-                        onClick={() => setDialog({ mode: "edit", customer })}
+                        onClick={() =>
+                          setDialog({
+                            mode: "edit",
+                            customer,
+                          })
+                        }
                         className="flex h-9 w-9 items-center justify-center rounded-lg border border-yz-border text-zinc-600 hover:bg-zinc-50"
                       >
                         <Pencil size={16} />
                       </button>
+
                       <button
                         type="button"
                         aria-label={`Delete ${customer.name}`}
-                        onClick={() => setDialog({ mode: "delete", customer })}
+                        onClick={() =>
+                          setDialog({
+                            mode: "delete",
+                            customer,
+                          })
+                        }
                         className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
                       >
                         <Trash2 size={16} />
@@ -304,21 +365,30 @@ export default function SellerCustomers() {
             </DataTable>
 
             <TableFooter
-              from={list.from}
-              to={list.to}
-              total={list.total}
-              page={list.page}
-              totalPages={list.totalPages}
-              onPageChange={list.setPage}
+              from={
+                totalCount === 0
+                  ? 0
+                  : (page - 1) * limit + 1
+              }
+              to={Math.min(page * limit, totalCount)}
+              total={totalCount}
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
             />
           </>
         )}
       </DataCard>
 
       {/* Add / edit dialog */}
-      {(dialog?.mode === "create" || dialog?.mode === "edit") && (
+      {(dialog?.mode === "create" ||
+        dialog?.mode === "edit") && (
         <Modal
-          title={dialog.mode === "edit" ? "Edit customer" : "Add customer"}
+          title={
+            dialog.mode === "edit"
+              ? "Edit customer"
+              : "Add customer"
+          }
           onClose={closeDialog}
         >
           <CustomerForm
@@ -331,8 +401,12 @@ export default function SellerCustomers() {
 
       {/* Delete confirmation */}
       {dialog?.mode === "delete" && (
-        <Modal title="Delete customer" onClose={closeDialog}>
+        <Modal
+          title="Delete customer"
+          onClose={closeDialog}
+        >
           <ErrorBanner>{deleteError}</ErrorBanner>
+
           <p className="text-sm text-zinc-600">
             Are you sure you want to delete{" "}
             <span className="font-semibold text-zinc-900">
@@ -340,6 +414,7 @@ export default function SellerCustomers() {
             </span>
             ? This can't be undone.
           </p>
+
           <div className="mt-5 flex justify-end gap-3">
             <button
               type="button"
@@ -348,6 +423,7 @@ export default function SellerCustomers() {
             >
               Cancel
             </button>
+
             <button
               type="button"
               disabled={deleting}
