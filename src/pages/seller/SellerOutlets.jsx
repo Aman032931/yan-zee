@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useOutletContext } from "react-router-dom"
 import { MapPin, Pencil, Phone, Plus, Trash2 } from "lucide-react"
+import { Req } from "../../components/seller/SellerUI"
 
 import {
   useOutlets,
@@ -69,7 +70,7 @@ function OutletForm({ storeId, outlet, onDone }) {
     const payload = Object.fromEntries(
       Object.entries(form)
         .map(([key, value]) => [key, value.trim()])
-        .filter(([, value]) => value !== ""),
+        .filter(([, value]) => value !== "")
     )
 
     try {
@@ -94,7 +95,9 @@ function OutletForm({ storeId, outlet, onDone }) {
         <ErrorBanner>{error}</ErrorBanner>
 
         <div>
-          <label className={labelClass}>Outlet name *</label>
+          <label className={labelClass}>
+            Outlet name <Req />
+          </label>
           <input
             required
             value={form.name}
@@ -158,7 +161,7 @@ export default function SellerOutlets() {
 
   const list = useListControls(
     outlets,
-    (o) => `${o.name} ${o.address ?? ""} ${o.contactPerson ?? ""}`,
+    (o) => `${o.name} ${o.address ?? ""} ${o.contactPerson ?? ""}`
   )
 
   // null = popup closed, {} = add, outlet object = edit

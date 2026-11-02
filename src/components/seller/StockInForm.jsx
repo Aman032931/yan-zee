@@ -7,6 +7,7 @@ import {
   ErrorBanner,
   FormModal,
   PrimaryButton,
+  Req,
   SecondaryButton,
   inputClass,
   labelClass,
@@ -145,7 +146,9 @@ export default function StockInForm({ storeId, onDone }) {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className={labelClass}>Outlet *</label>
+            <label className={labelClass}>
+              Outlet <Req />
+            </label>
             <select
               value={selectedOutletId}
               onChange={(e) => setOutletId(e.target.value)}
@@ -201,7 +204,7 @@ export default function StockInForm({ storeId, onDone }) {
 
         <div className="space-y-3">
           <p className="text-xs font-bold tracking-wide text-zinc-500 uppercase">
-            Items *
+            Items <Req />
           </p>
 
           {!loadingItems && stockItems.length === 0 && (
@@ -235,7 +238,9 @@ export default function StockInForm({ storeId, onDone }) {
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
                 <div className="sm:col-span-2">
-                  <label className={labelClass}>Product *</label>
+                  <label className={labelClass}>
+                    Product <Req />
+                  </label>
                   <select
                     value={row.itemKey}
                     onChange={(e) => setRow(index, "itemKey", e.target.value)}
@@ -254,7 +259,9 @@ export default function StockInForm({ storeId, onDone }) {
                 </div>
 
                 <div>
-                  <label className={labelClass}>Quantity *</label>
+                  <label className={labelClass}>
+                    Quantity <Req />
+                  </label>
                   <input
                     type="number"
                     min="1"
@@ -266,7 +273,9 @@ export default function StockInForm({ storeId, onDone }) {
                 </div>
 
                 <div>
-                  <label className={labelClass}>Unit cost (Nrs) *</label>
+                  <label className={labelClass}>
+                    Unit cost (Nrs) <Req />
+                  </label>
                   <input
                     type="number"
                     min="0"

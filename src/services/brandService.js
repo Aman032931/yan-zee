@@ -23,6 +23,20 @@ export const uploadBrandLogo = async (storeId, file) => {
   return res.data.url
 }
 
+// POST /images/brand-seo (multipart) -> { data: { url } }
+export const uploadBrandSeoImage = async (storeId, file) => {
+  const form = new FormData()
+  form.append("image", file)
+
+  const res = await apiRequest("/images/brand-seo", {
+    method: "POST",
+    body: form,
+    headers: storeHeader(storeId),
+  })
+
+  return res.data.url
+}
+
 // POST /brands  { name, logo, isAvailable } -> { data: { brand: { id, name, slug } } }
 export const createBrand = async (storeId, payload) => {
   const res = await apiRequest("/brands", {

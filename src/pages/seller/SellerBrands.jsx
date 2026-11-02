@@ -22,6 +22,7 @@ import {
   PageHeader,
   PageShell,
   PrimaryButton,
+  Req,
   RowButton,
   SecondaryButton,
   StatusPill,
@@ -49,6 +50,7 @@ function BrandForm({ storeId, brand, onDone }) {
   const [name, setName] = useState(brand?.name ?? "")
   const [isAvailable, setIsAvailable] = useState(brand?.isAvailable ?? true)
   const [logoFile, setLogoFile] = useState(null)
+  const [seoImageFile, setSeoImageFile] = useState(null)
   const [error, setError] = useState("")
 
   const handleSubmit = async (e) => {
@@ -68,9 +70,15 @@ function BrandForm({ storeId, brand, onDone }) {
           name: trimmed,
           isAvailable,
           logoFile,
+          seoImageFile,
         })
       } else {
-        await create.mutateAsync({ name: trimmed, isAvailable, logoFile })
+        await create.mutateAsync({
+          name: trimmed,
+          isAvailable,
+          logoFile,
+          seoImageFile,
+        })
       }
       onDone()
     } catch (err) {
@@ -88,7 +96,9 @@ function BrandForm({ storeId, brand, onDone }) {
         <ErrorBanner>{error}</ErrorBanner>
 
         <div>
-          <label className={labelClass}>Brand name *</label>
+          <label className={labelClass}>
+            Brand name <Req />
+          </label>
           <input
             required
             value={name}
@@ -105,6 +115,16 @@ function BrandForm({ storeId, brand, onDone }) {
           currentUrl={brand?.logo}
           onChange={setLogoFile}
           uploadText="Upload logo"
+          fit="contain"
+        />
+
+        <ImageUploadField
+          id="brand-seo-image"
+          label="SEO image (optional)"
+          file={seoImageFile}
+          currentUrl={brand?.seoImage}
+          onChange={setSeoImageFile}
+          uploadText="Upload SEO image"
           fit="contain"
         />
 
