@@ -289,6 +289,83 @@ function Section({ title, children }) {
   );
 }
 
+// Red asterisk for mandatory fields.
+function Req() {
+  return (
+    <span className="text-red-600" aria-hidden="true">
+      *
+    </span>
+  );
+}
+
+// Popup shown above the form so errors are never hidden off-screen.
+function ErrorPopup({ message, onClose }) {
+  useEffect(() => {
+    if (!message) return undefined;
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [message, onClose]);
+
+  if (!message) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="error-popup-title"
+        aria-describedby="error-popup-message"
+        className="w-full max-w-sm rounded-lg border border-red-200 bg-white p-5 shadow-xl"
+      >
+        <div className="flex items-start gap-3">
+          <span
+            aria-hidden="true"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-sm font-bold text-red-600"
+          >
+            !
+          </span>
+
+          <div className="min-w-0">
+            <h3
+              id="error-popup-title"
+              className="text-sm font-semibold text-gray-900"
+            >
+              Something needs fixing
+            </h3>
+            <p
+              id="error-popup-message"
+              className="mt-1 break-words text-sm text-gray-600"
+            >
+              {message}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <button
+            type="button"
+            autoFocus
+            onClick={onClose}
+            className="cursor-pointer rounded bg-black px-4 py-2 text-xs font-semibold text-white transition hover:bg-gray-800"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProductFormModal({
   initialData,
   onSave,
@@ -912,15 +989,6 @@ export default function ProductFormModal({
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div
-              role="alert"
-              className="break-words rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
-            >
-              {error}
-            </div>
-          )}
-
           {categoryError && (
             <div
               role="alert"
@@ -933,7 +1001,9 @@ export default function ProductFormModal({
           {/* Basic information */}
           <Section title="Basic info">
             <div>
-              <label className={labelClass}>Name *</label>
+              <label className={labelClass}>
+                Name <Req />
+              </label>
               <input
                 required
                 value={form.name}
@@ -953,7 +1023,7 @@ export default function ProductFormModal({
                   className={inputClass}
                 >
                   <option value="">
-                    {loadingBrands ? "Loading brands..." : "No brand"}
+                    {loadingBrands ? "Loading brands..." : "Select brand"}
                   </option>
 
                   {brands.map((brand) => (
@@ -984,8 +1054,9 @@ export default function ProductFormModal({
 
               {/* Category */}
               <div className="min-w-0">
-                <label className={labelClass}>Category *</label>
-
+                <label className={labelClass}>
+                  Category <Req />
+                </label>
                 <select
                   required
                   value={form.categoryId}
@@ -1033,7 +1104,9 @@ export default function ProductFormModal({
               </div>
 
               <div>
-                <label className={labelClass}>Audience *</label>
+                <label className={labelClass}>
+                  Audience <Req />
+                </label>
                 <select
                   value={form.audience}
                   onChange={handleChange("audience")}
@@ -1048,7 +1121,9 @@ export default function ProductFormModal({
               </div>
 
               <div>
-                <label className={labelClass}>Status *</label>
+                <label className={labelClass}>
+                  Status <Req />
+                </label>
                 <select
                   value={form.status}
                   onChange={handleChange("status")}
@@ -1254,7 +1329,9 @@ export default function ProductFormModal({
 
               <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className={labelClass}>Category name *</label>
+                  <label className={labelClass}>
+                    Category name <Req />
+                  </label>
                   <input
                     autoFocus
                     required
@@ -1524,7 +1601,9 @@ export default function ProductFormModal({
 
                   <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
                     <div>
-                      <label className={labelClass}>Size *</label>
+                      <label className={labelClass}>
+                        Size <Req />
+                      </label>
                       <input
                         required
                         value={variant.size}
@@ -1537,7 +1616,9 @@ export default function ProductFormModal({
                     </div>
 
                     <div>
-                      <label className={labelClass}>Color name *</label>
+                      <label className={labelClass}>
+                        Color name <Req />
+                      </label>
                       <input
                         required
                         value={variant.colorName}
@@ -1550,7 +1631,9 @@ export default function ProductFormModal({
                     </div>
 
                     <div>
-                      <label className={labelClass}>Color *</label>
+                      <label className={labelClass}>
+                        Color <Req />
+                      </label>
                       <div className="flex h-[38px] items-center gap-2 rounded border border-gray-300 px-2">
                         <input
                           type="color"
@@ -1570,7 +1653,9 @@ export default function ProductFormModal({
 
                   <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                      <label className={labelClass}>Selling price (Nrs) *</label>
+                      <label className={labelClass}>
+                        Selling price (Nrs) <Req />
+                      </label>
                       <input
                         required
                         type="number"
@@ -1615,7 +1700,9 @@ export default function ProductFormModal({
                     </div>
 
                     <div>
-                      <label className={labelClass}>Quantity *</label>
+                      <label className={labelClass}>
+                        Quantity <Req />
+                      </label>
                       <input
                         required
                         type="number"
@@ -1683,7 +1770,9 @@ export default function ProductFormModal({
             <Section title="Pricing and stock">
               <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className={labelClass}>Selling price (Nrs) *</label>
+                  <label className={labelClass}>
+                    Selling price (Nrs) <Req />
+                  </label>
                   <input
                     required
                     type="number"
@@ -1710,7 +1799,9 @@ export default function ProductFormModal({
                 </div>
 
                 <div>
-                  <label className={labelClass}>Quantity *</label>
+                  <label className={labelClass}>
+                    Quantity <Req />
+                  </label>
                   <input
                     required
                     type="number"
@@ -1887,6 +1978,9 @@ export default function ProductFormModal({
           </div>
         </form>
       </div>
+
+      {/* Error popup: shown above the form, no scrolling needed */}
+      <ErrorPopup message={error} onClose={() => setError("")} />
     </div>
   );
 }

@@ -22,6 +22,7 @@ import {
   PageHeader,
   PageShell,
   PrimaryButton,
+  Req,
   RowButton,
   RowLink,
   SecondaryButton,
@@ -51,6 +52,7 @@ function CategoryForm({ storeId, category, onDone }) {
   const [description, setDescription] = useState(category?.description ?? "")
   const [isAvailable, setIsAvailable] = useState(category?.isAvailable ?? true)
   const [imageFile, setImageFile] = useState(null)
+  const [seoImageFile, setSeoImageFile] = useState(null)
   const [error, setError] = useState("")
 
   const handleSubmit = async (e) => {
@@ -72,6 +74,7 @@ function CategoryForm({ storeId, category, onDone }) {
           name: trimmed,
           isAvailable,
           imageFile,
+          seoImageFile,
           ...(desc ? { description: desc } : {}),
         })
       } else {
@@ -79,6 +82,7 @@ function CategoryForm({ storeId, category, onDone }) {
           name: trimmed,
           isAvailable,
           imageFile,
+          seoImageFile,
           ...(desc ? { description: desc } : {}),
         })
       }
@@ -99,7 +103,9 @@ function CategoryForm({ storeId, category, onDone }) {
         <ErrorBanner>{error}</ErrorBanner>
 
         <div>
-          <label className={labelClass}>Category name *</label>
+          <label className={labelClass}>
+            Category name <Req />
+          </label>
           <input
             required
             value={name}
@@ -127,6 +133,15 @@ function CategoryForm({ storeId, category, onDone }) {
           currentUrl={category?.image}
           onChange={setImageFile}
           uploadText="Upload image"
+        />
+
+        <ImageUploadField
+          id="category-seo-image"
+          label="SEO image (optional)"
+          file={seoImageFile}
+          currentUrl={category?.seoImage}
+          onChange={setSeoImageFile}
+          uploadText="Upload SEO image"
         />
 
         <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-700">

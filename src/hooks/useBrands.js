@@ -5,6 +5,7 @@ import {
   updateBrand,
   deleteBrand,
   uploadBrandLogo,
+  uploadBrandSeoImage,
   toggleBrandAvailability,
 } from "../services/brandService"
 
@@ -19,12 +20,16 @@ export const useBrands = (storeId, params) =>
 export const useCreateBrand = (storeId) => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ logoFile, ...payload }) => {
-      // upload first: create needs the logo URL
-      const logo = logoFile ? await uploadBrandLogo(storeId, logoFile) : undefined
+    mutationFn: async ({ logoFile, seoImageFile, ...payload }) => {
+      // upload first: create needs the image URLs
+      const [logo, seoImage] = await Promise.all([
+        logoFile ? uploadBrandLogo(storeId, logoFile) : undefined,
+        seoImageFile ? uploadBrandSeoImage(storeId, seoImageFile) : undefined,
+      ])
       return createBrand(storeId, {
         ...payload,
         ...(logo ? { logo } : {}),
+        ...(seoImage ? { seoImage } : {}),
         isAvailable: payload.isAvailable ?? true,
       })
     },
@@ -35,11 +40,15 @@ export const useCreateBrand = (storeId) => {
 export const useUpdateBrand = (storeId) => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ brandId, logoFile, ...changes }) => {
-      const logo = logoFile ? await uploadBrandLogo(storeId, logoFile) : undefined
+    mutationFn: async ({ brandId, logoFile, seoImageFile, ...changes }) => {
+      const [logo, seoImage] = await Promise.all([
+        logoFile ? uploadBrandLogo(storeId, logoFile) : undefined,
+        seoImageFile ? uploadBrandSeoImage(storeId, seoImageFile) : undefined,
+      ])
       return updateBrand(storeId, brandId, {
         ...changes,
         ...(logo ? { logo } : {}),
+        ...(seoImage ? { seoImage } : {}),
       })
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["brands", storeId] }),

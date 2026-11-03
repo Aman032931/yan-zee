@@ -8,6 +8,15 @@ export const inputClass =
 
 export const labelClass = "mb-1 block text-xs font-medium text-zinc-600"
 
+/* ---------- Required-field marker (red asterisk) ---------- */
+export function Req() {
+  return (
+    <span className="text-red-600" aria-hidden="true">
+      *
+    </span>
+  )
+}
+
 /* ---------- Buttons ---------- */
 export function PrimaryButton({
   children,
@@ -93,7 +102,13 @@ export function FormCard({ title, children }) {
 }
 
 /* ---------- Popup form ---------- */
-export function FormModal({ title, onClose, busy = false, children }) {
+export function FormModal({
+  title,
+  onClose,
+  busy = false,
+  maxWidth = "max-w-lg",
+  children,
+}) {
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === "Escape" && !busy) onClose()
@@ -114,7 +129,7 @@ export function FormModal({ title, onClose, busy = false, children }) {
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-yz-border bg-white p-6 shadow-xl"
+        className={`max-h-[90vh] w-full ${maxWidth} overflow-y-auto rounded-2xl border border-yz-border bg-white p-6 shadow-xl`}
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <h2 className="text-lg font-bold text-zinc-900">{title}</h2>
@@ -398,15 +413,8 @@ export function RowLink({ className = "", ...props }) {
   )
 }
 
-/* ---------- Table footer: clean shared pagination ---------- */
-export function TableFooter({
-  from,
-  to,
-  total,
-  page,
-  totalPages,
-  onPageChange,
-}) {
+/* ---------- Table footer: "Page X" + numbered pagination ---------- */
+export function TableFooter({ total, page, totalPages, onPageChange }) {
   const safeTotalPages = Math.max(1, totalPages || 1)
 
   const windowStart = Math.max(
@@ -430,18 +438,7 @@ export function TableFooter({
   return (
     <div className="flex flex-col gap-3 border-t border-yz-border bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
       <p className="text-xs text-zinc-500 sm:text-sm">
-        {total === 0 ? (
-          "No results"
-        ) : (
-          <>
-            Showing{" "}
-            <span className="font-medium text-zinc-700">
-              {from}–{to}
-            </span>{" "}
-            of{" "}
-            <span className="font-medium text-zinc-700">{total}</span>
-          </>
-        )}
+        Page <span className="font-medium text-zinc-700">{page}</span>
       </p>
 
       <nav

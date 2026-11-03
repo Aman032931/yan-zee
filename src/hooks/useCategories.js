@@ -6,6 +6,7 @@ import {
   deleteCategory,
   toggleCategoryAvailability,
   uploadCategoryImage,
+  uploadCategorySeoImage,
 } from "../services/categoryService"
 
 // the store id is part of the key, so switching stores loads that store's categories
@@ -23,14 +24,16 @@ export const useCategories = (storeId, params) =>
 export const useCreateCategory = (storeId) => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ imageFile, ...payload }) => {
-      // upload first: create needs the image URL
-      const image = imageFile
-        ? await uploadCategoryImage(storeId, imageFile)
-        : undefined
+    mutationFn: async ({ imageFile, seoImageFile, ...payload }) => {
+      // upload first: create needs the image URLs
+      const [image, seoImage] = await Promise.all([
+        imageFile ? uploadCategoryImage(storeId, imageFile) : undefined,
+        seoImageFile ? uploadCategorySeoImage(storeId, seoImageFile) : undefined,
+      ])
       const res = await createCategory(storeId, {
         ...payload,
         ...(image ? { image } : {}),
+        ...(seoImage ? { seoImage } : {}),
         isAvailable: payload.isAvailable ?? true,
       })
       return res.data?.category
@@ -42,13 +45,15 @@ export const useCreateCategory = (storeId) => {
 export const useUpdateCategory = (storeId) => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ categoryId, imageFile, ...changes }) => {
-      const image = imageFile
-        ? await uploadCategoryImage(storeId, imageFile)
-        : undefined
+    mutationFn: async ({ categoryId, imageFile, seoImageFile, ...changes }) => {
+      const [image, seoImage] = await Promise.all([
+        imageFile ? uploadCategoryImage(storeId, imageFile) : undefined,
+        seoImageFile ? uploadCategorySeoImage(storeId, seoImageFile) : undefined,
+      ])
       const res = await updateCategory(storeId, categoryId, {
         ...changes,
         ...(image ? { image } : {}),
+        ...(seoImage ? { seoImage } : {}),
       })
       return res.data?.category ?? res.data
     },

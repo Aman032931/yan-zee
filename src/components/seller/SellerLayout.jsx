@@ -26,10 +26,10 @@ import CreateShopForm from "./CreateShopForm"
 
 const NAV_ITEMS = [
   { label: "Dashboard", to: "/seller", icon: LayoutDashboard },
-  { label: "My Products", to: "/seller/products", icon: Package },
-  { label: "Inventory", to: "/seller/inventory", icon: Boxes },
   { label: "Categories", to: "/seller/categories", icon: Tags },
   { label: "Brands", to: "/seller/brands", icon: Tag },
+  { label: "My Products", to: "/seller/products", icon: Package },
+  { label: "Inventory", to: "/seller/inventory", icon: Boxes },
   { label: "Outlets", to: "/seller/outlets", icon: MapPin },
   { label: "Customers", to: "/seller/customers", icon: Users },
   { label: "Orders", to: "/seller/orders", icon: ShoppingBag },

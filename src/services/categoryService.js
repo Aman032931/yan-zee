@@ -70,3 +70,18 @@ export const uploadCategoryImage = async (storeId, file) => {
 
   return res.data.url
 }
+
+
+// POST /images/category-seo (multipart) -> { data: { url } }
+export const uploadCategorySeoImage = async (storeId, file) => {
+  const form = new FormData()
+  form.append("image", file)
+
+  const res = await apiRequest("/images/category-seo", {
+    method: "POST",
+    body: form,
+    headers: storeHeaders(storeId),
+  })
+
+  return res.data.url
+}
