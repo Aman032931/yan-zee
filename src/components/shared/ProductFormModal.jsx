@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 
 import { getCategories } from "../../services/categoryService";

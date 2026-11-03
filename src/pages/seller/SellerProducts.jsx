@@ -281,267 +281,284 @@ export default function SellerProducts() {
 
   return (
     <PageShell>
-      <PageHeader
-        title="My Products"
-        subtitle={`Manage products for ${formatText(
-          shop?.name,
-          "your store"
-        )}.`}
-        action={
-          <PrimaryButton onClick={openAdd}>
-            <Plus className="h-4 w-4" />
-            Add Product
-          </PrimaryButton>
-        }
-      />
+      <div className="mx-auto w-full max-w-[1120px]">
+        {/* Page heading */}
+        <PageHeader
+          title="My Products"
+          subtitle={`Manage products for ${formatText(
+            shop?.name,
+            "your store"
+          )}.`}
+          action={
+            <PrimaryButton onClick={openAdd}>
+              <Plus className="h-4 w-4" />
+              Add Product
+            </PrimaryButton>
+          }
+        />
 
-      <ErrorBanner>{actionError || error}</ErrorBanner>
+        <ErrorBanner>{actionError || error}</ErrorBanner>
 
-      <DataCard
-        icon={Package}
-        title="All products"
-        count={loading ? undefined : filteredProducts.length}
-        search={{
-          value: list.query,
-          onChange: list.setQuery,
-          placeholder: "Search products",
-        }}
-      >
-        {/* Product filters */}
-        <div className="border-b border-yz-border px-4 py-4 sm:px-6">
-          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-700">
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-zinc-500">
-                Status
-              </span>
-
-              <select
-                value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value)}
-                className="h-10 w-full rounded-lg border border-yz-border bg-white px-3 text-sm text-zinc-700 outline-none focus:border-brand-red-600 focus:ring-2 focus:ring-brand-red-600/10"
-              >
-                <option value="ALL">All statuses</option>
-                <option value="ACTIVE">Active</option>
-                <option value="DRAFT">Draft</option>
-                <option value="ARCHIVED">Archived</option>
-                <option value="OUT_OF_STOCK">Out of stock</option>
-              </select>
-            </label>
-
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-zinc-500">
-                Category
-              </span>
-
-              <select
-                value={categoryFilter}
-                onChange={(event) => setCategoryFilter(event.target.value)}
-                className="h-10 w-full rounded-lg border border-yz-border bg-white px-3 text-sm text-zinc-700 outline-none focus:border-brand-red-600 focus:ring-2 focus:ring-brand-red-600/10"
-              >
-                <option value="ALL">All categories</option>
-
-                {categories.map((category) => (
-                  <option key={category.id} value={String(category.id)}>
-                    {formatText(category.name, "Unnamed category")}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-zinc-500">
-                Stock
-              </span>
-
-              <select
-                value={stockFilter}
-                onChange={(event) => setStockFilter(event.target.value)}
-                className="h-10 w-full rounded-lg border border-yz-border bg-white px-3 text-sm text-zinc-700 outline-none focus:border-brand-red-600 focus:ring-2 focus:ring-brand-red-600/10"
-              >
-                <option value="ALL">All stock levels</option>
-                <option value="IN_STOCK">In stock</option>
-                <option value="OUT_OF_STOCK">Out of stock</option>
-              </select>
-            </label>
-
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-zinc-500">
-                Sort by price
-              </span>
-
-              <select
-                value={priceSort}
-                onChange={(event) => setPriceSort(event.target.value)}
-                className="h-10 w-full rounded-lg border border-yz-border bg-white px-3 text-sm text-zinc-700 outline-none focus:border-brand-red-600 focus:ring-2 focus:ring-brand-red-600/10"
-              >
-                <option value="DEFAULT">Default order</option>
-                <option value="LOW_TO_HIGH">Price: Low to High</option>
-                <option value="HIGH_TO_LOW">Price: High to Low</option>
-              </select>
-            </label>
-          </div>
-
-          {hasActiveFilters && (
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs text-zinc-500">
-                {filteredProducts.length} product
-                {filteredProducts.length === 1 ? "" : "s"} match the selected
-                filters.
-              </p>
-
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="text-sm font-medium text-brand-red-600 transition hover:text-brand-red-700"
-              >
-                Clear filters
-              </button>
+        {/* Products card */}
+        <DataCard
+          icon={Package}
+          title="All products"
+          count={loading ? undefined : filteredProducts.length}
+          search={{
+            value: list.query,
+            onChange: list.setQuery,
+            placeholder: "Search products",
+          }}
+        >
+          {/* Product filters */}
+          <div className="border-b border-yz-border px-4 py-4 sm:px-6">
+            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-700">
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters
             </div>
-          )}
-        </div>
 
-        {loading ? (
-          <LoadingRows />
-        ) : products.length === 0 ? (
-          <EmptyState
-            icon={Package}
-            title="No products found for this store"
-            text="Add a product to get started."
-          />
-        ) : list.total === 0 ? (
-          <EmptyState
-            icon={Package}
-            title="No matching products"
-            text="Try changing your search or clearing some filters."
-          />
-        ) : (
-          <>
-            <DataTable columns={COLUMNS} minWidth="min-w-[820px]">
-              {list.pageItems.map((product, index) => {
-                const id = product.id ?? product._id ?? index
-                const price = Number(product.price)
-                const discountPrice = Number(product.discountPrice)
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {/* Status */}
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-zinc-500">
+                  Status
+                </span>
 
-                const hasDiscount =
-                  Number.isFinite(price) &&
-                  Number.isFinite(discountPrice) &&
-                  discountPrice > 0 &&
-                  discountPrice < price
+                <select
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value)}
+                  className="h-10 w-full rounded-lg border border-yz-border bg-white px-3 text-sm text-zinc-700 outline-none transition focus:border-brand-red-600 focus:ring-2 focus:ring-brand-red-600/10"
+                >
+                  <option value="ALL">All statuses</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="DRAFT">Draft</option>
+                  <option value="ARCHIVED">Archived</option>
+                  <option value="OUT_OF_STOCK">Out of stock</option>
+                </select>
+              </label>
 
-                const status = getProductStatus(product)
+              {/* Category */}
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-zinc-500">
+                  Category
+                </span>
 
-                const categoryId = getProductCategoryId(product)
+                <select
+                  value={categoryFilter}
+                  onChange={(event) => setCategoryFilter(event.target.value)}
+                  className="h-10 w-full rounded-lg border border-yz-border bg-white px-3 text-sm text-zinc-700 outline-none transition focus:border-brand-red-600 focus:ring-2 focus:ring-brand-red-600/10"
+                >
+                  <option value="ALL">All categories</option>
 
-                const categoryName =
-                  product.category?.name ??
-                  (typeof product.category === "string"
-                    ? product.category
-                    : null) ??
-                  categoryNames[String(categoryId)] ??
-                  "Uncategorized"
+                  {categories.map((category) => (
+                    <option key={category.id} value={String(category.id)}>
+                      {formatText(category.name, "Unnamed category")}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-                const productUrl = `/seller/products/${
-                  product.id ?? product._id
-                }`
+              {/* Stock */}
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-zinc-500">
+                  Stock
+                </span>
 
-                const displayedStock =
-                  product.totalStock ?? product.quantity
+                <select
+                  value={stockFilter}
+                  onChange={(event) => setStockFilter(event.target.value)}
+                  className="h-10 w-full rounded-lg border border-yz-border bg-white px-3 text-sm text-zinc-700 outline-none transition focus:border-brand-red-600 focus:ring-2 focus:ring-brand-red-600/10"
+                >
+                  <option value="ALL">All stock levels</option>
+                  <option value="IN_STOCK">In stock</option>
+                  <option value="OUT_OF_STOCK">Out of stock</option>
+                </select>
+              </label>
 
-                return (
-                  <TableRow key={id}>
-                    <Td>
-                      <EntityCell
-                        image={product.image}
-                        icon={Package}
-                        name={formatText(product.name, "Unnamed product")}
-                        to={productUrl}
-                        fit="contain"
-                      />
-                    </Td>
+              {/* Price sorting */}
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-zinc-500">
+                  Sort by price
+                </span>
 
-                    <Td className="text-zinc-600">
-                      {String(categoryName).replace(/_/g, " ")}
-                    </Td>
+                <select
+                  value={priceSort}
+                  onChange={(event) => setPriceSort(event.target.value)}
+                  className="h-10 w-full rounded-lg border border-yz-border bg-white px-3 text-sm text-zinc-700 outline-none transition focus:border-brand-red-600 focus:ring-2 focus:ring-brand-red-600/10"
+                >
+                  <option value="DEFAULT">Default order</option>
+                  <option value="LOW_TO_HIGH">Price: Low to High</option>
+                  <option value="HIGH_TO_LOW">Price: High to Low</option>
+                </select>
+              </label>
+            </div>
 
-                    <Td className="text-zinc-600">
-                      {formatAudience(product.audience)}
-                    </Td>
+            {hasActiveFilters && (
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs text-zinc-500">
+                  {filteredProducts.length} product
+                  {filteredProducts.length === 1 ? "" : "s"} match the selected
+                  filters.
+                </p>
 
-                    <Td className="font-semibold text-zinc-900">
-                      {hasDiscount ? (
-                        <>
-                          Nrs {formatPrice(discountPrice)}
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="text-sm font-medium text-brand-red-600 transition hover:text-brand-red-700"
+                >
+                  Clear filters
+                </button>
+              </div>
+            )}
+          </div>
 
-                          <span className="ml-1 text-xs font-normal text-zinc-400 line-through">
-                            {formatPrice(price)}
-                          </span>
-                        </>
-                      ) : Number.isFinite(price) ? (
-                        `Nrs ${formatPrice(price)}`
-                      ) : Number.isFinite(Number(product.sellingPrice)) ? (
-                        `Nrs ${formatPrice(product.sellingPrice)}`
-                      ) : (
-                        "Price unavailable"
-                      )}
-                    </Td>
-
-                    <Td className="text-zinc-600">
-                      {formatText(displayedStock)}
-                    </Td>
-
-                    <Td>
-                      <StatusPill tone={STATUS_TONES[status] ?? "gray"}>
-                        {formatStatus(status)}
-                      </StatusPill>
-                    </Td>
-
-                    <Td align="right" className="whitespace-nowrap">
-                      <RowLink to={productUrl}>View</RowLink>
-
-                      {EDIT_ENABLED ? (
-                        <RowButton onClick={() => openEdit(product)}>
-                          Edit
-                        </RowButton>
-                      ) : (
-                        <RowButton
-                          disabled
-                          title="Editing is not available yet"
-                        >
-                          Edit
-                        </RowButton>
-                      )}
-
-                      <RowButton
-                        danger
-                        disabled={deletingId === product.id}
-                        onClick={() => handleDelete(product)}
-                      >
-                        {deletingId === product.id
-                          ? "Deleting..."
-                          : "Delete"}
-                      </RowButton>
-                    </Td>
-                  </TableRow>
-                )
-              })}
-            </DataTable>
-
-            <TableFooter
-              from={list.from}
-              to={list.to}
-              total={list.total}
-              page={list.page}
-              totalPages={list.totalPages}
-              onPageChange={list.setPage}
+          {/* Loading state */}
+          {loading ? (
+            <LoadingRows />
+          ) : products.length === 0 ? (
+            <EmptyState
+              icon={Package}
+              title="No products found for this store"
+              text="Add a product to get started."
             />
-          </>
-        )}
-      </DataCard>
+          ) : list.total === 0 ? (
+            <EmptyState
+              icon={Package}
+              title="No matching products"
+              text="Try changing your search or clearing some filters."
+            />
+          ) : (
+            <>
+              {/* Products table */}
+              <DataTable columns={COLUMNS} minWidth="min-w-[820px]">
+                {list.pageItems.map((product, index) => {
+                  const id = product.id ?? product._id ?? index
+                  const price = Number(product.price)
+                  const discountPrice = Number(product.discountPrice)
+
+                  const hasDiscount =
+                    Number.isFinite(price) &&
+                    Number.isFinite(discountPrice) &&
+                    discountPrice > 0 &&
+                    discountPrice < price
+
+                  const status = getProductStatus(product)
+                  const categoryId = getProductCategoryId(product)
+
+                  const categoryName =
+                    product.category?.name ??
+                    (typeof product.category === "string"
+                      ? product.category
+                      : null) ??
+                    categoryNames[String(categoryId)] ??
+                    "Uncategorized"
+
+                  const productUrl = `/seller/products/${
+                    product.id ?? product._id
+                  }`
+
+                  const displayedStock =
+                    product.totalStock ?? product.quantity
+
+                  return (
+                    <TableRow key={id}>
+                      {/* Product */}
+                      <Td>
+                        <EntityCell
+                          image={product.image}
+                          icon={Package}
+                          name={formatText(product.name, "Unnamed product")}
+                          to={productUrl}
+                          fit="contain"
+                        />
+                      </Td>
+
+                      {/* Category */}
+                      <Td className="text-zinc-600">
+                        {String(categoryName).replace(/_/g, " ")}
+                      </Td>
+
+                      {/* Audience */}
+                      <Td className="text-zinc-600">
+                        {formatAudience(product.audience)}
+                      </Td>
+
+                      {/* Price */}
+                      <Td className="font-semibold text-zinc-900">
+                        {hasDiscount ? (
+                          <>
+                            Nrs {formatPrice(discountPrice)}
+
+                            <span className="ml-1 text-xs font-normal text-zinc-400 line-through">
+                              {formatPrice(price)}
+                            </span>
+                          </>
+                        ) : Number.isFinite(price) ? (
+                          `Nrs ${formatPrice(price)}`
+                        ) : Number.isFinite(Number(product.sellingPrice)) ? (
+                          `Nrs ${formatPrice(product.sellingPrice)}`
+                        ) : (
+                          "Price unavailable"
+                        )}
+                      </Td>
+
+                      {/* Stock */}
+                      <Td className="text-zinc-600">
+                        {formatText(displayedStock)}
+                      </Td>
+
+                      {/* Status */}
+                      <Td>
+                        <StatusPill tone={STATUS_TONES[status] ?? "gray"}>
+                          {formatStatus(status)}
+                        </StatusPill>
+                      </Td>
+
+                      {/* Actions */}
+                      <Td align="right" className="whitespace-nowrap">
+                        <RowLink to={productUrl}>View</RowLink>
+
+                        {EDIT_ENABLED ? (
+                          <RowButton onClick={() => openEdit(product)}>
+                            Edit
+                          </RowButton>
+                        ) : (
+                          <RowButton
+                            disabled
+                            title="Editing is not available yet"
+                          >
+                            Edit
+                          </RowButton>
+                        )}
+
+                        <RowButton
+                          danger
+                          disabled={deletingId === product.id}
+                          onClick={() => handleDelete(product)}
+                        >
+                          {deletingId === product.id
+                            ? "Deleting..."
+                            : "Delete"}
+                        </RowButton>
+                      </Td>
+                    </TableRow>
+                  )
+                })}
+              </DataTable>
+
+              {/* Pagination */}
+              <TableFooter
+                from={list.from}
+                to={list.to}
+                total={list.total}
+                page={list.page}
+                totalPages={list.totalPages}
+                onPageChange={list.setPage}
+              />
+            </>
+          )}
+        </DataCard>
+      </div>
 
       {/* Add / Edit product modal */}
       {showForm && (

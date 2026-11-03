@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { ChevronLeft, ChevronRight, Search, X } from "lucide-react"
@@ -142,18 +141,97 @@ export function SearchInput({
   value,
   onChange,
   placeholder = "Search name or slug",
+  results,
+  onSelect,
+  getResultLabel = (item) => item?.name ?? "Unnamed result",
+  getResultDescription,
+  loading = false,
+  emptyMessage = "No results found.",
 }) {
+  const wrapperRef = useRef(null)
+  const [open, setOpen] = useState(false)
+
+  const hasPopup = Array.isArray(results) && typeof onSelect === "function"
+
+  useEffect(() => {
+    if (!hasPopup) return
+
+    const handleOutsideClick = (event) => {
+      if (!wrapperRef.current?.contains(event.target)) {
+        setOpen(false)
+      }
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setOpen(false)
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick)
+    document.addEventListener("keydown", handleKeyDown)
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick)
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [hasPopup])
+
   return (
-    <div className="relative w-full sm:max-w-xs">
-      <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+    <div
+      ref={wrapperRef}
+      className="relative w-full sm:max-w-xs"
+    >
+      <Search className="pointer-events-none absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2 text-zinc-400" />
 
       <input
         type="search"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => {
+          if (hasPopup) setOpen(true)
+        }}
+        onChange={(event) => {
+          onChange(event.target.value)
+          if (hasPopup) setOpen(true)
+        }}
         placeholder={placeholder}
+        autoComplete="off"
         className="w-full rounded-xl border border-yz-border bg-white py-2.5 pr-3 pl-9 text-sm transition outline-none focus:border-brand-red-600 focus:ring-1 focus:ring-brand-red-600"
       />
+
+      {hasPopup && open && (
+        <div className="absolute top-full right-0 left-0 z-50 mt-2 max-h-72 overflow-y-auto rounded-xl border border-yz-border bg-white p-1 shadow-xl">
+          {loading ? (
+            <p className="px-3 py-4 text-center text-sm text-zinc-500">
+              Loading results...
+            </p>
+          ) : results.length === 0 ? (
+            <p className="px-3 py-4 text-center text-sm text-zinc-500">
+              {emptyMessage}
+            </p>
+          ) : (
+            results.map((item, index) => (
+              <button
+                key={item?.id ?? item?._id ?? item?.orderId ?? index}
+                type="button"
+                onClick={() => {
+                  onSelect(item)
+                  setOpen(false)
+                }}
+                className="flex w-full flex-col rounded-lg px-3 py-2.5 text-left transition hover:bg-yz-bg"
+              >
+                <span className="text-sm font-medium text-zinc-900">
+                  {getResultLabel(item)}
+                </span>
+
+                {getResultDescription?.(item) && (
+                  <span className="mt-0.5 text-xs text-zinc-500">
+                    {getResultDescription(item)}
+                  </span>
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,3 +1,4 @@
+
 import {
   useMutation,
   useQuery,
@@ -7,9 +8,11 @@ import {
 import {
   getOrders,
   getOrderById,
+  createOrder,
   updateOrderStatus,
 } from "../services/orderService";
 
+// Fetch orders
 export const useOrders = (filters = {}) => {
   const {
     storeId,
@@ -50,6 +53,7 @@ export const useOrders = (filters = {}) => {
   });
 };
 
+// Fetch individual order
 export const useOrder = (storeId, orderId) =>
   useQuery({
     queryKey: ["order", storeId, orderId],
@@ -58,6 +62,23 @@ export const useOrder = (storeId, orderId) =>
     staleTime: 30 * 1000,
   });
 
+// Create order
+export const useCreateOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ storeId, body }) =>
+      createOrder(storeId, body),
+
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["orders", variables.storeId],
+      });
+    },
+  });
+};
+
+// Update order status
 export const useUpdateOrderStatus = () => {
   const queryClient = useQueryClient();
 
@@ -71,7 +92,11 @@ export const useUpdateOrderStatus = () => {
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["order", variables.storeId, variables.orderId],
+        queryKey: [
+          "order",
+          variables.storeId,
+          variables.orderId,
+        ],
       });
     },
   });

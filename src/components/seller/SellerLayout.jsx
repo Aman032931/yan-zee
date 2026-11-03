@@ -39,7 +39,6 @@ const NAV_ITEMS = [
 
 const STORE_KEY = "yanzee_store_id"
 
-// Display the uploaded logo, or a fallback icon.
 function StoreLogo({ store, size = "h-10 w-10" }) {
   const [imageFailed, setImageFailed] = useState(false)
   const logoUrl = store?.logo || ""
@@ -85,6 +84,28 @@ export default function SellerLayout() {
   const shop =
     stores.find((store) => store.id === selectedId) ?? stores[0] ?? null
 
+  // Keep the selected store ID synchronized with localStorage.
+  useEffect(() => {
+    if (!stores.length) return
+
+    const savedStoreExists = stores.some(
+      (store) => store.id === selectedId
+    )
+
+    if (!savedStoreExists) {
+      const firstStore = stores[0]
+
+      setSelectedId(firstStore.id)
+
+      try {
+        localStorage.setItem(STORE_KEY, firstStore.id)
+      } catch {
+        // Keep selection in component state.
+      }
+    }
+  }, [stores, selectedId])
+
+  // Close store dropdown when clicking outside or pressing Escape.
   useEffect(() => {
     if (!storeMenuOpen) return
 
@@ -114,6 +135,7 @@ export default function SellerLayout() {
     }
   }, [storeMenuOpen])
 
+  // Close Add Store popup with Escape.
   useEffect(() => {
     if (!addingStore) return
 
@@ -230,10 +252,11 @@ export default function SellerLayout() {
   }
 
   const sidebar = (
-    <aside className="flex h-full w-65 shrink-0 flex-col overflow-hidden border-r border-yz-border bg-white">
+    <aside className="flex h-full w-[272px] shrink-0 flex-col overflow-hidden border-r border-yz-border bg-white">
+      {/* Brand */}
       <Link
         to="/"
-        className="flex items-center gap-3 border-b border-yz-border px-5 py-5"
+        className="flex min-h-[85px] items-center gap-3 border-b border-yz-border px-5 py-5"
         onClick={() => setMobileOpen(false)}
       >
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-red-600 text-white shadow-sm">
@@ -442,13 +465,14 @@ export default function SellerLayout() {
         </div>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <header className="z-30 flex h-[68px] shrink-0 items-center justify-between border-b border-yz-border bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8">
+          {/* Top header */}
+          <header className="z-30 flex h-[68px] shrink-0 items-center justify-between border-b border-yz-border bg-white px-4 sm:px-6 lg:px-8">
             <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
                 aria-label="Open navigation"
                 onClick={() => setMobileOpen(true)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-yz-border text-zinc-700 hover:bg-yz-bg lg:hidden"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-yz-border text-zinc-700 transition-colors hover:bg-yz-bg lg:hidden"
               >
                 <Menu size={20} />
               </button>
@@ -476,7 +500,7 @@ export default function SellerLayout() {
               <Link
                 to="/"
                 aria-label="Visit YanZee storefront"
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-yz-border text-zinc-500 hover:border-brand-red-600 hover:text-brand-red-600"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-yz-border text-zinc-500 transition-colors hover:border-brand-red-600 hover:text-brand-red-600"
               >
                 <ExternalLink size={16} />
               </Link>
@@ -484,7 +508,7 @@ export default function SellerLayout() {
           </header>
 
           {/* Independently scrolling page content */}
-          <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 lg:p-8">
+          <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-yz-bg p-4 sm:p-6 lg:p-8">
             <Outlet
               context={{
                 shop,
