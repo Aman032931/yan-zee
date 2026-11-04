@@ -1,13 +1,18 @@
+import { useEffect, useMemo, useRef } from "react"
+import { useForm, useWatch } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 
-import { useState, useEffect, useRef } from "react"
 import { useAuth } from "../../context/useAuth"
 import { useCreateStore } from "../../hooks/useStores"
 import { STORE_CATEGORIES } from "../../services/storeService"
 
 const inputClass =
-  "w-full min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-brand-red-600 focus:bg-white focus:ring-2 focus:ring-red-100"
+  "w-full min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-brand-red-600 focus:bg-white focus:ring-2 focus:ring-red-100 aria-invalid:border-red-400"
 
 const labelClass = "mb-1.5 block text-sm font-medium text-gray-700"
+
+const MAX_LOGO_SIZE = 5 * 1024 * 1024
 
 const categoryLabel = (category) =>
   category
@@ -15,95 +20,115 @@ const categoryLabel = (category) =>
     .map((word) => word[0] + word.slice(1).toLowerCase())
     .join(" ")
 
-export default function CreateShopForm({ onCreated, onCancel }) {
+const storeSchema = z.object({
+  name: z.string().trim().min(1, "Store name is required"),
+  category: z.enum(STORE_CATEGORIES),
+  contactEmail: z
+    .string()
+    .trim()
+    .min(1, "Contact email is required")
+    .email("Enter a valid email address"),
+  contactPhone: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === "" || /^\+?[\d\s-]{7,15}$/.test(value),
+      "Enter a valid phone number"
+    ),
+  storeAddress: z.string().trim(),
+  logo: z
+    .instanceof(File)
+    .refine((file) => file.type.startsWith("image/"), "File must be an image")
+    .refine((file) => file.size <= MAX_LOGO_SIZE, "Logo must be under 5 MB")
+    .optional(),
+})
+
+function FieldError({ error }) {
+  if (!error) return null
+  return <p className="mt-1.5 text-xs text-red-600">{error.message}</p>
+}
+
+export default function CreateShopForm({ onCreated }) {
   const { currentUser } = useAuth()
   const createStore = useCreateStore()
+  const fileInputRef = useRef(null)
 
-  const [form, setForm] = useState({
-    name: "",
-    category: "GENERAL",
-    contactEmail: currentUser?.email || "",
-    contactPhone: currentUser?.phone || "",
-    storeAddress: "",
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    setError,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(storeSchema),
+    defaultValues: {
+      name: "",
+      category: "GENERAL",
+      contactEmail: currentUser?.email || "",
+      contactPhone: currentUser?.phone || "",
+      storeAddress: "",
+      logo: undefined,
+    },
   })
 
-  const [logoFile, setLogoFile] = useState(null)
-  const [preview, setPreview] = useState("")
-  const [error, setError] = useState("")
-
-  const fileInputRef = useRef(null)
-  const previewRef = useRef("")
+  // Preview is derived from the form value, so no setState inside an effect.
+  const logo = useWatch({ control, name: "logo" })
+  const preview = useMemo(
+    () => (logo ? URL.createObjectURL(logo) : ""),
+    [logo]
+  )
 
   useEffect(() => {
     return () => {
-      if (previewRef.current) {
-        URL.revokeObjectURL(previewRef.current)
-      }
+      if (preview) URL.revokeObjectURL(preview)
     }
-  }, [])
-
-  const setLogo = (file) => {
-    if (previewRef.current) {
-      URL.revokeObjectURL(previewRef.current)
-    }
-
-    const url = file ? URL.createObjectURL(file) : ""
-
-    previewRef.current = url
-    setPreview(url)
-    setLogoFile(file)
-  }
+  }, [preview])
 
   const handleFileChange = (event) => {
-    setLogo(event.target.files?.[0] ?? null)
+    setValue("logo", event.target.files?.[0], {
+      shouldValidate: true,
+      shouldDirty: true,
+    })
   }
 
   const clearLogo = () => {
-    setLogo(null)
+    setValue("logo", undefined, { shouldValidate: true })
 
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
   }
 
-  const handleChange = (field) => (event) => {
-    setForm((previous) => ({
-      ...previous,
-      [field]: event.target.value,
-    }))
-  }
-
-  const handleSubmit = async (event) => {
-    event.preventDefault()
-    setError("")
-
+  const onSubmit = async ({ logo: logoFile, ...values }) => {
+    // Same behavior as before: send only the fields that have a value.
     const payload = Object.fromEntries(
-      Object.entries(form)
-        .map(([key, value]) => [key, value.trim()])
-        .filter(([, value]) => value !== "")
+      Object.entries(values).filter(([, value]) => value !== "")
     )
 
     try {
       const store = await createStore.mutateAsync({
         ...payload,
-        logoFile,
+        logoFile: logoFile ?? null,
       })
 
       onCreated?.(store)
     } catch (err) {
-      setError(err.message || "Unable to create your store. Please try again.")
+      setError("root.server", {
+        message: err.message || "Unable to create your store. Please try again.",
+      })
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {error && (
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+      {errors.root?.server && (
         <div
           role="alert"
           className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
         >
           <span aria-hidden="true">!</span>
-          <p>{error}</p>
+          <p>{errors.root.server.message}</p>
         </div>
       )}
 
@@ -113,13 +138,13 @@ export default function CreateShopForm({ onCreated, onCancel }) {
         </label>
         <input
           id="store-name"
-          required
           autoFocus
-          value={form.name}
-          onChange={handleChange("name")}
           placeholder="e.g. My Fashion Store"
           className={inputClass}
+          aria-invalid={!!errors.name}
+          {...register("name")}
         />
+        <FieldError error={errors.name} />
       </div>
 
       <div>
@@ -128,10 +153,9 @@ export default function CreateShopForm({ onCreated, onCancel }) {
         </label>
         <select
           id="store-category"
-          required
-          value={form.category}
-          onChange={handleChange("category")}
           className={inputClass}
+          aria-invalid={!!errors.category}
+          {...register("category")}
         >
           {STORE_CATEGORIES.map((category) => (
             <option key={category} value={category}>
@@ -139,6 +163,7 @@ export default function CreateShopForm({ onCreated, onCancel }) {
             </option>
           ))}
         </select>
+        <FieldError error={errors.category} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -148,13 +173,13 @@ export default function CreateShopForm({ onCreated, onCancel }) {
           </label>
           <input
             id="store-email"
-            required
             type="email"
-            value={form.contactEmail}
-            onChange={handleChange("contactEmail")}
             placeholder="you@example.com"
             className={inputClass}
+            aria-invalid={!!errors.contactEmail}
+            {...register("contactEmail")}
           />
+          <FieldError error={errors.contactEmail} />
         </div>
 
         <div className="min-w-0">
@@ -164,29 +189,34 @@ export default function CreateShopForm({ onCreated, onCancel }) {
           <input
             id="store-phone"
             type="tel"
-            value={form.contactPhone}
-            onChange={handleChange("contactPhone")}
             placeholder="Phone number"
             className={inputClass}
+            aria-invalid={!!errors.contactPhone}
+            {...register("contactPhone")}
           />
+          <FieldError error={errors.contactPhone} />
         </div>
       </div>
 
       <div>
         <label htmlFor="store-address" className={labelClass}>
-          Store address <span className="font-normal text-gray-400">(optional)</span>
+          Store address{" "}
+          <span className="font-normal text-gray-400">(optional)</span>
         </label>
         <input
           id="store-address"
-          value={form.storeAddress}
-          onChange={handleChange("storeAddress")}
           placeholder="City or full address"
           className={inputClass}
+          aria-invalid={!!errors.storeAddress}
+          {...register("storeAddress")}
         />
+        <FieldError error={errors.storeAddress} />
       </div>
 
       <div>
-        <label className={labelClass}>Store logo <span className="font-normal text-gray-400">(optional)</span></label>
+        <label className={labelClass}>
+          Store logo <span className="font-normal text-gray-400">(optional)</span>
+        </label>
 
         <input
           ref={fileInputRef}
@@ -197,7 +227,7 @@ export default function CreateShopForm({ onCreated, onCancel }) {
           className="hidden"
         />
 
-        {logoFile ? (
+        {logo ? (
           <div className="flex min-w-0 items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
             <img
               src={preview}
@@ -207,10 +237,10 @@ export default function CreateShopForm({ onCreated, onCancel }) {
 
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-gray-800">
-                {logoFile.name}
+                {logo.name}
               </p>
               <p className="mt-0.5 text-xs text-gray-500">
-                {(logoFile.size / 1024).toFixed(0)} KB
+                {(logo.size / 1024).toFixed(0)} KB
               </p>
             </div>
 
@@ -267,6 +297,8 @@ export default function CreateShopForm({ onCreated, onCancel }) {
             </span>
           </label>
         )}
+
+        <FieldError error={errors.logo} />
       </div>
 
       <div className="border-t border-gray-100 pt-4">

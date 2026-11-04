@@ -1,7 +1,9 @@
 import { useState } from "react"
 import { useOutletContext } from "react-router-dom"
 import { Pencil, Plus, Tag, Trash2 } from "lucide-react"
-
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import {
   useBrands,
   useCreateBrand,
@@ -41,48 +43,63 @@ const COLUMNS = [
 ]
 
 /* ---------------- Add / Edit form (popup) ---------------- */
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024
+
+const imageField = z
+  .instanceof(File)
+  .refine((file) => file.type.startsWith("image/"), "File must be an image")
+  .refine((file) => file.size <= MAX_IMAGE_SIZE, "Image must be under 5 MB")
+  .nullable()
+  .optional()
+
+const brandSchema = z.object({
+  name: z.string().trim().min(1, "Brand name is required"),
+  isAvailable: z.boolean(),
+  logoFile: imageField,
+  seoImageFile: imageField,
+})
+
+function FieldError({ error }) {
+  if (!error) return null
+  return <p className="mt-1.5 text-xs text-red-600">{error.message}</p>
+}
+
 function BrandForm({ storeId, brand, onDone }) {
   const isEdit = Boolean(brand)
   const create = useCreateBrand(storeId)
   const update = useUpdateBrand(storeId)
   const saving = create.isPending || update.isPending
 
-  const [name, setName] = useState(brand?.name ?? "")
-  const [isAvailable, setIsAvailable] = useState(brand?.isAvailable ?? true)
-  const [logoFile, setLogoFile] = useState(null)
-  const [seoImageFile, setSeoImageFile] = useState(null)
-  const [error, setError] = useState("")
+  const {
+    register,
+    handleSubmit,
+    control,
+    setError,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(brandSchema),
+    // The popup is remounted per brand (key on <BrandForm />),
+    // so defaultValues is enough and no reset() is needed.
+    defaultValues: {
+      name: brand?.name ?? "",
+      isAvailable: brand?.isAvailable ?? true,
+      logoFile: null,
+      seoImageFile: null,
+    },
+  })
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
-
-    const trimmed = name.trim()
-    if (!trimmed) {
-      setError("Brand name is required.")
-      return
-    }
-
+  const onSubmit = async (values) => {
     try {
       if (isEdit) {
-        await update.mutateAsync({
-          brandId: brand.id,
-          name: trimmed,
-          isAvailable,
-          logoFile,
-          seoImageFile,
-        })
+        await update.mutateAsync({ brandId: brand.id, ...values })
       } else {
-        await create.mutateAsync({
-          name: trimmed,
-          isAvailable,
-          logoFile,
-          seoImageFile,
-        })
+        await create.mutateAsync(values)
       }
       onDone()
     } catch (err) {
-      setError(err.message || "Unable to save brand.")
+      setError("root.server", {
+        message: err.message || "Unable to save brand.",
+      })
     }
   }
 
@@ -92,47 +109,64 @@ function BrandForm({ storeId, brand, onDone }) {
       onClose={onDone}
       busy={saving}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <ErrorBanner>{error}</ErrorBanner>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <ErrorBanner>{errors.root?.server?.message}</ErrorBanner>
 
         <div>
           <label className={labelClass}>
             Brand name <Req />
           </label>
           <input
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            {...register("name")}
             className={inputClass}
             placeholder="e.g. Nike"
+            aria-invalid={!!errors.name}
           />
+          <FieldError error={errors.name} />
         </div>
 
-        <ImageUploadField
-          id="brand-logo"
-          label="Logo (optional)"
-          file={logoFile}
-          currentUrl={brand?.logo}
-          onChange={setLogoFile}
-          uploadText="Upload logo"
-          fit="contain"
-        />
+        <div>
+          <Controller
+            control={control}
+            name="logoFile"
+            render={({ field }) => (
+              <ImageUploadField
+                id="brand-logo"
+                label="Logo (optional)"
+                file={field.value}
+                currentUrl={brand?.logo}
+                onChange={field.onChange}
+                uploadText="Upload logo"
+                fit="contain"
+              />
+            )}
+          />
+          <FieldError error={errors.logoFile} />
+        </div>
 
-        <ImageUploadField
-          id="brand-seo-image"
-          label="SEO image (optional)"
-          file={seoImageFile}
-          currentUrl={brand?.seoImage}
-          onChange={setSeoImageFile}
-          uploadText="Upload SEO image"
-          fit="contain"
-        />
+        <div>
+          <Controller
+            control={control}
+            name="seoImageFile"
+            render={({ field }) => (
+              <ImageUploadField
+                id="brand-seo-image"
+                label="SEO image (optional)"
+                file={field.value}
+                currentUrl={brand?.seoImage}
+                onChange={field.onChange}
+                uploadText="Upload SEO image"
+                fit="contain"
+              />
+            )}
+          />
+          <FieldError error={errors.seoImageFile} />
+        </div>
 
         <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-700">
           <input
             type="checkbox"
-            checked={isAvailable}
-            onChange={(e) => setIsAvailable(e.target.checked)}
+            {...register("isAvailable")}
             className="h-4 w-4 accent-brand-red-600"
           />
           Available to use on products
@@ -150,6 +184,7 @@ function BrandForm({ storeId, brand, onDone }) {
     </FormModal>
   )
 }
+
 
 /* ---------------- Page ---------------- */
 export default function SellerBrands() {

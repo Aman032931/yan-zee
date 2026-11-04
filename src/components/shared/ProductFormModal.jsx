@@ -1,9 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useForm,
+  useFieldArray,
+  useWatch,
+  Controller,
+} from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 import { getCategories } from "../../services/categoryService";
 import { getBrands } from "../../services/brandService";
 
-import { useCreateCategory } from "../../hooks/useCategories";
+import { useCategories, useCreateCategory } from "../../hooks/useCategories";
 import { useBrands, useCreateBrand } from "../../hooks/useBrands";
 
 import {
@@ -33,6 +41,10 @@ const labelClass = "mb-1 block text-xs font-medium text-gray-600";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
+/* ------------------------------------------------------------------ */
+/* Helpers                                                             */
+/* ------------------------------------------------------------------ */
+
 const emptyVariant = () => ({
   size: "",
   colorName: "",
@@ -55,6 +67,11 @@ const parseTags = (text) => [
       .filter(Boolean),
   ),
 ];
+
+const toText = (value) =>
+  value === null || value === undefined ? "" : String(value);
+
+const isBlank = (value) => String(value ?? "").trim() === "";
 
 function extractCategories(response) {
   const payload = response?.data ?? response;
@@ -119,6 +136,19 @@ function checkImage(file) {
   return "";
 }
 
+// Object URL for a local file, revoked automatically when it changes.
+function useObjectUrl(file) {
+  const url = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
+
+  useEffect(() => {
+    return () => {
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [url]);
+
+  return url;
+}
+
 function toForm(product) {
   const images =
     Array.isArray(product?.imageUrls) && product.imageUrls.length > 0
@@ -128,32 +158,33 @@ function toForm(product) {
         : [];
 
   return {
-    name: product?.name ?? "",
-    brandId: product?.brandId ?? product?.brand?.id ?? "",
-    categoryId:
+    name: toText(product?.name),
+    brandId: toText(product?.brandId ?? product?.brand?.id),
+    categoryId: toText(
       product?.categoryIds?.[0] ??
-      product?.categories?.[0]?.id ??
-      product?.category?.id ??
-      "",
+        product?.categories?.[0]?.id ??
+        product?.category?.id,
+    ),
     audience: product?.audience ?? "UNISEX",
     status: product?.status ?? "ACTIVE",
     isAvailable: product?.isAvailable ?? true,
-    slug: product?.slug ?? "",
-    productDescription:
-      product?.productDescription ?? product?.description ?? "",
-    longDescription: product?.longDescription ?? "",
+    slug: toText(product?.slug),
+    productDescription: toText(
+      product?.productDescription ?? product?.description,
+    ),
+    longDescription: toText(product?.longDescription),
     imageUrls: images,
     tags: Array.isArray(product?.tags) ? product.tags.join(", ") : "",
     releaseDate: product?.releaseDate
       ? String(product.releaseDate).slice(0, 10)
       : "",
-    seoTitle: product?.seoTitle ?? "",
-    seoDescription: product?.seoDescription ?? "",
-    seoImage: product?.seoImage ?? "",
-    sellingPrice: product?.sellingPrice ?? product?.price ?? "",
-    crossedPrice: product?.crossedPrice ?? product?.discountPrice ?? "",
-    quantity: product?.quantity ?? product?.totalStock ?? "",
-    weight: product?.weight ?? "",
+    seoTitle: toText(product?.seoTitle),
+    seoDescription: toText(product?.seoDescription),
+    seoImage: toText(product?.seoImage),
+    sellingPrice: toText(product?.sellingPrice ?? product?.price),
+    crossedPrice: toText(product?.crossedPrice ?? product?.discountPrice),
+    quantity: toText(product?.quantity ?? product?.totalStock),
+    weight: toText(product?.weight),
   };
 }
 
@@ -189,81 +220,25 @@ function pickChanged(now, before, keys) {
   return changed;
 }
 
-function buildVariants(variants) {
-  if (variants.length === 0) {
-    return { error: "Add at least one product variant." };
-  }
-
-  const result = [];
-
-  for (let i = 0; i < variants.length; i += 1) {
-    const variant = variants[i];
-    const label = `Variant ${i + 1}`;
-
+function buildVariantPayload(variants) {
+  return variants.map((variant) => {
     const size = variant.size.trim();
     const colorName = variant.colorName.trim();
-    const sellingPrice = Number(variant.sellingPrice);
-    const crossedPrice =
-      variant.crossedPrice === "" ? null : Number(variant.crossedPrice);
-    const costPrice =
-      variant.costPrice === "" ? null : Number(variant.costPrice);
-    const quantity = Number(variant.quantity);
-    const weight = variant.weight === "" ? null : Number(variant.weight);
 
-    if (!size || !colorName) {
-      return { error: `${label}: enter both size and color name.` };
-    }
+    const crossedPrice = isBlank(variant.crossedPrice)
+      ? null
+      : Number(variant.crossedPrice);
+    const costPrice = isBlank(variant.costPrice)
+      ? null
+      : Number(variant.costPrice);
+    const weight = isBlank(variant.weight) ? null : Number(variant.weight);
 
-    if (!/^#[0-9a-fA-F]{6}$/.test(variant.colorCode)) {
-      return { error: `${label}: select a valid color.` };
-    }
-
-    if (!Number.isFinite(sellingPrice) || sellingPrice <= 0) {
-      return { error: `${label}: selling price must be greater than 0.` };
-    }
-
-    if (
-      crossedPrice !== null &&
-      (!Number.isFinite(crossedPrice) || crossedPrice < sellingPrice)
-    ) {
-      return {
-        error: `${label}: crossed-out price must be at least the selling price.`,
-      };
-    }
-
-    if (costPrice !== null && (!Number.isFinite(costPrice) || costPrice < 0)) {
-      return { error: `${label}: cost price must be 0 or greater.` };
-    }
-
-    if (!Number.isInteger(quantity) || quantity < 0) {
-      return {
-        error: `${label}: quantity must be a whole number of 0 or more.`,
-      };
-    }
-
-    if (weight !== null && (!Number.isFinite(weight) || weight < 0)) {
-      return { error: `${label}: weight must be 0 or greater.` };
-    }
-
-    const duplicate = result.some(
-      (item) =>
-        item.size.toLowerCase() === size.toLowerCase() &&
-        item.name.split(" - ")[0].toLowerCase() ===
-          colorName.toLowerCase(),
-    );
-
-    if (duplicate) {
-      return {
-        error: `${label}: this size and color combination already exists.`,
-      };
-    }
-
-    result.push({
+    return {
       name: `${colorName} - ${size}`,
       size,
       colorCodes: [variant.colorCode],
-      sellingPrice,
-      quantity,
+      sellingPrice: Number(variant.sellingPrice),
+      quantity: Number(variant.quantity),
       ...(crossedPrice !== null && { crossedPrice }),
       ...(costPrice !== null && { costPrice }),
       ...(weight !== null && { weight }),
@@ -272,11 +247,200 @@ function buildVariants(variants) {
       ...(variant.altBarcode.trim() && {
         altBarcode: variant.altBarcode.trim(),
       }),
-    });
+    };
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Zod schemas                                                         */
+/* ------------------------------------------------------------------ */
+
+function addIssue(ctx, path, message) {
+  ctx.addIssue({ code: "custom", message, path });
+}
+
+// Shared by the simple product form and each variant row.
+function validatePricing(source, ctx, basePath) {
+  const at = (field) => [...basePath, field];
+
+  const sellingPrice = Number(source.sellingPrice);
+
+  if (
+    isBlank(source.sellingPrice) ||
+    !Number.isFinite(sellingPrice) ||
+    sellingPrice <= 0
+  ) {
+    addIssue(ctx, at("sellingPrice"), "Selling price must be greater than 0");
   }
 
-  return { variants: result };
+  if (!isBlank(source.crossedPrice)) {
+    const crossedPrice = Number(source.crossedPrice);
+
+    if (!Number.isFinite(crossedPrice) || crossedPrice < sellingPrice) {
+      addIssue(
+        ctx,
+        at("crossedPrice"),
+        "Crossed-out price must be at least the selling price",
+      );
+    }
+  }
+
+  if (!isBlank(source.costPrice)) {
+    const costPrice = Number(source.costPrice);
+
+    if (!Number.isFinite(costPrice) || costPrice < 0) {
+      addIssue(ctx, at("costPrice"), "Cost price must be 0 or greater");
+    }
+  }
+
+  const quantity = Number(source.quantity);
+
+  if (isBlank(source.quantity) || !Number.isInteger(quantity) || quantity < 0) {
+    addIssue(
+      ctx,
+      at("quantity"),
+      "Quantity must be a whole number of 0 or more",
+    );
+  }
+
+  if (!isBlank(source.weight)) {
+    const weight = Number(source.weight);
+
+    if (!Number.isFinite(weight) || weight < 0) {
+      addIssue(ctx, at("weight"), "Weight must be 0 or greater");
+    }
+  }
 }
+
+function validateVariants(variants, ctx) {
+  if (variants.length === 0) {
+    addIssue(ctx, ["variants"], "Add at least one product variant");
+    return;
+  }
+
+  const seen = new Set();
+
+  variants.forEach((variant, index) => {
+    const base = ["variants", index];
+    const size = variant.size.trim();
+    const colorName = variant.colorName.trim();
+
+    if (!size) addIssue(ctx, [...base, "size"], "Size is required");
+
+    if (!colorName) {
+      addIssue(ctx, [...base, "colorName"], "Color name is required");
+    }
+
+    if (!/^#[0-9a-fA-F]{6}$/.test(variant.colorCode)) {
+      addIssue(ctx, [...base, "colorCode"], "Select a valid color");
+    }
+
+    validatePricing(variant, ctx, base);
+
+    if (size && colorName) {
+      const key = `${colorName.toLowerCase()}|${size.toLowerCase()}`;
+
+      if (seen.has(key)) {
+        addIssue(
+          ctx,
+          [...base, "size"],
+          "This size and color combination already exists",
+        );
+      }
+
+      seen.add(key);
+    }
+  });
+}
+
+const variantSchema = z.object({
+  size: z.string().trim(),
+  colorName: z.string().trim(),
+  colorCode: z.string(),
+  sellingPrice: z.string(),
+  crossedPrice: z.string(),
+  costPrice: z.string(),
+  quantity: z.string(),
+  weight: z.string(),
+  sku: z.string().trim(),
+  hsCode: z.string().trim(),
+  altBarcode: z.string().trim(),
+});
+
+function buildProductSchema(isEdit) {
+  return z
+    .object({
+      name: z.string().trim().min(1, "Product name is required"),
+      brandId: z.string(),
+      categoryId: z.string().min(1, "Please select a category"),
+      audience: z.string(),
+      status: z.string(),
+      isAvailable: z.boolean(),
+      slug: z.string().trim(),
+      productDescription: z.string().trim(),
+      longDescription: z.string().trim(),
+      imageUrls: z.array(z.string()),
+      tags: z.string(),
+      releaseDate: z.string(),
+      seoTitle: z.string().trim(),
+      seoDescription: z.string().trim(),
+      seoImage: z.string(),
+      hasVariants: z.boolean(),
+      sellingPrice: z.string(),
+      crossedPrice: z.string(),
+      quantity: z.string(),
+      weight: z.string(),
+      variants: z.array(variantSchema),
+    })
+    .superRefine((values, ctx) => {
+      // Editing never touches pricing or variants.
+      if (isEdit) return;
+
+      if (values.hasVariants) {
+        validateVariants(values.variants, ctx);
+      } else {
+        validatePricing(values, ctx, []);
+      }
+    });
+}
+
+const imageFileSchema = z
+  .instanceof(File)
+  .superRefine((file, ctx) => {
+    const problem = checkImage(file);
+
+    if (problem) {
+      ctx.addIssue({ code: "custom", message: problem });
+    }
+  })
+  .nullable()
+  .optional();
+
+const newBrandSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Brand name is required")
+    .max(100, "Brand name must be 100 characters or fewer"),
+  logo: imageFileSchema,
+});
+
+const newCategorySchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Category name is required")
+    .max(100, "Category name must be 100 characters or fewer"),
+  description: z
+    .string()
+    .trim()
+    .max(1000, "Description must be 1000 characters or fewer"),
+  photo: imageFileSchema,
+});
+
+/* ------------------------------------------------------------------ */
+/* Small UI pieces                                                     */
+/* ------------------------------------------------------------------ */
 
 function Section({ title, children }) {
   return (
@@ -298,7 +462,16 @@ function Req() {
   );
 }
 
-// Popup shown above the form so errors are never hidden off-screen.
+function FieldError({ error }) {
+  if (!error?.message) return null;
+  return (
+    <p role="alert" className="mt-1 break-words text-xs text-red-600">
+      {error.message}
+    </p>
+  );
+}
+
+// Popup shown above the form so upload and save errors are never hidden.
 function ErrorPopup({ message, onClose }) {
   useEffect(() => {
     if (!message) return undefined;
@@ -366,6 +539,408 @@ function ErrorPopup({ message, onClose }) {
   );
 }
 
+// Dashed upload box with preview, used by the inline brand/category panels.
+function ImagePicker({
+  label,
+  file,
+  preview,
+  onChange,
+  disabled,
+  fit = "contain",
+  uploadText,
+  changeText,
+  error,
+}) {
+  const inputRef = useRef(null);
+
+  const clear = () => {
+    onChange(null);
+
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div>
+      <label className={labelClass}>{label}</label>
+
+      <label className="flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-4 transition hover:border-gray-500">
+        {preview ? (
+          <img
+            src={preview}
+            alt={`${label} preview`}
+            className={`mb-3 h-24 w-24 rounded-lg border border-gray-200 ${
+              fit === "cover" ? "object-cover" : "object-contain"
+            }`}
+          />
+        ) : (
+          <div className="mb-3 flex h-24 w-24 items-center justify-center rounded-lg bg-gray-100 text-gray-400">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="30"
+              height="30"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="m21 15-5-5L5 21" />
+            </svg>
+          </div>
+        )}
+
+        <span className="text-sm font-medium text-gray-800">
+          {file ? changeText : uploadText}
+        </span>
+
+        <span className="mt-1 text-center text-xs text-gray-500">
+          Optional · Maximum 5 MB
+        </span>
+
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          disabled={disabled}
+          onChange={(event) => {
+            const picked = event.target.files?.[0];
+            if (picked) onChange(picked);
+          }}
+        />
+      </label>
+
+      {file && (
+        <div className="mt-3 flex min-w-0 items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-2">
+          <div className="min-w-0 flex-1">
+            <p
+              title={file.name}
+              className="truncate text-xs font-medium text-gray-800"
+            >
+              {file.name}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              {(file.size / 1024).toFixed(0)} KB
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={clear}
+            disabled={disabled}
+            className="shrink-0 rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+          >
+            Remove
+          </button>
+        </div>
+      )}
+
+      <FieldError error={error} />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Inline "create brand" panel                                         */
+/* ------------------------------------------------------------------ */
+
+// This panel sits inside the product <form>, so it never renders a nested
+// <form>. Its own useForm is submitted by the button (and the Enter key).
+function NewBrandPanel({ storeId, mutation, onCreated, onClose }) {
+  const creating = mutation.isPending;
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    setError,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(newBrandSchema),
+    defaultValues: { name: "", logo: null },
+  });
+
+  const logo = useWatch({ control, name: "logo" });
+  const preview = useObjectUrl(logo);
+
+  const onSubmit = async ({ name, logo: logoFile }) => {
+    if (!storeId) {
+      setError("root.server", {
+        message: "Store ID is missing. Please select your store.",
+      });
+      return;
+    }
+
+    try {
+      const response = await mutation.mutateAsync({
+        name,
+        logoFile: logoFile || undefined,
+        isAvailable: true,
+      });
+
+      let created = extractCreatedBrand(response);
+
+      if (!created?.id) {
+        const items = await getBrands(storeId, { page: 1, limit: 100 });
+
+        created = (Array.isArray(items) ? items : []).find(
+          (brand) => brand.name?.trim().toLowerCase() === name.toLowerCase(),
+        );
+      }
+
+      onCreated(created?.id ? String(created.id) : "");
+    } catch (err) {
+      setError("root.server", {
+        message: err?.message || "Unable to create brand.",
+      });
+    }
+  };
+
+  const submit = handleSubmit(onSubmit);
+
+  return (
+    <section className="w-full min-w-0 space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-5">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900">Create brand</h3>
+        <p className="mt-1 text-xs text-gray-500">
+          Enter a brand name and optionally upload its logo.
+        </p>
+      </div>
+
+      <div>
+        <label className={labelClass}>
+          Brand name <Req />
+        </label>
+        <input
+          autoFocus
+          maxLength={100}
+          placeholder="e.g. Nike"
+          className={inputClass}
+          disabled={creating}
+          aria-invalid={!!errors.name}
+          {...register("name")}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              submit();
+            }
+          }}
+        />
+        <FieldError error={errors.name} />
+      </div>
+
+      <ImagePicker
+        label="Brand logo"
+        file={logo}
+        preview={preview}
+        disabled={creating}
+        fit="contain"
+        uploadText="Upload logo"
+        changeText="Choose another logo"
+        error={errors.logo}
+        onChange={(file) =>
+          setValue("logo", file, { shouldValidate: true, shouldDirty: true })
+        }
+      />
+
+      {errors.root?.server && (
+        <p role="alert" className="break-words text-xs text-red-600">
+          {errors.root.server.message}
+        </p>
+      )}
+
+      <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-3">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={creating}
+          className="rounded border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-white disabled:opacity-50"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={submit}
+          disabled={creating || !storeId}
+          className="rounded bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {creating ? "Creating brand..." : "Create brand"}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Inline "create category" panel                                      */
+/* ------------------------------------------------------------------ */
+
+function NewCategoryPanel({ storeId, mutation, onCreated, onClose }) {
+  const creating = mutation.isPending;
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    setError,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(newCategorySchema),
+    defaultValues: { name: "", description: "", photo: null },
+  });
+
+  const photo = useWatch({ control, name: "photo" });
+  const preview = useObjectUrl(photo);
+
+  const onSubmit = async ({ name, description, photo: photoFile }) => {
+    if (!storeId) {
+      setError("root.server", {
+        message: "Store ID is missing. Please select your store.",
+      });
+      return;
+    }
+
+    try {
+      const response = await mutation.mutateAsync({
+        name,
+        ...(description ? { description } : {}),
+        imageFile: photoFile,
+        isAvailable: true,
+      });
+
+      let created = extractCreatedCategory(response);
+
+      if (!created?.id) {
+        try {
+          const refreshed = await getCategories(storeId, {
+            page: 1,
+            limit: 100,
+          });
+
+          created = extractCategories(refreshed).find(
+            (category) =>
+              category.name?.trim().toLowerCase() === name.toLowerCase() &&
+              category.isAvailable !== false,
+          );
+        } catch {
+          // The category list refreshes on its own after creation.
+        }
+      }
+
+      onCreated(created?.id ? String(created.id) : "");
+    } catch (err) {
+      setError("root.server", {
+        message: err?.message || "Unable to create category.",
+      });
+    }
+  };
+
+  const submit = handleSubmit(onSubmit);
+
+  return (
+    <section className="w-full min-w-0 space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-5">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900">
+          Create category
+        </h3>
+        <p className="mt-1 text-xs text-gray-500">
+          Add a category name, description, and optional photo.
+        </p>
+      </div>
+
+      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label className={labelClass}>
+            Category name <Req />
+          </label>
+          <input
+            autoFocus
+            maxLength={100}
+            placeholder="e.g. Running shoes"
+            className={inputClass}
+            disabled={creating}
+            aria-invalid={!!errors.name}
+            {...register("name")}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                submit();
+              }
+            }}
+          />
+          <FieldError error={errors.name} />
+        </div>
+
+        <div>
+          <label className={labelClass}>Description</label>
+          <textarea
+            rows={2}
+            maxLength={1000}
+            placeholder="Briefly describe this category"
+            className={`${inputClass} resize-none`}
+            disabled={creating}
+            {...register("description")}
+          />
+          <FieldError error={errors.description} />
+        </div>
+      </div>
+
+      <ImagePicker
+        label="Category photo"
+        file={photo}
+        preview={preview}
+        disabled={creating}
+        fit="cover"
+        uploadText="Upload photo"
+        changeText="Choose another photo"
+        error={errors.photo}
+        onChange={(file) =>
+          setValue("photo", file, { shouldValidate: true, shouldDirty: true })
+        }
+      />
+
+      {errors.root?.server && (
+        <p role="alert" className="break-words text-xs text-red-600">
+          {errors.root.server.message}
+        </p>
+      )}
+
+      <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-3">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={creating}
+          className="rounded border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-white disabled:opacity-50"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={submit}
+          disabled={creating || !storeId}
+          className="rounded bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {creating ? "Creating category..." : "Create category"}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Product form                                                        */
+/* ------------------------------------------------------------------ */
+
 export default function ProductFormModal({
   initialData,
   onSave,
@@ -373,23 +948,49 @@ export default function ProductFormModal({
   storeId,
 }) {
   const isEdit = Boolean(initialData);
+  const schema = useMemo(() => buildProductSchema(isEdit), [isEdit]);
 
-  const [form, setForm] = useState(() => toForm(initialData));
-
-  const [categories, setCategories] = useState([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
-  const [categoryError, setCategoryError] = useState("");
-
-  const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadingSeoImage, setUploadingSeoImage] = useState(false);
-  const [error, setError] = useState("");
-
-  // Brand data and creation.
   const {
-    data: brands = [],
-    isLoading: loadingBrands,
-  } = useBrands(storeId, {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    getValues,
+    setError: setFieldError,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      ...toForm(initialData),
+      hasVariants: false,
+      variants: [emptyVariant()],
+    },
+  });
+
+  const {
+    fields: variantFields,
+    append: appendVariant,
+    remove: removeVariant,
+  } = useFieldArray({ control, name: "variants" });
+
+  const hasVariants = useWatch({ control, name: "hasVariants" });
+  const variantValues = useWatch({ control, name: "variants" });
+  const imageUrls = useWatch({ control, name: "imageUrls" }) ?? [];
+  const seoImage = useWatch({ control, name: "seoImage" });
+
+  // Categories.
+  const {
+    data: categories = [],
+    isLoading: loadingCategories,
+    error: categoriesLoadError,
+  } = useCategories(storeId, { page: 1, limit: 100 });
+
+  const categoryError = !storeId
+    ? "Store ID is missing. Please select your store."
+    : categoriesLoadError?.message || "";
+
+  // Brands.
+  const { data: brands = [], isLoading: loadingBrands } = useBrands(storeId, {
     page: 1,
     limit: 100,
   });
@@ -397,278 +998,24 @@ export default function ProductFormModal({
   const createBrandMutation = useCreateBrand(storeId);
   const creatingBrand = createBrandMutation.isPending;
 
-  const [showNewBrand, setShowNewBrand] = useState(false);
-  const [newBrandName, setNewBrandName] = useState("");
-  const [newBrandImage, setNewBrandImage] = useState(null);
-  const [newBrandPreview, setNewBrandPreview] = useState("");
-  const [newBrandError, setNewBrandError] = useState("");
-
-  const brandFileInputRef = useRef(null);
-
-  // Category creation.
-  const [showNewCategory, setShowNewCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryDescription, setNewCategoryDescription] = useState("");
-  const [newCategoryImage, setNewCategoryImage] = useState(null);
-  const [newCategoryPreview, setNewCategoryPreview] = useState("");
-  const [newCategoryError, setNewCategoryError] = useState("");
-
   const createCategoryMutation = useCreateCategory(storeId);
   const creatingCategory = createCategoryMutation.isPending;
 
-  const categoryFileInputRef = useRef(null);
+  const [showNewBrand, setShowNewBrand] = useState(false);
+  const [showNewCategory, setShowNewCategory] = useState(false);
 
-  // Variants.
-  const [hasVariants, setHasVariants] = useState(false);
-  const [variants, setVariants] = useState([emptyVariant()]);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingSeoImage, setUploadingSeoImage] = useState(false);
 
-  // Brand image preview.
-  useEffect(() => {
-    if (!newBrandImage) {
-      setNewBrandPreview("");
-      return undefined;
-    }
+  // Upload and save failures (field errors are shown under each field).
+  const [popupError, setPopupError] = useState("");
 
-    const objectUrl = URL.createObjectURL(newBrandImage);
-    setNewBrandPreview(objectUrl);
-
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [newBrandImage]);
-
-  // Category image preview.
-  useEffect(() => {
-    if (!newCategoryImage) {
-      setNewCategoryPreview("");
-      return undefined;
-    }
-
-    const objectUrl = URL.createObjectURL(newCategoryImage);
-    setNewCategoryPreview(objectUrl);
-
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [newCategoryImage]);
-
-  // Load categories.
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadCategories() {
-      if (!storeId) {
-        setCategories([]);
-        setCategoryError("Store ID is missing. Please select your store.");
-        setLoadingCategories(false);
-        return;
-      }
-
-      setLoadingCategories(true);
-      setCategoryError("");
-
-      try {
-        const response = await getCategories(storeId, {
-          page: 1,
-          limit: 100,
-        });
-
-        const items = extractCategories(response);
-
-        if (!cancelled) {
-          setCategories(items);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setCategories([]);
-          setCategoryError(err?.message || "Unable to load categories.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoadingCategories(false);
-        }
-      }
-    }
-
-    loadCategories();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [storeId]);
-
-  const refreshCategories = async (preferredCategoryId = null) => {
-    const response = await getCategories(storeId, {
-      page: 1,
-      limit: 100,
-    });
-
-    const items = extractCategories(response);
-
-    setCategories(items);
-    setCategoryError("");
-
-    if (preferredCategoryId != null) {
-      const created = items.find(
-        (category) => String(category.id) === String(preferredCategoryId),
-      );
-
-      if (created && created.isAvailable !== false) {
-        setForm((previous) => ({
-          ...previous,
-          categoryId: String(created.id),
-        }));
-      }
-    }
-
-    return items;
-  };
-
-  const resetNewCategoryForm = () => {
-    setNewCategoryName("");
-    setNewCategoryDescription("");
-    setNewCategoryImage(null);
-    setNewCategoryError("");
-
-    if (categoryFileInputRef.current) {
-      categoryFileInputRef.current.value = "";
-    }
-  };
-
-  const resetNewBrandForm = () => {
-    setNewBrandName("");
-    setNewBrandImage(null);
-    setNewBrandError("");
-
-    if (brandFileInputRef.current) {
-      brandFileInputRef.current.value = "";
-    }
-  };
-
-  // Create a brand and automatically select it.
-  const handleCreateBrand = async (event) => {
-    event.preventDefault();
-    setNewBrandError("");
-
-    const name = newBrandName.trim();
-
-    if (!name) {
-      setNewBrandError("Brand name is required.");
-      return;
-    }
-
-    if (!storeId) {
-      setNewBrandError("Store ID is missing. Please select your store.");
-      return;
-    }
-
-    if (newBrandImage) {
-      const problem = checkImage(newBrandImage);
-
-      if (problem) {
-        setNewBrandError(problem);
-        return;
-      }
-    }
-
-    try {
-      const response = await createBrandMutation.mutateAsync({
-        name,
-        logoFile: newBrandImage || undefined,
-        isAvailable: true,
-      });
-
-      let createdBrand = extractCreatedBrand(response);
-
-      const refreshedBrands = await getBrands(storeId, {
-        page: 1,
-        limit: 100,
-      });
-
-      const items = Array.isArray(refreshedBrands) ? refreshedBrands : [];
-
-      if (!createdBrand?.id) {
-        createdBrand = items.find(
-          (brand) =>
-            brand.name?.trim().toLowerCase() === name.toLowerCase(),
-        );
-      }
-
-      if (createdBrand?.id) {
-        setForm((previous) => ({
-          ...previous,
-          brandId: String(createdBrand.id),
-        }));
-      }
-
-      resetNewBrandForm();
-      setShowNewBrand(false);
-    } catch (err) {
-      setNewBrandError(err?.message || "Unable to create brand.");
-    }
-  };
-
-  const handleCreateCategory = async (event) => {
-    event.preventDefault();
-    setNewCategoryError("");
-
-    const name = newCategoryName.trim();
-    const description = newCategoryDescription.trim();
-
-    if (!name) {
-      setNewCategoryError("Category name is required.");
-      return;
-    }
-
-    if (!storeId) {
-      setNewCategoryError("Store ID is missing. Please select your store.");
-      return;
-    }
-
-    if (newCategoryImage) {
-      const problem = checkImage(newCategoryImage);
-
-      if (problem) {
-        setNewCategoryError(problem);
-        return;
-      }
-    }
-
-    try {
-      const response = await createCategoryMutation.mutateAsync({
-        name,
-        ...(description ? { description } : {}),
-        imageFile: newCategoryImage,
-        isAvailable: true,
-      });
-
-      const createdCategory = extractCreatedCategory(response);
-      const items = await refreshCategories(createdCategory?.id);
-
-      if (!createdCategory?.id) {
-        const matchingCategory = items.find(
-          (category) =>
-            category.name?.trim().toLowerCase() === name.toLowerCase() &&
-            category.isAvailable !== false,
-        );
-
-        if (matchingCategory) {
-          setForm((previous) => ({
-            ...previous,
-            categoryId: String(matchingCategory.id),
-          }));
-        }
-      }
-
-      resetNewCategoryForm();
-      setShowNewCategory(false);
-    } catch (err) {
-      setNewCategoryError(err?.message || "Unable to create category.");
-    }
-  };
-
-  const handleChange = (field) => (event) => {
-    setForm((previous) => ({
-      ...previous,
-      [field]: event.target.value,
-    }));
-  };
+  const busy =
+    isSubmitting ||
+    uploadingImage ||
+    uploadingSeoImage ||
+    creatingCategory ||
+    creatingBrand;
 
   // Product image uploads.
   const handleProductImages = async (event) => {
@@ -677,19 +1024,19 @@ export default function ProductFormModal({
 
     if (files.length === 0) return;
 
-    setError("");
+    setPopupError("");
 
     for (const file of files) {
       const problem = checkImage(file);
 
       if (problem) {
-        setError(problem);
+        setPopupError(problem);
         return;
       }
     }
 
     if (!storeId) {
-      setError("Please select your store before uploading images.");
+      setPopupError("Please select your store before uploading images.");
       return;
     }
 
@@ -700,23 +1047,23 @@ export default function ProductFormModal({
         const response = await uploadProductImage(file, storeId);
         const url = extractUploadedImageUrl(response);
 
-        setForm((previous) => ({
-          ...previous,
-          imageUrls: [...previous.imageUrls, url],
-        }));
+        setValue("imageUrls", [...getValues("imageUrls"), url], {
+          shouldDirty: true,
+        });
       }
     } catch (err) {
-      setError(err?.message || "Image upload failed.");
+      setPopupError(err?.message || "Image upload failed.");
     } finally {
       setUploadingImage(false);
     }
   };
 
   const removeImage = (index) => {
-    setForm((previous) => ({
-      ...previous,
-      imageUrls: previous.imageUrls.filter((_, i) => i !== index),
-    }));
+    setValue(
+      "imageUrls",
+      getValues("imageUrls").filter((_, i) => i !== index),
+      { shouldDirty: true },
+    );
   };
 
   // SEO image upload.
@@ -726,17 +1073,17 @@ export default function ProductFormModal({
 
     if (!file) return;
 
-    setError("");
+    setPopupError("");
 
     const problem = checkImage(file);
 
     if (problem) {
-      setError(problem);
+      setPopupError(problem);
       return;
     }
 
     if (!storeId) {
-      setError("Please select your store before uploading an image.");
+      setPopupError("Please select your store before uploading an image.");
       return;
     }
 
@@ -746,48 +1093,20 @@ export default function ProductFormModal({
       const response = await uploadProductSeoImage(file, storeId);
       const url = extractUploadedImageUrl(response);
 
-      setForm((previous) => ({
-        ...previous,
-        seoImage: url,
-      }));
+      setValue("seoImage", url, { shouldDirty: true });
     } catch (err) {
-      setError(err?.message || "SEO image upload failed.");
+      setPopupError(err?.message || "SEO image upload failed.");
     } finally {
       setUploadingSeoImage(false);
     }
   };
 
-  // Variant controls.
-  const updateVariant = (index, field, value) => {
-    setVariants((previous) =>
-      previous.map((variant, i) =>
-        i === index ? { ...variant, [field]: value } : variant,
-      ),
-    );
-  };
-
-  const addVariant = () => {
-    setVariants((previous) => [...previous, emptyVariant()]);
-  };
-
-  const removeVariant = (index) => {
-    setVariants((previous) => previous.filter((_, i) => i !== index));
-  };
-
   // Submit product.
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setError("");
+  const onSubmit = async (form) => {
+    setPopupError("");
 
-    const values = toValues(form);
-
-    if (!values.name) {
-      setError("Product name is required.");
-      return;
-    }
-
-    if (!form.categoryId) {
-      setError("Please select a category.");
+    if (!storeId) {
+      setPopupError("Please select your store before saving.");
       return;
     }
 
@@ -796,74 +1115,21 @@ export default function ProductFormModal({
     );
 
     if (!selectedCategory) {
-      setError("The selected category was not found. Reload the form.");
+      setFieldError("categoryId", {
+        message: "The selected category was not found. Reload the form.",
+      });
       return;
     }
 
     if (selectedCategory.isAvailable === false) {
-      setError(
-        "This category is unavailable. Enable it through your category management first.",
-      );
+      setFieldError("categoryId", {
+        message:
+          "This category is unavailable. Enable it through your category management first.",
+      });
       return;
     }
 
-    if (!storeId) {
-      setError("Please select your store before saving.");
-      return;
-    }
-
-    let simpleProductData = null;
-
-    if (!isEdit && !hasVariants) {
-      const sellingPrice = Number(form.sellingPrice);
-      const crossedPrice =
-        form.crossedPrice === "" ? null : Number(form.crossedPrice);
-      const quantity = Number(form.quantity);
-      const weight = form.weight === "" ? null : Number(form.weight);
-
-      if (!Number.isFinite(sellingPrice) || sellingPrice <= 0) {
-        setError("Selling price must be greater than 0.");
-        return;
-      }
-
-      if (
-        crossedPrice !== null &&
-        (!Number.isFinite(crossedPrice) || crossedPrice < sellingPrice)
-      ) {
-        setError("Crossed-out price must be at least the selling price.");
-        return;
-      }
-
-      if (!Number.isInteger(quantity) || quantity < 0) {
-        setError("Quantity must be a whole number of 0 or more.");
-        return;
-      }
-
-      if (weight !== null && (!Number.isFinite(weight) || weight < 0)) {
-        setError("Weight must be 0 or greater.");
-        return;
-      }
-
-      simpleProductData = {
-        sellingPrice,
-        quantity,
-        ...(crossedPrice !== null && { crossedPrice }),
-        ...(weight !== null && { weight }),
-      };
-    }
-
-    let builtVariants = null;
-
-    if (!isEdit && hasVariants) {
-      builtVariants = buildVariants(variants);
-
-      if (builtVariants.error) {
-        setError(builtVariants.error);
-        return;
-      }
-    }
-
-    setSaving(true);
+    const values = toValues(form);
 
     try {
       if (isEdit) {
@@ -893,10 +1159,7 @@ export default function ProductFormModal({
           data.status = values.status;
         }
 
-        const custom = pickChanged(values, before, [
-          "tags",
-          "releaseDate",
-        ]);
+        const custom = pickChanged(values, before, ["tags", "releaseDate"]);
 
         if (!custom.releaseDate) {
           delete custom.releaseDate;
@@ -923,6 +1186,24 @@ export default function ProductFormModal({
 
         await onSave(data);
       } else {
+        let pricing;
+
+        if (form.hasVariants) {
+          pricing = { variants: buildVariantPayload(form.variants) };
+        } else {
+          const crossedPrice = isBlank(form.crossedPrice)
+            ? null
+            : Number(form.crossedPrice);
+          const weight = isBlank(form.weight) ? null : Number(form.weight);
+
+          pricing = {
+            sellingPrice: Number(form.sellingPrice),
+            quantity: Number(form.quantity),
+            ...(crossedPrice !== null && { crossedPrice }),
+            ...(weight !== null && { weight }),
+          };
+        }
+
         const payload = {
           name: values.name,
           channel: "ALL",
@@ -942,9 +1223,7 @@ export default function ProductFormModal({
           ...(values.releaseDate && {
             releaseDate: values.releaseDate,
           }),
-          ...(hasVariants
-            ? { variants: builtVariants.variants }
-            : simpleProductData),
+          ...pricing,
         };
 
         const seo = {
@@ -958,18 +1237,9 @@ export default function ProductFormModal({
         await onSave({ payload, seo });
       }
     } catch (err) {
-      setError(err?.message || "Unable to save the product.");
-    } finally {
-      setSaving(false);
+      setPopupError(err?.message || "Unable to save the product.");
     }
   };
-
-  const busy =
-    saving ||
-    uploadingImage ||
-    uploadingSeoImage ||
-    creatingCategory ||
-    creatingBrand;
 
   return (
     <div
@@ -988,7 +1258,11 @@ export default function ProductFormModal({
           {isEdit ? "Edit Product" : "Add Product"}
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          className="space-y-4"
+        >
           {categoryError && (
             <div
               role="alert"
@@ -1005,11 +1279,11 @@ export default function ProductFormModal({
                 Name <Req />
               </label>
               <input
-                required
-                value={form.name}
-                onChange={handleChange("name")}
                 className={inputClass}
+                aria-invalid={!!errors.name}
+                {...register("name")}
               />
+              <FieldError error={errors.name} />
             </div>
 
             <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1017,33 +1291,34 @@ export default function ProductFormModal({
               <div className="min-w-0">
                 <label className={labelClass}>Brand</label>
 
-                <select
-                  value={form.brandId}
-                  onChange={handleChange("brandId")}
-                  className={inputClass}
-                >
-                  <option value="">
-                    {loadingBrands ? "Loading brands..." : "Select brand"}
-                  </option>
+                <Controller
+                  control={control}
+                  name="brandId"
+                  render={({ field }) => (
+                    <select {...field} className={inputClass}>
+                      <option value="">
+                        {loadingBrands ? "Loading brands..." : "Select brand"}
+                      </option>
 
-                  {brands.map((brand) => (
-                    <option
-                      key={brand.id}
-                      value={String(brand.id)}
-                      disabled={brand.isAvailable === false}
-                    >
-                      {brand.name}
-                      {brand.isAvailable === false ? " (Unavailable)" : ""}
-                    </option>
-                  ))}
-                </select>
+                      {brands.map((brand) => (
+                        <option
+                          key={brand.id}
+                          value={String(brand.id)}
+                          disabled={brand.isAvailable === false}
+                        >
+                          {brand.name}
+                          {brand.isAvailable === false ? " (Unavailable)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
 
                 <button
                   type="button"
                   onClick={() => {
                     setShowNewBrand((previous) => !previous);
-                    setNewBrandError("");
-                    setError("");
+                    setPopupError("");
                   }}
                   disabled={!storeId || creatingBrand}
                   className="mt-2 text-xs font-semibold text-gray-900 hover:text-red-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
@@ -1057,42 +1332,48 @@ export default function ProductFormModal({
                 <label className={labelClass}>
                   Category <Req />
                 </label>
-                <select
-                  required
-                  value={form.categoryId}
-                  onChange={handleChange("categoryId")}
-                  className={inputClass}
-                >
-                  <option value="">
-                    {loadingCategories
-                      ? "Loading categories..."
-                      : categoryError
-                        ? "Could not load categories"
-                        : categories.length
-                          ? "Select category"
-                          : "No categories found"}
-                  </option>
 
-                  {categories.map((category) => (
-                    <option
-                      key={category.id}
-                      value={String(category.id)}
-                      disabled={category.isAvailable === false}
+                <Controller
+                  control={control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <select
+                      {...field}
+                      className={inputClass}
+                      aria-invalid={!!errors.categoryId}
                     >
-                      {category.name}
-                      {category.isAvailable === false
-                        ? " (Unavailable)"
-                        : ""}
-                    </option>
-                  ))}
-                </select>
+                      <option value="">
+                        {loadingCategories
+                          ? "Loading categories..."
+                          : categoryError
+                            ? "Could not load categories"
+                            : categories.length
+                              ? "Select category"
+                              : "No categories found"}
+                      </option>
+
+                      {categories.map((category) => (
+                        <option
+                          key={category.id}
+                          value={String(category.id)}
+                          disabled={category.isAvailable === false}
+                        >
+                          {category.name}
+                          {category.isAvailable === false
+                            ? " (Unavailable)"
+                            : ""}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
+                <FieldError error={errors.categoryId} />
 
                 <button
                   type="button"
                   onClick={() => {
                     setShowNewCategory((previous) => !previous);
-                    setNewCategoryError("");
-                    setError("");
+                    setPopupError("");
                   }}
                   disabled={!storeId || creatingCategory}
                   className="mt-2 text-xs font-semibold text-gray-900 hover:text-red-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
@@ -1107,11 +1388,7 @@ export default function ProductFormModal({
                 <label className={labelClass}>
                   Audience <Req />
                 </label>
-                <select
-                  value={form.audience}
-                  onChange={handleChange("audience")}
-                  className={inputClass}
-                >
+                <select className={inputClass} {...register("audience")}>
                   {AUDIENCES.map((audience) => (
                     <option key={audience.value} value={audience.value}>
                       {audience.label}
@@ -1124,11 +1401,7 @@ export default function ProductFormModal({
                 <label className={labelClass}>
                   Status <Req />
                 </label>
-                <select
-                  value={form.status}
-                  onChange={handleChange("status")}
-                  className={inputClass}
-                >
+                <select className={inputClass} {...register("status")}>
                   {STATUSES.map((status) => (
                     <option key={status.value} value={status.value}>
                       {status.label}
@@ -1141,361 +1414,54 @@ export default function ProductFormModal({
             {isEdit && (
               <div>
                 <label className={labelClass}>Slug</label>
-                <input
-                  value={form.slug}
-                  onChange={handleChange("slug")}
-                  className={inputClass}
-                />
+                <input className={inputClass} {...register("slug")} />
               </div>
             )}
 
             <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={form.isAvailable}
-                onChange={(event) =>
-                  setForm((previous) => ({
-                    ...previous,
-                    isAvailable: event.target.checked,
-                  }))
-                }
-              />
+              <input type="checkbox" {...register("isAvailable")} />
               Available for sale
             </label>
           </Section>
 
           {/* Inline brand creation */}
           {showNewBrand && (
-            <section className="w-full min-w-0 space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-5">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900">
-                  Create brand
-                </h3>
-                <p className="mt-1 text-xs text-gray-500">
-                  Enter a brand name and optionally upload its logo.
-                </p>
-              </div>
-
-              <div>
-                <label className={labelClass}>Brand name *</label>
-                <input
-                  autoFocus
-                  required
-                  maxLength={100}
-                  value={newBrandName}
-                  onChange={(event) => setNewBrandName(event.target.value)}
-                  placeholder="e.g. Nike"
-                  className={inputClass}
-                  disabled={creatingBrand}
-                />
-              </div>
-
-              <div>
-                <label className={labelClass}>Brand logo</label>
-
-                <label className="flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-4 transition hover:border-gray-500">
-                  {newBrandPreview ? (
-                    <img
-                      src={newBrandPreview}
-                      alt="Brand logo preview"
-                      className="mb-3 h-24 w-24 rounded-lg border border-gray-200 object-contain"
-                    />
-                  ) : (
-                    <div className="mb-3 flex h-24 w-24 items-center justify-center rounded-lg bg-gray-100 text-gray-400">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="30"
-                        height="30"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <rect x="3" y="3" width="18" height="18" rx="2" />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <path d="m21 15-5-5L5 21" />
-                      </svg>
-                    </div>
-                  )}
-
-                  <span className="text-sm font-medium text-gray-800">
-                    {newBrandImage ? "Choose another logo" : "Upload logo"}
-                  </span>
-
-                  <span className="mt-1 text-center text-xs text-gray-500">
-                    Optional · Maximum 5 MB
-                  </span>
-
-                  <input
-                    ref={brandFileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="sr-only"
-                    disabled={creatingBrand}
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (!file) return;
-
-                      const problem = checkImage(file);
-
-                      if (problem) {
-                        setNewBrandError(problem);
-                        event.target.value = "";
-                        return;
-                      }
-
-                      setNewBrandError("");
-                      setNewBrandImage(file);
-                    }}
-                  />
-                </label>
-
-                {newBrandImage && (
-                  <div className="mt-3 flex min-w-0 items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-2">
-                    <div className="min-w-0 flex-1">
-                      <p
-                        title={newBrandImage.name}
-                        className="truncate text-xs font-medium text-gray-800"
-                      >
-                        {newBrandImage.name}
-                      </p>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {(newBrandImage.size / 1024).toFixed(0)} KB
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNewBrandImage(null);
-                        if (brandFileInputRef.current) {
-                          brandFileInputRef.current.value = "";
-                        }
-                      }}
-                      disabled={creatingBrand}
-                      className="shrink-0 rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {newBrandError && (
-                <p role="alert" className="break-words text-xs text-red-600">
-                  {newBrandError}
-                </p>
-              )}
-
-              <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowNewBrand(false);
-                    resetNewBrandForm();
-                  }}
-                  disabled={creatingBrand}
-                  className="rounded border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-white disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCreateBrand}
-                  disabled={creatingBrand || !newBrandName.trim() || !storeId}
-                  className="rounded bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {creatingBrand ? "Creating brand..." : "Create brand"}
-                </button>
-              </div>
-            </section>
+            <NewBrandPanel
+              storeId={storeId}
+              mutation={createBrandMutation}
+              onClose={() => setShowNewBrand(false)}
+              onCreated={(brandId) => {
+                if (brandId) {
+                  setValue("brandId", brandId, { shouldDirty: true });
+                }
+                setShowNewBrand(false);
+              }}
+            />
           )}
 
           {/* Inline category creation */}
           {showNewCategory && (
-            <section className="w-full min-w-0 space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-5">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900">
-                  Create category
-                </h3>
-                <p className="mt-1 text-xs text-gray-500">
-                  Add a category name, description, and optional photo.
-                </p>
-              </div>
-
-              <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className={labelClass}>
-                    Category name <Req />
-                  </label>
-                  <input
-                    autoFocus
-                    required
-                    maxLength={100}
-                    value={newCategoryName}
-                    onChange={(event) =>
-                      setNewCategoryName(event.target.value)
-                    }
-                    placeholder="e.g. Running shoes"
-                    className={inputClass}
-                    disabled={creatingCategory}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Description</label>
-                  <textarea
-                    rows={2}
-                    maxLength={1000}
-                    value={newCategoryDescription}
-                    onChange={(event) =>
-                      setNewCategoryDescription(event.target.value)
-                    }
-                    placeholder="Briefly describe this category"
-                    className={`${inputClass} resize-none`}
-                    disabled={creatingCategory}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className={labelClass}>Category photo</label>
-
-                <label className="flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-4 transition hover:border-gray-500">
-                  {newCategoryPreview ? (
-                    <img
-                      src={newCategoryPreview}
-                      alt="Category preview"
-                      className="mb-3 h-24 w-24 rounded-lg border border-gray-200 object-cover"
-                    />
-                  ) : (
-                    <div className="mb-3 flex h-24 w-24 items-center justify-center rounded-lg bg-gray-100 text-gray-400">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="30"
-                        height="30"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <rect x="3" y="3" width="18" height="18" rx="2" />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <path d="m21 15-5-5L5 21" />
-                      </svg>
-                    </div>
-                  )}
-
-                  <span className="text-sm font-medium text-gray-800">
-                    {newCategoryImage ? "Choose another photo" : "Upload photo"}
-                  </span>
-
-                  <span className="mt-1 text-center text-xs text-gray-500">
-                    Optional · Maximum 5 MB
-                  </span>
-
-                  <input
-                    ref={categoryFileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="sr-only"
-                    disabled={creatingCategory}
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (!file) return;
-
-                      const problem = checkImage(file);
-
-                      if (problem) {
-                        setNewCategoryError(problem);
-                        event.target.value = "";
-                        return;
-                      }
-
-                      setNewCategoryError("");
-                      setNewCategoryImage(file);
-                    }}
-                  />
-                </label>
-
-                {newCategoryImage && (
-                  <div className="mt-3 flex min-w-0 items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-2">
-                    <div className="min-w-0 flex-1">
-                      <p
-                        title={newCategoryImage.name}
-                        className="truncate text-xs font-medium text-gray-800"
-                      >
-                        {newCategoryImage.name}
-                      </p>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {(newCategoryImage.size / 1024).toFixed(0)} KB
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNewCategoryImage(null);
-                        if (categoryFileInputRef.current) {
-                          categoryFileInputRef.current.value = "";
-                        }
-                      }}
-                      disabled={creatingCategory}
-                      className="shrink-0 rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {newCategoryError && (
-                <p role="alert" className="break-words text-xs text-red-600">
-                  {newCategoryError}
-                </p>
-              )}
-
-              <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowNewCategory(false);
-                    resetNewCategoryForm();
-                  }}
-                  disabled={creatingCategory}
-                  className="rounded border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-white disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCreateCategory}
-                  disabled={
-                    creatingCategory ||
-                    !newCategoryName.trim() ||
-                    !storeId
-                  }
-                  className="rounded bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {creatingCategory ? "Creating category..." : "Create category"}
-                </button>
-              </div>
-            </section>
+            <NewCategoryPanel
+              storeId={storeId}
+              mutation={createCategoryMutation}
+              onClose={() => setShowNewCategory(false)}
+              onCreated={(categoryId) => {
+                if (categoryId) {
+                  setValue("categoryId", categoryId, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                }
+                setShowNewCategory(false);
+              }}
+            />
           )}
 
           {/* Product images */}
           <Section title="Images">
-            {form.imageUrls.length > 0 && (
+            {imageUrls.length > 0 && (
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                {form.imageUrls.map((url, index) => (
+                {imageUrls.map((url, index) => (
                   <div key={`${url}-${index}`} className="relative">
                     <img
                       src={url}
@@ -1541,12 +1507,8 @@ export default function ProductFormModal({
               <label className="flex cursor-pointer items-start gap-2">
                 <input
                   type="checkbox"
-                  checked={hasVariants}
-                  onChange={(event) => {
-                    setHasVariants(event.target.checked);
-                    setError("");
-                  }}
                   className="mt-0.5 h-4 w-4 accent-black"
+                  {...register("hasVariants")}
                 />
 
                 <span>
@@ -1571,200 +1533,188 @@ export default function ProductFormModal({
 
                 <button
                   type="button"
-                  onClick={addVariant}
+                  onClick={() => appendVariant(emptyVariant())}
                   className="shrink-0 rounded border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50"
                 >
                   + Add variant
                 </button>
               </div>
 
-              {variants.map((variant, index) => (
-                <div
-                  key={index}
-                  className="space-y-3 rounded-lg border border-gray-200 p-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-gray-800">
-                      Variant {index + 1}
-                    </p>
+              <FieldError
+                error={errors.variants?.root ?? errors.variants}
+              />
 
-                    {variants.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeVariant(index)}
-                        className="text-xs font-medium text-red-600 hover:underline"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
+              {variantFields.map((field, index) => {
+                const rowErrors = errors.variants?.[index];
+                const colorCode =
+                  variantValues?.[index]?.colorCode ?? field.colorCode;
 
-                  <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
-                    <div>
-                      <label className={labelClass}>
-                        Size <Req />
-                      </label>
-                      <input
-                        required
-                        value={variant.size}
-                        onChange={(event) =>
-                          updateVariant(index, "size", event.target.value)
-                        }
-                        placeholder="S, M, L or XL"
-                        className={inputClass}
-                      />
+                return (
+                  <div
+                    key={field.id}
+                    className="space-y-3 rounded-lg border border-gray-200 p-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-gray-800">
+                        Variant {index + 1}
+                      </p>
+
+                      {variantFields.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeVariant(index)}
+                          className="text-xs font-medium text-red-600 hover:underline"
+                        >
+                          Remove
+                        </button>
+                      )}
                     </div>
 
-                    <div>
-                      <label className={labelClass}>
-                        Color name <Req />
-                      </label>
-                      <input
-                        required
-                        value={variant.colorName}
-                        onChange={(event) =>
-                          updateVariant(index, "colorName", event.target.value)
-                        }
-                        placeholder="Black"
-                        className={inputClass}
-                      />
-                    </div>
-
-                    <div>
-                      <label className={labelClass}>
-                        Color <Req />
-                      </label>
-                      <div className="flex h-[38px] items-center gap-2 rounded border border-gray-300 px-2">
+                    <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
+                      <div>
+                        <label className={labelClass}>
+                          Size <Req />
+                        </label>
                         <input
-                          type="color"
-                          value={variant.colorCode}
-                          onChange={(event) =>
-                            updateVariant(index, "colorCode", event.target.value)
-                          }
-                          aria-label={`Variant ${index + 1} color`}
-                          className="h-7 w-9 cursor-pointer border-0 bg-transparent p-0"
+                          placeholder="S, M, L or XL"
+                          className={inputClass}
+                          aria-invalid={!!rowErrors?.size}
+                          {...register(`variants.${index}.size`)}
                         />
-                        <span className="text-xs text-gray-600">
-                          {variant.colorCode.toUpperCase()}
-                        </span>
+                        <FieldError error={rowErrors?.size} />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>
+                          Color name <Req />
+                        </label>
+                        <input
+                          placeholder="Black"
+                          className={inputClass}
+                          aria-invalid={!!rowErrors?.colorName}
+                          {...register(`variants.${index}.colorName`)}
+                        />
+                        <FieldError error={rowErrors?.colorName} />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>
+                          Color <Req />
+                        </label>
+                        <div className="flex h-[38px] items-center gap-2 rounded border border-gray-300 px-2">
+                          <input
+                            type="color"
+                            aria-label={`Variant ${index + 1} color`}
+                            className="h-7 w-9 cursor-pointer border-0 bg-transparent p-0"
+                            {...register(`variants.${index}.colorCode`)}
+                          />
+                          <span className="text-xs text-gray-600">
+                            {String(colorCode).toUpperCase()}
+                          </span>
+                        </div>
+                        <FieldError error={rowErrors?.colorCode} />
+                      </div>
+                    </div>
+
+                    <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className={labelClass}>
+                          Selling price (Nrs) <Req />
+                        </label>
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="any"
+                          className={inputClass}
+                          aria-invalid={!!rowErrors?.sellingPrice}
+                          {...register(`variants.${index}.sellingPrice`)}
+                        />
+                        <FieldError error={rowErrors?.sellingPrice} />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>
+                          Crossed-out price (Nrs)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          className={inputClass}
+                          aria-invalid={!!rowErrors?.crossedPrice}
+                          {...register(`variants.${index}.crossedPrice`)}
+                        />
+                        <FieldError error={rowErrors?.crossedPrice} />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>Cost price (Nrs)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          className={inputClass}
+                          aria-invalid={!!rowErrors?.costPrice}
+                          {...register(`variants.${index}.costPrice`)}
+                        />
+                        <FieldError error={rowErrors?.costPrice} />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>
+                          Quantity <Req />
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          className={inputClass}
+                          aria-invalid={!!rowErrors?.quantity}
+                          {...register(`variants.${index}.quantity`)}
+                        />
+                        <FieldError error={rowErrors?.quantity} />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>Weight (kg)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          className={inputClass}
+                          aria-invalid={!!rowErrors?.weight}
+                          {...register(`variants.${index}.weight`)}
+                        />
+                        <FieldError error={rowErrors?.weight} />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>SKU</label>
+                        <input
+                          className={inputClass}
+                          {...register(`variants.${index}.sku`)}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>HS code</label>
+                        <input
+                          className={inputClass}
+                          {...register(`variants.${index}.hsCode`)}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>Barcode</label>
+                        <input
+                          className={inputClass}
+                          {...register(`variants.${index}.altBarcode`)}
+                        />
                       </div>
                     </div>
                   </div>
-
-                  <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className={labelClass}>
-                        Selling price (Nrs) <Req />
-                      </label>
-                      <input
-                        required
-                        type="number"
-                        min="0.01"
-                        step="any"
-                        value={variant.sellingPrice}
-                        onChange={(event) =>
-                          updateVariant(index, "sellingPrice", event.target.value)
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-
-                    <div>
-                      <label className={labelClass}>
-                        Crossed-out price (Nrs)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        value={variant.crossedPrice}
-                        onChange={(event) =>
-                          updateVariant(index, "crossedPrice", event.target.value)
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-
-                    <div>
-                      <label className={labelClass}>Cost price (Nrs)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        value={variant.costPrice}
-                        onChange={(event) =>
-                          updateVariant(index, "costPrice", event.target.value)
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-
-                    <div>
-                      <label className={labelClass}>
-                        Quantity <Req />
-                      </label>
-                      <input
-                        required
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={variant.quantity}
-                        onChange={(event) =>
-                          updateVariant(index, "quantity", event.target.value)
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-
-                    <div>
-                      <label className={labelClass}>Weight (kg)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        value={variant.weight}
-                        onChange={(event) =>
-                          updateVariant(index, "weight", event.target.value)
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-
-                    <div>
-                      <label className={labelClass}>SKU</label>
-                      <input
-                        value={variant.sku}
-                        onChange={(event) =>
-                          updateVariant(index, "sku", event.target.value)
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-
-                    <div>
-                      <label className={labelClass}>HS code</label>
-                      <input
-                        value={variant.hsCode}
-                        onChange={(event) =>
-                          updateVariant(index, "hsCode", event.target.value)
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-
-                    <div>
-                      <label className={labelClass}>Barcode</label>
-                      <input
-                        value={variant.altBarcode}
-                        onChange={(event) =>
-                          updateVariant(index, "altBarcode", event.target.value)
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </Section>
           ) : !isEdit ? (
             <Section title="Pricing and stock">
@@ -1774,28 +1724,27 @@ export default function ProductFormModal({
                     Selling price (Nrs) <Req />
                   </label>
                   <input
-                    required
                     type="number"
                     min="0.01"
                     step="any"
-                    value={form.sellingPrice}
-                    onChange={handleChange("sellingPrice")}
                     className={inputClass}
+                    aria-invalid={!!errors.sellingPrice}
+                    {...register("sellingPrice")}
                   />
+                  <FieldError error={errors.sellingPrice} />
                 </div>
 
                 <div>
-                  <label className={labelClass}>
-                    Crossed-out price (Nrs)
-                  </label>
+                  <label className={labelClass}>Crossed-out price (Nrs)</label>
                   <input
                     type="number"
                     min="0"
                     step="any"
-                    value={form.crossedPrice}
-                    onChange={handleChange("crossedPrice")}
                     className={inputClass}
+                    aria-invalid={!!errors.crossedPrice}
+                    {...register("crossedPrice")}
                   />
+                  <FieldError error={errors.crossedPrice} />
                 </div>
 
                 <div>
@@ -1803,14 +1752,14 @@ export default function ProductFormModal({
                     Quantity <Req />
                   </label>
                   <input
-                    required
                     type="number"
                     min="0"
                     step="1"
-                    value={form.quantity}
-                    onChange={handleChange("quantity")}
                     className={inputClass}
+                    aria-invalid={!!errors.quantity}
+                    {...register("quantity")}
                   />
+                  <FieldError error={errors.quantity} />
                 </div>
 
                 <div>
@@ -1819,10 +1768,11 @@ export default function ProductFormModal({
                     type="number"
                     min="0"
                     step="any"
-                    value={form.weight}
-                    onChange={handleChange("weight")}
                     className={inputClass}
+                    aria-invalid={!!errors.weight}
+                    {...register("weight")}
                   />
+                  <FieldError error={errors.weight} />
                 </div>
               </div>
             </Section>
@@ -1839,9 +1789,8 @@ export default function ProductFormModal({
               <label className={labelClass}>Product description</label>
               <textarea
                 rows={2}
-                value={form.productDescription}
-                onChange={handleChange("productDescription")}
                 className={`${inputClass} resize-none`}
+                {...register("productDescription")}
               />
             </div>
 
@@ -1849,9 +1798,8 @@ export default function ProductFormModal({
               <label className={labelClass}>Long description</label>
               <textarea
                 rows={3}
-                value={form.longDescription}
-                onChange={handleChange("longDescription")}
                 className={`${inputClass} resize-none`}
+                {...register("longDescription")}
               />
             </div>
 
@@ -1859,10 +1807,9 @@ export default function ProductFormModal({
               <div>
                 <label className={labelClass}>Tags (comma separated)</label>
                 <input
-                  value={form.tags}
-                  onChange={handleChange("tags")}
                   placeholder="oversized, cotton, summer"
                   className={inputClass}
+                  {...register("tags")}
                 />
               </div>
 
@@ -1870,9 +1817,8 @@ export default function ProductFormModal({
                 <label className={labelClass}>Release date</label>
                 <input
                   type="date"
-                  value={form.releaseDate}
-                  onChange={handleChange("releaseDate")}
                   className={inputClass}
+                  {...register("releaseDate")}
                 />
               </div>
             </div>
@@ -1882,20 +1828,15 @@ export default function ProductFormModal({
           <Section title="SEO (optional)">
             <div>
               <label className={labelClass}>SEO title</label>
-              <input
-                value={form.seoTitle}
-                onChange={handleChange("seoTitle")}
-                className={inputClass}
-              />
+              <input className={inputClass} {...register("seoTitle")} />
             </div>
 
             <div>
               <label className={labelClass}>SEO description</label>
               <textarea
                 rows={2}
-                value={form.seoDescription}
-                onChange={handleChange("seoDescription")}
                 className={`${inputClass} resize-none`}
+                {...register("seoDescription")}
               />
             </div>
 
@@ -1903,9 +1844,9 @@ export default function ProductFormModal({
               <label className={labelClass}>SEO image</label>
 
               <div className="flex flex-wrap items-center gap-3">
-                {form.seoImage && (
+                {seoImage && (
                   <img
-                    src={form.seoImage}
+                    src={seoImage}
                     alt="SEO preview"
                     className="h-16 w-16 rounded border bg-gray-50 object-contain"
                   />
@@ -1914,7 +1855,7 @@ export default function ProductFormModal({
                 <label className="cursor-pointer rounded border border-gray-300 px-3 py-2 text-xs font-medium text-gray-800 hover:border-gray-500">
                   {uploadingSeoImage
                     ? "Uploading..."
-                    : form.seoImage
+                    : seoImage
                       ? "Replace image"
                       : "Choose image"}
 
@@ -1927,14 +1868,11 @@ export default function ProductFormModal({
                   />
                 </label>
 
-                {form.seoImage && (
+                {seoImage && (
                   <button
                     type="button"
                     onClick={() =>
-                      setForm((previous) => ({
-                        ...previous,
-                        seoImage: "",
-                      }))
+                      setValue("seoImage", "", { shouldDirty: true })
                     }
                     className="text-xs font-medium text-red-600 hover:underline"
                   >
@@ -1958,14 +1896,10 @@ export default function ProductFormModal({
 
             <button
               type="submit"
-              disabled={
-                busy ||
-                loadingCategories ||
-                Boolean(categoryError)
-              }
+              disabled={busy || loadingCategories || Boolean(categoryError)}
               className="cursor-pointer rounded bg-brand-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand-red-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {saving
+              {isSubmitting
                 ? "Saving..."
                 : uploadingImage || uploadingSeoImage
                   ? "Uploading image..."
@@ -1979,8 +1913,8 @@ export default function ProductFormModal({
         </form>
       </div>
 
-      {/* Error popup: shown above the form, no scrolling needed */}
-      <ErrorPopup message={error} onClose={() => setError("")} />
+      {/* Upload and save errors: shown above the form, no scrolling needed */}
+      <ErrorPopup message={popupError} onClose={() => setPopupError("")} />
     </div>
   );
 }

@@ -110,6 +110,7 @@ function hasStockHistory(item, outletId) {
   return item?.batchCount == null ? true : Number(item.batchCount) > 0
 }
 
+
 export default function SellerInventory() {
   const outletContext = useOutletContext() ?? {}
   const { shop } = outletContext
