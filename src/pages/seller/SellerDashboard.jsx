@@ -633,20 +633,20 @@ export default function SellerDashboard() {
 
         <div className="relative z-10 flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
           <div className="min-w-0">
-            <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/75">
+            <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/75">
               <Store className="h-4 w-4" />
               Seller Dashboard
             </div>
 
-            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
               Welcome back{shop?.name ? `, ${shop.name}` : ""}
             </h1>
 
-            <p className="mt-2 text-sm text-white/80">
+            <p className="mt-1.5 text-sm text-white/80">
               Here's what's happening with your shop today.
             </p>
 
-            <p className="mt-4 text-xs font-medium text-white/70">
+            <p className="mt-3 text-xs font-medium text-white/70">
               {today}
             </p>
           </div>

@@ -5,6 +5,7 @@ import {
   updateOutlet,
   deleteOutlet,
   toggleOutletStatus,
+  changeMainOutlet,
 } from "../services/outletService"
 
 // the store id is part of the key, so switching stores loads that store's outlets
@@ -44,6 +45,14 @@ export const useToggleOutletStatus = (storeId) => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (outletId) => toggleOutletStatus(storeId, outletId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["outlets", storeId] }),
+  })
+}
+
+export const useChangeMainOutlet = (storeId) => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (outletId) => changeMainOutlet(storeId, outletId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["outlets", storeId] }),
   })
 }

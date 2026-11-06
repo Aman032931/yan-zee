@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react"
-import { NavLink, Outlet, Link } from "react-router-dom"
+import { NavLink, Outlet, Link, useLocation } from "react-router-dom"
 import {
   LayoutDashboard,
   Package,
@@ -30,7 +29,15 @@ const NAV_ITEMS = [
   { label: "Categories", to: "/seller/categories", icon: Tags },
   { label: "Brands", to: "/seller/brands", icon: Tag },
   { label: "My Products", to: "/seller/products", icon: Package },
-  { label: "Inventory", to: "/seller/inventory", icon: Boxes },
+  {
+    label: "Inventory",
+    to: "/seller/inventory",
+    icon: Boxes,
+    children: [
+      { label: "Search inventory", to: "/seller/inventory/stock" },
+      { label: "Stock movements", to: "/seller/inventory/movements" },
+    ],
+  },
   { label: "Outlets", to: "/seller/outlets", icon: MapPin },
   { label: "Customers", to: "/seller/customers", icon: Users },
   { label: "Orders", to: "/seller/orders", icon: ShoppingBag },
@@ -76,11 +83,20 @@ const readSavedStoreId = () => {
 
 export default function SellerLayout() {
   const { data: stores = [], isLoading, error } = useMyStores()
+  const { pathname } = useLocation()
 
   const [selectedId, setSelectedId] = useState(readSavedStoreId)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [storeMenuOpen, setStoreMenuOpen] = useState(false)
   const [addingStore, setAddingStore] = useState(false)
+  const [openGroups, setOpenGroups] = useState({})
+
+  // A nav group is open when the user toggled it, or by default when the
+  // current page is inside it.
+  const isGroupOpen = (key) => openGroups[key] ?? pathname.startsWith(key)
+
+  const toggleGroup = (key) =>
+    setOpenGroups((groups) => ({ ...groups, [key]: !isGroupOpen(key) }))
 
   const shop =
     stores.find((store) => store.id === selectedId) ?? stores[0] ?? null
@@ -387,6 +403,85 @@ export default function SellerLayout() {
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon
 
+          // Expandable group (Inventory)
+          if (item.children) {
+            const open = isGroupOpen(item.to)
+            const groupActive = pathname.startsWith(item.to)
+
+            return (
+              <div key={item.to}>
+                <div
+                  className={`flex items-center rounded-xl transition-colors ${
+                    groupActive ? "bg-red-50" : "hover:bg-zinc-50"
+                  }`}
+                >
+                  <NavLink
+                    to={item.to}
+                    end
+                    onClick={() => {
+                      setOpenGroups((groups) => ({
+                        ...groups,
+                        [item.to]: true,
+                      }))
+                      setMobileOpen(false)
+                    }}
+                    className={`flex flex-1 items-center gap-3 px-3 py-3 text-sm ${
+                      groupActive
+                        ? "font-semibold text-brand-red-600"
+                        : "font-medium text-zinc-600 hover:text-zinc-950"
+                    }`}
+                  >
+                    <Icon
+                      size={19}
+                      strokeWidth={groupActive ? 2.3 : 1.8}
+                      className={
+                        groupActive ? "text-brand-red-600" : "text-zinc-400"
+                      }
+                    />
+                    <span className="flex-1">{item.label}</span>
+                  </NavLink>
+
+                  <button
+                    type="button"
+                    aria-label={`${open ? "Collapse" : "Expand"} ${item.label}`}
+                    aria-expanded={open}
+                    onClick={() => toggleGroup(item.to)}
+                    className="mr-2 flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-700"
+                  >
+                    <ChevronDown
+                      size={16}
+                      className={`transition-transform ${
+                        open ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {open && (
+                  <div className="mt-1 ml-6 space-y-1 border-l border-yz-border pl-3">
+                    {item.children.map((child) => (
+                      <NavLink
+                        key={child.to}
+                        to={child.to}
+                        onClick={() => setMobileOpen(false)}
+                        className={({ isActive }) =>
+                          `block rounded-lg px-3 py-2 text-sm transition-colors ${
+                            isActive
+                              ? "bg-red-50 font-semibold text-brand-red-600"
+                              : "font-medium text-zinc-600 hover:bg-zinc-50 hover:text-zinc-950"
+                          }`
+                        }
+                      >
+                        {child.label}
+                      </NavLink>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          // Regular item
           return (
             <NavLink
               key={item.to}

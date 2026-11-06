@@ -1,14 +1,14 @@
 import { useState } from "react"
 import { useOutletContext } from "react-router-dom"
-import { MapPin, Pencil, Phone, Plus, Trash2 } from "lucide-react"
-import { Req } from "../../components/seller/SellerUI"
-
+import { MapPin, Pencil, Phone, Plus, Star, Trash2 } from "lucide-react"
+import { FieldError, Req } from "../../components/seller/SellerUI"
 import {
   useOutlets,
   useCreateOutlet,
   useUpdateOutlet,
   useDeleteOutlet,
   useToggleOutletStatus,
+  useChangeMainOutlet,
 } from "../../hooks/useOutlets"
 import { useListControls } from "../../hooks/useListControls"
 import {
@@ -31,6 +31,9 @@ import {
   inputClass,
   labelClass,
 } from "../../components/seller/SellerUI"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 
 const COLUMNS = [
   { label: "Outlet" },
@@ -40,37 +43,46 @@ const COLUMNS = [
 ]
 
 /* ---------------- Add / Edit form (popup) ---------------- */
+const outletSchema = z.object({
+  name: z.string().trim().min(1, "Outlet name is required"),
+  address: z.string().trim().min(1, "Address is required"),
+  contactPerson: z.string().trim(),
+  contactPhone: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === "" || /^\d{10}$/.test(value),
+      "Phone number must be exactly 10 digits"
+    ),
+})
+
 function OutletForm({ storeId, outlet, onDone }) {
   const isEdit = Boolean(outlet)
   const create = useCreateOutlet(storeId)
   const update = useUpdateOutlet(storeId)
   const saving = create.isPending || update.isPending
 
-  const [form, setForm] = useState({
-    name: outlet?.name ?? "",
-    address: outlet?.address ?? "",
-    contactPerson: outlet?.contactPerson ?? "",
-    contactPhone: outlet?.contactPhone ?? "",
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(outletSchema),
+    // The popup is remounted per outlet (key on <OutletForm />),
+    // so defaultValues is enough and no reset() is needed.
+    defaultValues: {
+      name: outlet?.name ?? "",
+      address: outlet?.address ?? "",
+      contactPerson: outlet?.contactPerson ?? "",
+      contactPhone: outlet?.contactPhone ?? "",
+    },
   })
-  const [error, setError] = useState("")
 
-  const handleChange = (field) => (e) =>
-    setForm((prev) => ({ ...prev, [field]: e.target.value }))
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
-
-    if (!form.name.trim()) {
-      setError("Outlet name is required.")
-      return
-    }
-
+  const onSubmit = async (values) => {
     // send only the fields that have a value
     const payload = Object.fromEntries(
-      Object.entries(form)
-        .map(([key, value]) => [key, value.trim()])
-        .filter(([, value]) => value !== "")
+      Object.entries(values).filter(([, value]) => value !== "")
     )
 
     try {
@@ -81,7 +93,9 @@ function OutletForm({ storeId, outlet, onDone }) {
       }
       onDone()
     } catch (err) {
-      setError(err.message || "Unable to save outlet.")
+      setError("root.server", {
+        message: err.message || "Unable to save outlet.",
+      })
     }
   }
 
@@ -91,50 +105,53 @@ function OutletForm({ storeId, outlet, onDone }) {
       onClose={onDone}
       busy={saving}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <ErrorBanner>{error}</ErrorBanner>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <ErrorBanner>{errors.root?.server?.message}</ErrorBanner>
 
         <div>
           <label className={labelClass}>
             Outlet name <Req />
           </label>
           <input
-            required
-            value={form.name}
-            onChange={handleChange("name")}
+            {...register("name")}
             className={inputClass}
             placeholder="e.g. Pokhara branch"
+            aria-invalid={!!errors.name}
           />
+          <FieldError error={errors.name} />
         </div>
 
         <div>
-          <label className={labelClass}>Address</label>
+          <label className={labelClass}>
+            Address <Req />
+          </label>
           <input
-            value={form.address}
-            onChange={handleChange("address")}
+            {...register("address")}
             className={inputClass}
             placeholder="Street, city"
           />
+          <FieldError error={errors.address} />
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className={labelClass}>Contact person</label>
             <input
-              value={form.contactPerson}
-              onChange={handleChange("contactPerson")}
+              {...register("contactPerson")}
               className={inputClass}
               placeholder="Full name"
             />
+            <FieldError error={errors.contactPerson} />
           </div>
           <div>
             <label className={labelClass}>Contact phone</label>
             <input
-              value={form.contactPhone}
-              onChange={handleChange("contactPhone")}
+              {...register("contactPhone")}
               className={inputClass}
               placeholder="Phone number"
+              aria-invalid={!!errors.contactPhone}
             />
+            <FieldError error={errors.contactPhone} />
           </div>
         </div>
 
@@ -158,6 +175,7 @@ export default function SellerOutlets() {
   const { data: outlets = [], isLoading, error } = useOutlets(shop.id)
   const toggle = useToggleOutletStatus(shop.id)
   const remove = useDeleteOutlet(shop.id)
+  const changeMain = useChangeMainOutlet(shop.id)
 
   const list = useListControls(
     outlets,
@@ -184,6 +202,11 @@ export default function SellerOutlets() {
   const handleDelete = (outlet) => {
     if (!window.confirm(`Delete "${outlet.name}"?`)) return
     run(outlet.id, () => remove.mutateAsync(outlet.id))
+  }
+
+  const handleMakeMain = (outlet) => {
+    if (!window.confirm(`Make "${outlet.name}" the main outlet?`)) return
+    run(outlet.id, () => changeMain.mutateAsync(outlet.id))
   }
 
   return (
@@ -267,6 +290,31 @@ export default function SellerOutlets() {
                     </Td>
 
                     <Td align="right" className="whitespace-nowrap">
+                      {outlet.isMain ? (
+                        <span
+                          title="Main outlet"
+                          aria-label="Main outlet"
+                          className="inline-flex h-8 items-center px-2.5"
+                        >
+                          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        </span>
+                      ) : outlet.isActive ? (
+                        <RowButton
+                          disabled={busy}
+                          onClick={() => handleMakeMain(outlet)}
+                          aria-label={`Make ${outlet.name} the main outlet`}
+                          title="Make main outlet"
+                          className="hover:text-amber-500"
+                        >
+                          <Star className="h-4 w-4" />
+                        </RowButton>
+                      ) : (
+                        <span
+                          className="inline-block h-8 w-9"
+                          aria-hidden="true"
+                        />
+                      )}
+
                       <RowButton
                         disabled={busy}
                         onClick={() =>

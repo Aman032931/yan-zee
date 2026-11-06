@@ -1,70 +1,76 @@
 import { useState } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 
 import { registerUser } from "../services/authService"
 
 import "../styles/auth.css"
 
+const signupSchema = z
+  .object({
+    name: z.string().trim().min(1, "Full name is required"),
+    email: z
+      .string()
+      .trim()
+      .min(1, "Email is required")
+      .email("Please enter a valid email address"),
+    phone: z
+      .string()
+      .trim()
+      .regex(/^\+?[0-9\s-]{7,15}$/, "Please enter a valid phone number"),
+    password: z.string().min(1, "Password is required"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
+
+function FieldError({ error }) {
+  if (!error) return null
+  return <p className="auth-field-error">{error.message}</p>
+}
+
 export default function Signup() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-  })
-
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-    setError("")
-  }
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+    },
+  })
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
-      return
-    }
-
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      setError("Please enter a valid email address.")
-      return
-    }
-
-    if (!/^\+?[0-9\s-]{7,15}$/.test(formData.phone.trim())) {
-      setError("Please enter a valid phone number.")
-      return
-    }
-
-    const payload = {
-      fullName: formData.name.trim(),
-      email: formData.email.trim(),
-      password: formData.password,
-      phone: formData.phone.trim(),
-    }
-
-    setIsLoading(true)
+  const onSubmit = async (values) => {
     try {
-      await registerUser(payload)
+      await registerUser({
+        fullName: values.name,
+        email: values.email,
+        password: values.password,
+        phone: values.phone,
+      })
+
       navigate("/login", {
         replace: true,
         state: { from: location.state?.from || "/" },
       })
     } catch (err) {
-      setError(err.message)
-    } finally {
-      setIsLoading(false)
+      setError("root.server", { message: err.message })
     }
   }
 
@@ -143,8 +149,14 @@ export default function Signup() {
               </Link>
             </div>
 
-            <form className="auth-form" onSubmit={handleSubmit}>
-              {error && <div className="auth-error">⚠ {error}</div>}
+            <form
+              className="auth-form"
+              onSubmit={handleSubmit(onSubmit)}
+              noValidate
+            >
+              {errors.root?.server && (
+                <div className="auth-error">⚠ {errors.root.server.message}</div>
+              )}
 
               {/* FULL NAME */}
               <div className="auth-form-group">
@@ -155,14 +167,12 @@ export default function Signup() {
                   <input
                     id="name"
                     type="text"
-                    name="name"
-                    value={formData.name}
                     placeholder="Enter your full name"
-                    onChange={handleInputChange}
                     autoComplete="name"
-                    required
+                    {...register("name")}
                   />
                 </div>
+                <FieldError error={errors.name} />
               </div>
 
               {/* EMAIL */}
@@ -174,14 +184,12 @@ export default function Signup() {
                   <input
                     id="signup-email"
                     type="email"
-                    name="email"
-                    value={formData.email}
                     placeholder="Enter your email"
-                    onChange={handleInputChange}
                     autoComplete="email"
-                    required
+                    {...register("email")}
                   />
                 </div>
+                <FieldError error={errors.email} />
               </div>
 
               {/* PHONE */}
@@ -193,14 +201,12 @@ export default function Signup() {
                   <input
                     id="phone"
                     type="tel"
-                    name="phone"
-                    value={formData.phone}
                     placeholder="Enter your phone number"
-                    onChange={handleInputChange}
                     autoComplete="tel"
-                    required
+                    {...register("phone")}
                   />
                 </div>
+                <FieldError error={errors.phone} />
               </div>
 
               {/* PASSWORD */}
@@ -212,12 +218,9 @@ export default function Signup() {
                   <input
                     id="signup-password"
                     type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
                     placeholder="Enter your password"
-                    onChange={handleInputChange}
                     autoComplete="new-password"
-                    required
+                    {...register("password")}
                   />
                   <button
                     type="button"
@@ -228,6 +231,7 @@ export default function Signup() {
                     {showPassword ? "👁" : "⌣"}
                   </button>
                 </div>
+                <FieldError error={errors.password} />
               </div>
 
               {/* CONFIRM PASSWORD */}
@@ -239,12 +243,9 @@ export default function Signup() {
                   <input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
                     placeholder="Confirm your password"
-                    onChange={handleInputChange}
                     autoComplete="new-password"
-                    required
+                    {...register("confirmPassword")}
                   />
                   <button
                     type="button"
@@ -257,11 +258,16 @@ export default function Signup() {
                     {showConfirmPassword ? "👁" : "⌣"}
                   </button>
                 </div>
+                <FieldError error={errors.confirmPassword} />
               </div>
 
               {/* SIGN UP */}
-              <button type="submit" className="auth-submit" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Sign Up"}
+              <button
+                type="submit"
+                className="auth-submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Creating account..." : "Sign Up"}
               </button>
 
               <p className="auth-switch">

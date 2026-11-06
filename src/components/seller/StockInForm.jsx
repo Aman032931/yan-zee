@@ -1,10 +1,14 @@
-import { useState } from "react"
+import { useEffect, useMemo } from "react"
 import { Plus, Trash2 } from "lucide-react"
+import { useForm, useFieldArray } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 
 import { useOutlets } from "../../hooks/useOutlets"
 import { useInventoryStock, useStockIn } from "../../hooks/useInventory"
 import {
   ErrorBanner,
+  FieldError,
   FormModal,
   PrimaryButton,
   Req,
@@ -12,6 +16,51 @@ import {
   inputClass,
   labelClass,
 } from "./SellerUI"
+
+const makeItemSchema = (validKeys) =>
+  z
+    .object({
+      itemKey: z
+        .string()
+        .min(1, "Choose a product")
+        .refine((key) => validKeys.has(key), "Choose a valid product"),
+      quantity: z
+        .string()
+        .min(1, "Quantity is required")
+        .refine(
+          (value) => Number.isInteger(Number(value)) && Number(value) > 0,
+          "Quantity must be a whole number greater than 0"
+        ),
+      unitCost: z
+        .string()
+        .min(1, "Unit cost is required")
+        .refine(
+          (value) => Number.isFinite(Number(value)) && Number(value) >= 0,
+          "Unit cost must be 0 or greater"
+        ),
+      supplierLot: z.string().trim(),
+      manufactureDate: z.string(),
+      expiryDate: z.string(),
+    })
+    .refine(
+      (row) =>
+        !row.manufactureDate ||
+        !row.expiryDate ||
+        row.expiryDate >= row.manufactureDate,
+      {
+        message: "Expiry date can't be before the manufacture date",
+        path: ["expiryDate"],
+      }
+    )
+
+const makeStockInSchema = (validKeys) =>
+  z.object({
+    outletId: z.string().min(1, "Please choose an outlet"),
+    referenceNumber: z.string().trim(),
+    supplierName: z.string().trim(),
+    note: z.string().trim(),
+    items: z.array(makeItemSchema(validKeys)).min(1, "Add at least one item"),
+  })
 
 const emptyRow = () => ({
   itemKey: "",
@@ -28,7 +77,7 @@ export default function StockInForm({ storeId, onDone }) {
   const stockIn = useStockIn(storeId)
   const saving = stockIn.isPending
 
-  const { data: outlets = [], isLoading: loadingOutlets } = useOutlets(storeId)
+  const { data: outlets, isLoading: loadingOutlets } = useOutlets(storeId)
 
   // Items you can add stock to come from the inventory list.
   const { data: stockResponse, isLoading: loadingItems } = useInventoryStock({
@@ -37,102 +86,89 @@ export default function StockInForm({ storeId, onDone }) {
     limit: 100,
   })
 
-  const stockItems = stockResponse?.data?.items ?? []
-  const itemsByKey = Object.fromEntries(
-    stockItems.map((item) => [itemKeyOf(item), item]),
+  const stockItems = useMemo(
+    () => stockResponse?.data?.items ?? [],
+    [stockResponse]
   )
 
-  const activeOutlets = outlets.filter((outlet) => outlet.isActive !== false)
+  const itemsByKey = useMemo(
+    () =>
+      Object.fromEntries(stockItems.map((item) => [itemKeyOf(item), item])),
+    [stockItems]
+  )
 
-  const [outletId, setOutletId] = useState("")
-  const [referenceNumber, setReferenceNumber] = useState("")
-  const [supplierName, setSupplierName] = useState("")
-  const [note, setNote] = useState("")
-  const [rows, setRows] = useState([emptyRow()])
-  const [error, setError] = useState("")
+  const schema = useMemo(
+  () => makeStockInSchema(new Set(Object.keys(itemsByKey))),
+  [itemsByKey]
+)
+
+  const activeOutlets = useMemo(
+    () => (outlets ?? []).filter((outlet) => outlet.isActive !== false),
+    [outlets]
+  )
 
   // With only one active outlet there is nothing to choose.
-  const selectedOutletId =
-    outletId || (activeOutlets.length === 1 ? activeOutlets[0].id : "")
+  const singleOutletId = activeOutlets.length === 1 ? activeOutlets[0].id : ""
 
-  const setRow = (index, field, value) =>
-    setRows((previous) =>
-      previous.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
-    )
+  const {
+    register,
+    handleSubmit,
+    control,
+    getValues,
+    setValue,
+    setError,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      outletId: "",
+      referenceNumber: "",
+      supplierName: "",
+      note: "",
+      items: [emptyRow()],
+    },
+  })
 
-  const addRow = () => setRows((previous) => [...previous, emptyRow()])
+  const { fields, append, remove } = useFieldArray({ control, name: "items" })
 
-  const removeRow = (index) =>
-    setRows((previous) => previous.filter((_, i) => i !== index))
-
-  const handleSubmit = async (event) => {
-    event.preventDefault()
-    setError("")
-
-    if (!selectedOutletId) {
-      setError("Please choose an outlet.")
-      return
+  useEffect(() => {
+    if (singleOutletId && !getValues("outletId")) {
+      setValue("outletId", singleOutletId)
     }
+  }, [singleOutletId, getValues, setValue])
 
-    const items = []
+  const onSubmit = async (values) => {
+  const items = values.items.map((row) => {
+    const source = itemsByKey[row.itemKey]
 
-    for (let i = 0; i < rows.length; i += 1) {
-      const row = rows[i]
-      const label = `Item ${i + 1}`
-      const source = itemsByKey[row.itemKey]
-      const quantity = Number(row.quantity)
-      const unitCost = Number(row.unitCost)
-
-      if (!source) {
-        setError(`${label}: choose a product.`)
-        return
-      }
-
-      if (!Number.isInteger(quantity) || quantity <= 0) {
-        setError(`${label}: quantity must be a whole number greater than 0.`)
-        return
-      }
-
-      if (row.unitCost === "" || !Number.isFinite(unitCost) || unitCost < 0) {
-        setError(`${label}: unit cost must be 0 or greater.`)
-        return
-      }
-
-      if (
-        row.manufactureDate &&
-        row.expiryDate &&
-        row.expiryDate < row.manufactureDate
-      ) {
-        setError(`${label}: expiry date can't be before the manufacture date.`)
-        return
-      }
-
-      items.push({
-        productId: source.productId,
-        ...(source.variantId && { variantId: source.variantId }),
-        quantity,
-        unitCost,
-        ...(row.supplierLot.trim() && { supplierLot: row.supplierLot.trim() }),
-        ...(row.manufactureDate && { manufactureDate: row.manufactureDate }),
-        ...(row.expiryDate && { expiryDate: row.expiryDate }),
-      })
+    return {
+      productId: source.productId,
+      ...(source.variantId && { variantId: source.variantId }),
+      quantity: Number(row.quantity),
+      unitCost: Number(row.unitCost),
+      ...(row.supplierLot && { supplierLot: row.supplierLot }),
+      ...(row.manufactureDate && { manufactureDate: row.manufactureDate }),
+      ...(row.expiryDate && { expiryDate: row.expiryDate }),
     }
+  })
 
-    const payload = {
-      outletId: selectedOutletId,
-      ...(referenceNumber.trim() && { referenceNumber: referenceNumber.trim() }),
-      ...(supplierName.trim() && { supplierName: supplierName.trim() }),
-      ...(note.trim() && { note: note.trim() }),
-      items,
-    }
-
-    try {
-      await stockIn.mutateAsync(payload)
-      onDone()
-    } catch (err) {
-      setError(err.message || "Unable to add stock.")
-    }
+  const payload = {
+    outletId: values.outletId,
+    ...(values.referenceNumber && { referenceNumber: values.referenceNumber }),
+    ...(values.supplierName && { supplierName: values.supplierName }),
+    ...(values.note && { note: values.note }),
+    items,
   }
+
+  try {
+    await stockIn.mutateAsync(payload)
+    onDone()
+  } catch (err) {
+    setError("root.server", {
+      message: err.message || "Unable to add stock.",
+    })
+  }
+}
 
   return (
     <FormModal
@@ -141,8 +177,8 @@ export default function StockInForm({ storeId, onDone }) {
       busy={saving}
       maxWidth="max-w-3xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <ErrorBanner>{error}</ErrorBanner>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <ErrorBanner>{errors.root?.server?.message}</ErrorBanner>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
@@ -150,9 +186,9 @@ export default function StockInForm({ storeId, onDone }) {
               Outlet <Req />
             </label>
             <select
-              value={selectedOutletId}
-              onChange={(e) => setOutletId(e.target.value)}
+              {...register("outletId")}
               className={inputClass}
+              aria-invalid={!!errors.outletId}
             >
               <option value="">
                 {loadingOutlets
@@ -169,13 +205,13 @@ export default function StockInForm({ storeId, onDone }) {
                 </option>
               ))}
             </select>
+            <FieldError error={errors.outletId} />
           </div>
 
           <div>
             <label className={labelClass}>Reference number</label>
             <input
-              value={referenceNumber}
-              onChange={(e) => setReferenceNumber(e.target.value)}
+              {...register("referenceNumber")}
               className={inputClass}
               placeholder="e.g. STOCK-IN-2026-004"
             />
@@ -184,8 +220,7 @@ export default function StockInForm({ storeId, onDone }) {
           <div>
             <label className={labelClass}>Supplier</label>
             <input
-              value={supplierName}
-              onChange={(e) => setSupplierName(e.target.value)}
+              {...register("supplierName")}
               className={inputClass}
               placeholder="e.g. XYZ Garment Suppliers"
             />
@@ -194,8 +229,7 @@ export default function StockInForm({ storeId, onDone }) {
           <div>
             <label className={labelClass}>Note</label>
             <input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
+              {...register("note")}
               className={inputClass}
               placeholder="Optional"
             />
@@ -214,121 +248,123 @@ export default function StockInForm({ storeId, onDone }) {
             </p>
           )}
 
-          {rows.map((row, index) => (
-            <div
-              key={index}
-              className="space-y-3 rounded-xl border border-yz-border bg-yz-bg p-3"
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-zinc-700">
-                  Item {index + 1}
-                </p>
+          {fields.map((field, index) => {
+            const rowErrors = errors.items?.[index]
 
-                {rows.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeRow(index)}
-                    aria-label={`Remove item ${index + 1}`}
-                    className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                )}
-              </div>
+            return (
+              <div
+                key={field.id}
+                className="space-y-3 rounded-xl border border-yz-border bg-yz-bg p-3"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-zinc-700">
+                    Item {index + 1}
+                  </p>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-                <div className="sm:col-span-2">
-                  <label className={labelClass}>
-                    Product <Req />
-                  </label>
-                  <select
-                    value={row.itemKey}
-                    onChange={(e) => setRow(index, "itemKey", e.target.value)}
-                    className={inputClass}
-                  >
-                    <option value="">
-                      {loadingItems ? "Loading products..." : "Select product"}
-                    </option>
+                  {fields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => remove(index)}
+                      aria-label={`Remove item ${index + 1}`}
+                      className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  )}
+                </div>
 
-                    {stockItems.map((item) => (
-                      <option key={itemKeyOf(item)} value={itemKeyOf(item)}>
-                        {item.name}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>
+                      Product <Req />
+                    </label>
+                    <select
+                      {...register(`items.${index}.itemKey`)}
+                      className={inputClass}
+                      aria-invalid={!!rowErrors?.itemKey}
+                    >
+                      <option value="">
+                        {loadingItems
+                          ? "Loading products..."
+                          : "Select product"}
                       </option>
-                    ))}
-                  </select>
+
+                      {stockItems.map((item) => (
+                        <option key={itemKeyOf(item)} value={itemKeyOf(item)}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </select>
+                    <FieldError error={rowErrors?.itemKey} />
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>
+                      Quantity <Req />
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      {...register(`items.${index}.quantity`)}
+                      className={inputClass}
+                      aria-invalid={!!rowErrors?.quantity}
+                    />
+                    <FieldError error={rowErrors?.quantity} />
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>
+                      Unit cost (Nrs) <Req />
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      {...register(`items.${index}.unitCost`)}
+                      className={inputClass}
+                      aria-invalid={!!rowErrors?.unitCost}
+                    />
+                    <FieldError error={rowErrors?.unitCost} />
+                  </div>
                 </div>
 
-                <div>
-                  <label className={labelClass}>
-                    Quantity <Req />
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={row.quantity}
-                    onChange={(e) => setRow(index, "quantity", e.target.value)}
-                    className={inputClass}
-                  />
-                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div>
+                    <label className={labelClass}>Supplier lot</label>
+                    <input
+                      {...register(`items.${index}.supplierLot`)}
+                      className={inputClass}
+                    />
+                  </div>
 
-                <div>
-                  <label className={labelClass}>
-                    Unit cost (Nrs) <Req />
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={row.unitCost}
-                    onChange={(e) => setRow(index, "unitCost", e.target.value)}
-                    className={inputClass}
-                  />
+                  <div>
+                    <label className={labelClass}>Manufacture date</label>
+                    <input
+                      type="date"
+                      {...register(`items.${index}.manufactureDate`)}
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Expiry date</label>
+                    <input
+                      type="date"
+                      {...register(`items.${index}.expiryDate`)}
+                      className={inputClass}
+                      aria-invalid={!!rowErrors?.expiryDate}
+                    />
+                    <FieldError error={rowErrors?.expiryDate} />
+                  </div>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div>
-                  <label className={labelClass}>Supplier lot</label>
-                  <input
-                    value={row.supplierLot}
-                    onChange={(e) =>
-                      setRow(index, "supplierLot", e.target.value)
-                    }
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Manufacture date</label>
-                  <input
-                    type="date"
-                    value={row.manufactureDate}
-                    onChange={(e) =>
-                      setRow(index, "manufactureDate", e.target.value)
-                    }
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Expiry date</label>
-                  <input
-                    type="date"
-                    value={row.expiryDate}
-                    onChange={(e) =>
-                      setRow(index, "expiryDate", e.target.value)
-                    }
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
+            )
+          })}
 
           <button
             type="button"
-            onClick={addRow}
+            onClick={() => append(emptyRow())}
             className="inline-flex cursor-pointer items-center gap-1 text-sm font-semibold text-brand-red-600 hover:underline"
           >
             <Plus size={15} />

@@ -47,7 +47,9 @@ import SellerShops from "./pages/seller/SellerShops"
 import SellerSettings from "./pages/seller/SellerSettings"
 import SellerCategoryDetail from "./pages/seller/SellerCategoryDetails"
 import SellerOutlets from "./pages/seller/SellerOutlets"
-import SellerInventory from "./pages/seller/SellerInventory"
+import SellerInventoryOverview from "./pages/seller/SellerInventoryOverview"
+import SellerInventoryStock from "./pages/seller/SellerInventoryStock"
+import SellerInventoryMovements from "./pages/seller/SellerInventoryMovements"
 
 import Profile from "./pages/Profile"
 import SellerCustomers from "./pages/seller/SellerCustomers"
@@ -167,7 +169,12 @@ function App() {
             { index: true, element: <SellerDashboard /> },
             { path: "products", element: <SellerProducts /> },
             { path: "products/:id", element: <SellerProductDetail /> },
-            { path: "inventory", element: <SellerInventory /> },
+            { path: "inventory", element: <SellerInventoryOverview /> },
+            { path: "inventory/stock", element: <SellerInventoryStock /> },
+            {
+              path: "inventory/movements",
+              element: <SellerInventoryMovements />,
+            },
             { path: "categories", element: <SellerCategories /> },
             { path: "categories/:id", element: <SellerCategoryDetail /> },
             { path: "brands", element: <SellerBrands /> },

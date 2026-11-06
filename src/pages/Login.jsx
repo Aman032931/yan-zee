@@ -1,69 +1,57 @@
 import { useState, useRef } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import "../styles/auth.css"
 import { useAuth } from "../context/useAuth"
+
+const loginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+})
+
+function FieldError({ error }) {
+  if (!error) return null
+  return <p className="auth-field-error">{error.message}</p>
+}
 
 function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const { login } = useAuth()
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  })
-
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
   const [isVideoLoaded, setIsVideoLoaded] = useState(false)
 
   const videoRef = useRef(null)
+
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  })
 
   const handleClose = () => {
     navigate(location.state?.from || "/", { replace: true })
   }
 
   // =========================
-  // INPUT CHANGE
-  // =========================
-  const handleChange = (e) => {
-    const { name, value } = e.target
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-
-    setError("")
-  }
-
-  // =========================
   // LOGIN SUBMIT
   // =========================
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
-
-    // Empty validation
-    if (!formData.email || !formData.password) {
-      setError("Please enter your email and password.")
-      return
-    }
-
-    // Email validation
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      setError("Please enter a valid email address.")
-      return
-    }
-
-    setIsLoading(true)
-
-    const result = await login(formData.email.trim(), formData.password)
-    setIsLoading(false)
+  const onSubmit = async ({ email, password }) => {
+    const result = await login(email, password)
 
     if (!result.success) {
-      setError(result.error)
+      setError("root.server", { message: result.error })
       return
     }
 
@@ -193,9 +181,15 @@ function Login() {
             </div>
 
             {/* Login form */}
-            <form className="auth-form" onSubmit={handleSubmit}>
+            <form
+              className="auth-form"
+              onSubmit={handleSubmit(onSubmit)}
+              noValidate
+            >
               {/* Error */}
-              {error && <div className="auth-error">⚠ {error}</div>}
+              {errors.root?.server && (
+                <div className="auth-error">⚠ {errors.root.server.message}</div>
+              )}
 
               {/* ================= EMAIL ================= */}
 
@@ -206,14 +200,13 @@ function Login() {
                   <input
                     id="email"
                     type="email"
-                    name="email"
-                    value={formData.email}
                     placeholder="Enter your email"
-                    onChange={handleChange}
                     autoComplete="email"
-                    required
+                    {...register("email")}
                   />
                 </div>
+
+                <FieldError error={errors.email} />
               </div>
 
               {/* ================= PASSWORD ================= */}
@@ -225,12 +218,9 @@ function Login() {
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
                     placeholder="Enter your password"
-                    onChange={handleChange}
                     autoComplete="current-password"
-                    required
+                    {...register("password")}
                   />
 
                   <button
@@ -244,6 +234,8 @@ function Login() {
                     {showPassword ? "👁" : "⌣"}
                   </button>
                 </div>
+
+                <FieldError error={errors.password} />
               </div>
 
               {/* ================= FORGOT PASSWORD ================= */}
@@ -257,9 +249,9 @@ function Login() {
               <button
                 type="submit"
                 className="auth-submit"
-                disabled={isLoading}
+                disabled={isSubmitting}
               >
-                {isLoading ? "Logging in..." : "Login"}
+                {isSubmitting ? "Logging in..." : "Login"}
               </button>
 
               {/* ================= SIGNUP ================= */}

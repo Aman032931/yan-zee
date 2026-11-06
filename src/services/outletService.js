@@ -61,3 +61,13 @@ export const deleteOutlet = async (storeId, outletId) => {
   })
   return res.data.deletedOutlet
 }
+
+// PATCH /outlets/change-main  { outletId } -> { data: { outlet, previousMain } }
+export const changeMainOutlet = async (storeId, outletId) => {
+  const res = await apiRequest("/outlets/change-main", {
+    method: "PATCH",
+    body: { outletId },
+    headers: storeHeaders(storeId),
+  })
+  return res.data
+}

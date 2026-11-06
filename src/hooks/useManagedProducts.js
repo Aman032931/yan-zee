@@ -6,7 +6,6 @@ import {
   getProductById,
   createProduct,
   updateProduct,
-  updateProductInventory,
   updateProductStatus,
   updateProductCustom,
   updateProductSeo,

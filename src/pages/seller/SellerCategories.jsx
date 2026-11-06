@@ -1,17 +1,10 @@
 
 import { useState } from "react"
 import { useOutletContext } from "react-router-dom"
-import {
-  Eye,
-  Layers,
-  Pencil,
-  Plus,
-  Trash2,
-  Tag,
-  Package,
-  Search,
-} from "lucide-react"
-
+import { Eye, Layers, Pencil, Plus, Trash2 } from "lucide-react"
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import {
   useCategories,
   useCreateCategory,
@@ -28,8 +21,7 @@ import {
   ErrorBanner,
   FormModal,
   ImageUploadField,
-  LoadingRows,
-  PageHeader,
+  LoadingRows, 
   PageShell,
   PrimaryButton,
   Req,
@@ -43,6 +35,7 @@ import {
   inputClass,
   labelClass,
 } from "../../components/seller/SellerUI"
+import { PageHeader } from "../../components/seller/SellerUI"
 
 const COLUMNS = [
   { label: "Category" },
@@ -51,7 +44,28 @@ const COLUMNS = [
   { label: "Actions", align: "right" },
 ]
 
-/* ---------------- Add / Edit form ---------------- */
+/* ---------------- Add / Edit form (popup) ---------------- */
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024
+
+const imageField = z
+  .instanceof(File)
+  .refine((file) => file.type.startsWith("image/"), "File must be an image")
+  .refine((file) => file.size <= MAX_IMAGE_SIZE, "Image must be under 5 MB")
+  .nullable()
+  .optional()
+
+const categorySchema = z.object({
+  name: z.string().trim().min(1, "Category name is required"),
+  description: z.string().trim(),
+  isAvailable: z.boolean(),
+  imageFile: imageField,
+  seoImageFile: imageField,
+})
+
+function FieldError({ error }) {
+  if (!error) return null
+  return <p className="mt-1.5 text-xs text-red-600">{error.message}</p>
+}
 
 function CategoryForm({ storeId, category, onDone }) {
   const isEdit = Boolean(category)
@@ -59,53 +73,44 @@ function CategoryForm({ storeId, category, onDone }) {
   const update = useUpdateCategory(storeId)
   const saving = create.isPending || update.isPending
 
-  const [name, setName] = useState(category?.name ?? "")
-  const [description, setDescription] = useState(
-    category?.description ?? ""
-  )
-  const [isAvailable, setIsAvailable] = useState(
-    category?.isAvailable ?? true
-  )
-  const [imageFile, setImageFile] = useState(null)
-  const [seoImageFile, setSeoImageFile] = useState(null)
-  const [error, setError] = useState("")
+  const {
+    register,
+    handleSubmit,
+    control,
+    setError,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(categorySchema),
+    // The popup is remounted per category (key on <CategoryForm />),
+    // so defaultValues is enough and no reset() is needed.
+    defaultValues: {
+      name: category?.name ?? "",
+      description: category?.description ?? "",
+      isAvailable: category?.isAvailable ?? true,
+      imageFile: null,
+      seoImageFile: null,
+    },
+  })
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
-
-    const trimmed = name.trim()
-
-    if (!trimmed) {
-      setError("Category name is required.")
-      return
+  const onSubmit = async ({ description, ...values }) => {
+    // same behavior as before: only send description when it has a value
+    const payload = {
+      ...values,
+      ...(description ? { description } : {}),
     }
 
     try {
-      const desc = description.trim()
-
       if (isEdit) {
-        await update.mutateAsync({
-          categoryId: category.id,
-          name: trimmed,
-          isAvailable,
-          imageFile,
-          seoImageFile,
-          ...(desc ? { description: desc } : {}),
-        })
+        await update.mutateAsync({ categoryId: category.id, ...payload })
       } else {
-        await create.mutateAsync({
-          name: trimmed,
-          isAvailable,
-          imageFile,
-          seoImageFile,
-          ...(desc ? { description: desc } : {}),
-        })
+        await create.mutateAsync(payload)
       }
 
       onDone()
     } catch (err) {
-      setError(err.message || "Unable to save category.")
+      setError("root.server", {
+        message: err.message || "Unable to save category.",
+      })
     }
   }
 
@@ -115,8 +120,8 @@ function CategoryForm({ storeId, category, onDone }) {
       onClose={onDone}
       busy={saving}
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <ErrorBanner>{error}</ErrorBanner>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <ErrorBanner>{errors.root?.server?.message}</ErrorBanner>
 
         <div>
           <label className={labelClass}>
@@ -124,12 +129,12 @@ function CategoryForm({ storeId, category, onDone }) {
           </label>
 
           <input
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            {...register("name")}
             className={inputClass}
             placeholder="e.g. Running shoes"
+            aria-invalid={!!errors.name}
           />
+          <FieldError error={errors.name} />
         </div>
 
         <div>
@@ -139,50 +144,57 @@ function CategoryForm({ storeId, category, onDone }) {
 
           <textarea
             rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            {...register("description")}
             className={`${inputClass} resize-none`}
             placeholder="Short description of this category"
           />
+          <FieldError error={errors.description} />
         </div>
 
-        <ImageUploadField
-          id="category-image"
-          label="Category image (optional)"
-          file={imageFile}
-          currentUrl={category?.image}
-          onChange={setImageFile}
-          uploadText="Upload image"
-        />
-
-        <ImageUploadField
-          id="category-seo-image"
-          label="SEO image (optional)"
-          file={seoImageFile}
-          currentUrl={category?.seoImage}
-          onChange={setSeoImageFile}
-          uploadText="Upload SEO image"
-        />
-
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-          <label className="flex cursor-pointer items-center gap-3">
-            <input
-              type="checkbox"
-              checked={isAvailable}
-              onChange={(e) => setIsAvailable(e.target.checked)}
-              className="h-4 w-4 accent-brand-red-600"
-            />
-
-            <span>
-              <span className="block text-sm font-semibold text-zinc-900">
-                Available to use on products
-              </span>
-              <span className="mt-0.5 block text-xs text-zinc-500">
-                Customers and product listings can use this category.
-              </span>
-            </span>
-          </label>
+        <div>
+          <Controller
+            control={control}
+            name="imageFile"
+            render={({ field }) => (
+              <ImageUploadField
+                id="category-image"
+                label="Image (optional)"
+                file={field.value}
+                currentUrl={category?.image}
+                onChange={field.onChange}
+                uploadText="Upload image"
+              />
+            )}
+          />
+          <FieldError error={errors.imageFile} />
         </div>
+
+        <div>
+          <Controller
+            control={control}
+            name="seoImageFile"
+            render={({ field }) => (
+              <ImageUploadField
+                id="category-seo-image"
+                label="SEO image (optional)"
+                file={field.value}
+                currentUrl={category?.seoImage}
+                onChange={field.onChange}
+                uploadText="Upload SEO image"
+              />
+            )}
+          />
+          <FieldError error={errors.seoImageFile} />
+        </div>
+
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-700">
+          <input
+            type="checkbox"
+            {...register("isAvailable")}
+            className="h-4 w-4 accent-brand-red-600"
+          />
+          Available to use on products
+        </label>
 
         <div className="flex justify-end gap-2 border-t border-zinc-100 pt-4">
           <SecondaryButton onClick={onDone} disabled={saving}>
