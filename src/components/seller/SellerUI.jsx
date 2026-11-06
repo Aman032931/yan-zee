@@ -92,6 +92,17 @@ export function ErrorBanner({ children }) {
   )
 }
 
+/* ---------- Inline field error (react-hook-form) ---------- */
+export function FieldError({ error }) {
+  if (!error?.message) return null
+
+  return (
+    <p role="alert" className="mt-1 text-xs text-red-600">
+      {error.message}
+    </p>
+  )
+}
+
 export function FormCard({ title, children }) {
   return (
     <section className="rounded-2xl border border-yz-border bg-white p-5 shadow-sm">

@@ -17,45 +17,50 @@ import {
   labelClass,
 } from "./SellerUI"
 
-const itemSchema = z
-  .object({
-    itemKey: z.string().min(1, "Choose a product"),
-    quantity: z
-      .string()
-      .min(1, "Quantity is required")
-      .refine(
-        (value) => Number.isInteger(Number(value)) && Number(value) > 0,
-        "Quantity must be a whole number greater than 0"
-      ),
-    unitCost: z
-      .string()
-      .min(1, "Unit cost is required")
-      .refine(
-        (value) => Number.isFinite(Number(value)) && Number(value) >= 0,
-        "Unit cost must be 0 or greater"
-      ),
-    supplierLot: z.string().trim(),
-    manufactureDate: z.string(),
-    expiryDate: z.string(),
-  })
-  .refine(
-    (row) =>
-      !row.manufactureDate ||
-      !row.expiryDate ||
-      row.expiryDate >= row.manufactureDate,
-    {
-      message: "Expiry date can't be before the manufacture date",
-      path: ["expiryDate"],
-    }
-  )
+const makeItemSchema = (validKeys) =>
+  z
+    .object({
+      itemKey: z
+        .string()
+        .min(1, "Choose a product")
+        .refine((key) => validKeys.has(key), "Choose a valid product"),
+      quantity: z
+        .string()
+        .min(1, "Quantity is required")
+        .refine(
+          (value) => Number.isInteger(Number(value)) && Number(value) > 0,
+          "Quantity must be a whole number greater than 0"
+        ),
+      unitCost: z
+        .string()
+        .min(1, "Unit cost is required")
+        .refine(
+          (value) => Number.isFinite(Number(value)) && Number(value) >= 0,
+          "Unit cost must be 0 or greater"
+        ),
+      supplierLot: z.string().trim(),
+      manufactureDate: z.string(),
+      expiryDate: z.string(),
+    })
+    .refine(
+      (row) =>
+        !row.manufactureDate ||
+        !row.expiryDate ||
+        row.expiryDate >= row.manufactureDate,
+      {
+        message: "Expiry date can't be before the manufacture date",
+        path: ["expiryDate"],
+      }
+    )
 
-const stockInSchema = z.object({
-  outletId: z.string().min(1, "Please choose an outlet"),
-  referenceNumber: z.string().trim(),
-  supplierName: z.string().trim(),
-  note: z.string().trim(),
-  items: z.array(itemSchema).min(1, "Add at least one item"),
-})
+const makeStockInSchema = (validKeys) =>
+  z.object({
+    outletId: z.string().min(1, "Please choose an outlet"),
+    referenceNumber: z.string().trim(),
+    supplierName: z.string().trim(),
+    note: z.string().trim(),
+    items: z.array(makeItemSchema(validKeys)).min(1, "Add at least one item"),
+  })
 
 const emptyRow = () => ({
   itemKey: "",
@@ -92,6 +97,11 @@ export default function StockInForm({ storeId, onDone }) {
     [stockItems]
   )
 
+  const schema = useMemo(
+  () => makeStockInSchema(new Set(Object.keys(itemsByKey))),
+  [itemsByKey]
+)
+
   const activeOutlets = useMemo(
     () => (outlets ?? []).filter((outlet) => outlet.isActive !== false),
     [outlets]
@@ -109,7 +119,7 @@ export default function StockInForm({ storeId, onDone }) {
     setError,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(stockInSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       outletId: "",
       referenceNumber: "",
@@ -128,45 +138,37 @@ export default function StockInForm({ storeId, onDone }) {
   }, [singleOutletId, getValues, setValue])
 
   const onSubmit = async (values) => {
-    const items = []
+  const items = values.items.map((row) => {
+    const source = itemsByKey[row.itemKey]
 
-    for (let i = 0; i < values.items.length; i += 1) {
-      const row = values.items[i]
-      const source = itemsByKey[row.itemKey]
-
-      if (!source) {
-        setError(`items.${i}.itemKey`, { message: "Choose a product" })
-        return
-      }
-
-      items.push({
-        productId: source.productId,
-        ...(source.variantId && { variantId: source.variantId }),
-        quantity: Number(row.quantity),
-        unitCost: Number(row.unitCost),
-        ...(row.supplierLot && { supplierLot: row.supplierLot }),
-        ...(row.manufactureDate && { manufactureDate: row.manufactureDate }),
-        ...(row.expiryDate && { expiryDate: row.expiryDate }),
-      })
+    return {
+      productId: source.productId,
+      ...(source.variantId && { variantId: source.variantId }),
+      quantity: Number(row.quantity),
+      unitCost: Number(row.unitCost),
+      ...(row.supplierLot && { supplierLot: row.supplierLot }),
+      ...(row.manufactureDate && { manufactureDate: row.manufactureDate }),
+      ...(row.expiryDate && { expiryDate: row.expiryDate }),
     }
+  })
 
-    const payload = {
-      outletId: values.outletId,
-      ...(values.referenceNumber && { referenceNumber: values.referenceNumber }),
-      ...(values.supplierName && { supplierName: values.supplierName }),
-      ...(values.note && { note: values.note }),
-      items,
-    }
-
-    try {
-      await stockIn.mutateAsync(payload)
-      onDone()
-    } catch (err) {
-      setError("root.server", {
-        message: err.message || "Unable to add stock.",
-      })
-    }
+  const payload = {
+    outletId: values.outletId,
+    ...(values.referenceNumber && { referenceNumber: values.referenceNumber }),
+    ...(values.supplierName && { supplierName: values.supplierName }),
+    ...(values.note && { note: values.note }),
+    items,
   }
+
+  try {
+    await stockIn.mutateAsync(payload)
+    onDone()
+  } catch (err) {
+    setError("root.server", {
+      message: err.message || "Unable to add stock.",
+    })
+  }
+}
 
   return (
     <FormModal

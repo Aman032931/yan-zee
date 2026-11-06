@@ -1,13 +1,14 @@
 import { useState } from "react"
 import { useOutletContext } from "react-router-dom"
-import { MapPin, Pencil, Phone, Plus, Trash2 } from "lucide-react"
-import { Req } from "../../components/seller/SellerUI"
+import { MapPin, Pencil, Phone, Plus, Star, Trash2 } from "lucide-react"
+import { FieldError, Req } from "../../components/seller/SellerUI"
 import {
   useOutlets,
   useCreateOutlet,
   useUpdateOutlet,
   useDeleteOutlet,
   useToggleOutletStatus,
+  useChangeMainOutlet,
 } from "../../hooks/useOutlets"
 import { useListControls } from "../../hooks/useListControls"
 import {
@@ -42,7 +43,6 @@ const COLUMNS = [
 ]
 
 /* ---------------- Add / Edit form (popup) ---------------- */
-/* ---------------- Add / Edit form (popup) ---------------- */
 const outletSchema = z.object({
   name: z.string().trim().min(1, "Outlet name is required"),
   address: z.string().trim().min(1, "Address is required"),
@@ -55,11 +55,6 @@ const outletSchema = z.object({
       "Phone number must be exactly 10 digits"
     ),
 })
-
-function FieldError({ error }) {
-  if (!error) return null
-  return <p className="mt-1.5 text-xs text-red-600">{error.message}</p>
-}
 
 function OutletForm({ storeId, outlet, onDone }) {
   const isEdit = Boolean(outlet)
@@ -127,7 +122,9 @@ function OutletForm({ storeId, outlet, onDone }) {
         </div>
 
         <div>
-          <label className={labelClass}>Address <Req/></label>
+          <label className={labelClass}>
+            Address <Req />
+          </label>
           <input
             {...register("address")}
             className={inputClass}
@@ -178,6 +175,7 @@ export default function SellerOutlets() {
   const { data: outlets = [], isLoading, error } = useOutlets(shop.id)
   const toggle = useToggleOutletStatus(shop.id)
   const remove = useDeleteOutlet(shop.id)
+  const changeMain = useChangeMainOutlet(shop.id)
 
   const list = useListControls(
     outlets,
@@ -204,6 +202,11 @@ export default function SellerOutlets() {
   const handleDelete = (outlet) => {
     if (!window.confirm(`Delete "${outlet.name}"?`)) return
     run(outlet.id, () => remove.mutateAsync(outlet.id))
+  }
+
+  const handleMakeMain = (outlet) => {
+    if (!window.confirm(`Make "${outlet.name}" the main outlet?`)) return
+    run(outlet.id, () => changeMain.mutateAsync(outlet.id))
   }
 
   return (
@@ -287,6 +290,31 @@ export default function SellerOutlets() {
                     </Td>
 
                     <Td align="right" className="whitespace-nowrap">
+                      {outlet.isMain ? (
+                        <span
+                          title="Main outlet"
+                          aria-label="Main outlet"
+                          className="inline-flex h-8 items-center px-2.5"
+                        >
+                          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        </span>
+                      ) : outlet.isActive ? (
+                        <RowButton
+                          disabled={busy}
+                          onClick={() => handleMakeMain(outlet)}
+                          aria-label={`Make ${outlet.name} the main outlet`}
+                          title="Make main outlet"
+                          className="hover:text-amber-500"
+                        >
+                          <Star className="h-4 w-4" />
+                        </RowButton>
+                      ) : (
+                        <span
+                          className="inline-block h-8 w-9"
+                          aria-hidden="true"
+                        />
+                      )}
+
                       <RowButton
                         disabled={busy}
                         onClick={() =>

@@ -13,11 +13,7 @@ import {
 
 import { useOutletContext } from "react-router-dom"
 import { useInventoryStock } from "../../hooks/useInventory"
-import {
-  InventoryOverview,
-  BatchesRow,
-  InventoryMovements,
-} from "../../components/seller/InventoryExtras"
+import { BatchesRow } from "../../components/seller/InventoryExtras"
 import StockInForm from "../../components/seller/StockInForm"
 import { useOutlets } from "../../hooks/useOutlets"
 
@@ -110,8 +106,7 @@ function hasStockHistory(item, outletId) {
   return item?.batchCount == null ? true : Number(item.batchCount) > 0
 }
 
-
-export default function SellerInventory() {
+export default function SellerInventoryStock() {
   const outletContext = useOutletContext() ?? {}
   const { shop } = outletContext
 
@@ -179,10 +174,10 @@ export default function SellerInventory() {
 
           <div>
             <h1 className="text-2xl font-semibold text-foreground">
-              Inventory
+              Search inventory
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Monitor stock levels for your selected store.
+              Find stock records by product, outlet or status.
             </p>
           </div>
         </div>
@@ -209,8 +204,6 @@ export default function SellerInventory() {
           </button>
         </div>
       </div>
-
-      <InventoryOverview storeId={storeId} outletId={outletId} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-yz-border bg-yz-bg p-5">
@@ -446,8 +439,6 @@ export default function SellerInventory() {
           </>
         )}
       </div>
-
-      <InventoryMovements storeId={storeId} outletId={outletId} />
 
       {showStockIn && (
         <StockInForm storeId={storeId} onDone={() => setShowStockIn(false)} />
