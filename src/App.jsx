@@ -1,3 +1,4 @@
+
 import React from "react"
 import { Navigate, useLocation, useNavigate, useRoutes } from "react-router-dom"
 
@@ -30,29 +31,33 @@ import { ToastProvider } from "./context/ToastContext"
 import Toast from "./components/Toast"
 import ProtectedRoute from "./components/ProtectedRoute"
 
+// ADMIN
 import AdminLayout from "./components/admin/AdminLayout"
 import AdminDashboard from "./pages/admin/AdminDashboard"
 import AdminProducts from "./pages/admin/AdminProducts"
 import AdminOrders from "./pages/admin/AdminOrders"
 import AdminUsers from "./pages/admin/AdminUsers"
 
+// SELLER
 import SellerLayout from "./components/seller/SellerLayout"
 import SellerDashboard from "./pages/seller/SellerDashboard"
+import SellerAnalytics from "./pages/seller/SellerAnalytics"
 import SellerProducts from "./pages/seller/SellerProducts"
 import SellerProductDetail from "./pages/seller/SellerProductDetail"
-import SellerCategories from "./pages/seller/SellerCategories"
-import SellerBrands from "./pages/seller/SellerBrands"
-import SellerOrders from "./pages/seller/SellerOrders"
-import SellerShops from "./pages/seller/SellerShops"
-import SellerSettings from "./pages/seller/SellerSettings"
-import SellerCategoryDetail from "./pages/seller/SellerCategoryDetails"
-import SellerOutlets from "./pages/seller/SellerOutlets"
 import SellerInventoryOverview from "./pages/seller/SellerInventoryOverview"
 import SellerInventoryStock from "./pages/seller/SellerInventoryStock"
 import SellerInventoryMovements from "./pages/seller/SellerInventoryMovements"
+import SellerOutlets from "./pages/seller/SellerOutlets"
+
+import SellerCategories from "./pages/seller/SellerCategories"
+import SellerCategoryDetail from "./pages/seller/SellerCategoryDetails"
+import SellerBrands from "./pages/seller/SellerBrands"
+import SellerOrders from "./pages/seller/SellerOrders"
+import SellerCustomers from "./pages/seller/SellerCustomers"
+import SellerShops from "./pages/seller/SellerShops"
+import SellerSettings from "./pages/seller/SellerSettings"
 
 import Profile from "./pages/Profile"
-import SellerCustomers from "./pages/seller/SellerCustomers"
 
 function App() {
   const location = useLocation()
@@ -67,8 +72,7 @@ function App() {
   // Keep the previous page visible behind Login / Signup.
   const backgroundLocation = location.state?.backgroundLocation || null
 
-  // For direct visits to /login or /signup, show the homepage
-  // behind the authentication modal.
+  // For direct visits to /login or /signup, show homepage behind the popup.
   const routeLocation = isAuthPopup
     ? backgroundLocation || { ...location, pathname: "/" }
     : location
@@ -129,12 +133,14 @@ function App() {
     // PROFILE
     {
       element: (
-        <ProtectedRoute roles={["CUSTOMER", "OWNER", "SHOP_OWNER", "ADMIN"]} />
+        <ProtectedRoute
+          roles={["CUSTOMER", "OWNER", "SHOP_OWNER", "ADMIN"]}
+        />
       ),
       children: [{ path: "/profile", element: <Profile /> }],
     },
 
-    // OLD SETUP URL -> onboarding now lives inside the seller panel
+    // OLD SETUP URL
     {
       path: "/shop-owner/setup-shop",
       element: <Navigate to="/seller" replace />,
@@ -167,22 +173,40 @@ function App() {
           element: <SellerLayout />,
           children: [
             { index: true, element: <SellerDashboard /> },
+
+            // ANALYTICS
+            { path: "analytics", element: <SellerAnalytics /> },
+
+            // PRODUCTS
             { path: "products", element: <SellerProducts /> },
             { path: "products/:id", element: <SellerProductDetail /> },
+
+            // INVENTORY
             { path: "inventory", element: <SellerInventoryOverview /> },
             { path: "inventory/stock", element: <SellerInventoryStock /> },
-            {
-              path: "inventory/movements",
-              element: <SellerInventoryMovements />,
-            },
+            { path: "inventory/movements", element: <SellerInventoryMovements /> },
+
+            // OUTLETS
+            { path: "outlets", element: <SellerOutlets /> },
+
+            // CATEGORIES
             { path: "categories", element: <SellerCategories /> },
             { path: "categories/:id", element: <SellerCategoryDetail /> },
+
+            // BRANDS
             { path: "brands", element: <SellerBrands /> },
-            { path: "outlets", element: <SellerOutlets /> },
+
+            // CUSTOMERS
             { path: "customers", element: <SellerCustomers /> },
+
+            // ORDERS
             { path: "orders", element: <SellerOrders /> },
+
+            // OTHER SELLER PAGES
             { path: "shops", element: <SellerShops /> },
             { path: "settings", element: <SellerSettings /> },
+
+            // UNKNOWN SELLER ROUTES
             { path: "*", element: <NotFound /> },
           ],
         },
