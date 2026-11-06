@@ -1,6 +1,16 @@
+
 import { useState } from "react"
 import { useOutletContext } from "react-router-dom"
-import { Eye, Layers, Pencil, Plus, Trash2 } from "lucide-react"
+import {
+  Eye,
+  Layers,
+  Pencil,
+  Plus,
+  Trash2,
+  Tag,
+  Package,
+  Search,
+} from "lucide-react"
 
 import {
   useCategories,
@@ -41,7 +51,8 @@ const COLUMNS = [
   { label: "Actions", align: "right" },
 ]
 
-/* ---------------- Add / Edit form (popup) ---------------- */
+/* ---------------- Add / Edit form ---------------- */
+
 function CategoryForm({ storeId, category, onDone }) {
   const isEdit = Boolean(category)
   const create = useCreateCategory(storeId)
@@ -49,8 +60,12 @@ function CategoryForm({ storeId, category, onDone }) {
   const saving = create.isPending || update.isPending
 
   const [name, setName] = useState(category?.name ?? "")
-  const [description, setDescription] = useState(category?.description ?? "")
-  const [isAvailable, setIsAvailable] = useState(category?.isAvailable ?? true)
+  const [description, setDescription] = useState(
+    category?.description ?? ""
+  )
+  const [isAvailable, setIsAvailable] = useState(
+    category?.isAvailable ?? true
+  )
   const [imageFile, setImageFile] = useState(null)
   const [seoImageFile, setSeoImageFile] = useState(null)
   const [error, setError] = useState("")
@@ -60,6 +75,7 @@ function CategoryForm({ storeId, category, onDone }) {
     setError("")
 
     const trimmed = name.trim()
+
     if (!trimmed) {
       setError("Category name is required.")
       return
@@ -99,13 +115,14 @@ function CategoryForm({ storeId, category, onDone }) {
       onClose={onDone}
       busy={saving}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <ErrorBanner>{error}</ErrorBanner>
 
         <div>
           <label className={labelClass}>
             Category name <Req />
           </label>
+
           <input
             required
             value={name}
@@ -116,7 +133,10 @@ function CategoryForm({ storeId, category, onDone }) {
         </div>
 
         <div>
-          <label className={labelClass}>Description (optional)</label>
+          <label className={labelClass}>
+            Description (optional)
+          </label>
+
           <textarea
             rows={3}
             value={description}
@@ -128,7 +148,7 @@ function CategoryForm({ storeId, category, onDone }) {
 
         <ImageUploadField
           id="category-image"
-          label="Image (optional)"
+          label="Category image (optional)"
           file={imageFile}
           currentUrl={category?.image}
           onChange={setImageFile}
@@ -144,22 +164,37 @@ function CategoryForm({ storeId, category, onDone }) {
           uploadText="Upload SEO image"
         />
 
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-700">
-          <input
-            type="checkbox"
-            checked={isAvailable}
-            onChange={(e) => setIsAvailable(e.target.checked)}
-            className="h-4 w-4 accent-brand-red-600"
-          />
-          Available to use on products
-        </label>
+        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+          <label className="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              checked={isAvailable}
+              onChange={(e) => setIsAvailable(e.target.checked)}
+              className="h-4 w-4 accent-brand-red-600"
+            />
 
-        <div className="flex justify-end gap-2 pt-2">
+            <span>
+              <span className="block text-sm font-semibold text-zinc-900">
+                Available to use on products
+              </span>
+              <span className="mt-0.5 block text-xs text-zinc-500">
+                Customers and product listings can use this category.
+              </span>
+            </span>
+          </label>
+        </div>
+
+        <div className="flex justify-end gap-2 border-t border-zinc-100 pt-4">
           <SecondaryButton onClick={onDone} disabled={saving}>
             Cancel
           </SecondaryButton>
+
           <PrimaryButton type="submit" disabled={saving}>
-            {saving ? "Saving..." : isEdit ? "Save changes" : "Create category"}
+            {saving
+              ? "Saving..."
+              : isEdit
+                ? "Save changes"
+                : "Create category"}
           </PrimaryButton>
         </div>
       </form>
@@ -168,17 +203,26 @@ function CategoryForm({ storeId, category, onDone }) {
 }
 
 /* ---------------- Categories page ---------------- */
+
 export default function SellerCategories() {
   const { shop } = useOutletContext()
 
-  const { data: categories = [], isLoading, error } = useCategories(shop.id)
+  const {
+    data: categories = [],
+    isLoading,
+    error,
+  } = useCategories(shop.id)
 
   const toggle = useToggleCategoryAvailability(shop.id)
   const remove = useDeleteCategory(shop.id)
 
-  const list = useListControls(categories, (c) => `${c.name} ${c.slug ?? ""}`)
+  const list = useListControls(
+    categories,
+    (category) =>
+      `${category.name} ${category.slug ?? ""}`
+  )
 
-  // null = popup closed, {} = add, category object = edit
+  // null = closed, {} = add, category object = edit
   const [formCategory, setFormCategory] = useState(null)
   const [actionError, setActionError] = useState("")
   const [busyId, setBusyId] = useState(null)
@@ -190,19 +234,26 @@ export default function SellerCategories() {
     try {
       await fn()
     } catch (err) {
-      setActionError(err.message || "The action could not be completed.")
+      setActionError(
+        err.message || "The action could not be completed."
+      )
     } finally {
       setBusyId(null)
     }
   }
 
   const handleToggle = (category) => {
-    run(category.id, () => toggle.mutateAsync(category.id))
+    run(category.id, () =>
+      toggle.mutateAsync(category.id)
+    )
   }
 
   const handleDelete = (category) => {
     if (!window.confirm(`Delete "${category.name}"?`)) return
-    run(category.id, () => remove.mutateAsync(category.id))
+
+    run(category.id, () =>
+      remove.mutateAsync(category.id)
+    )
   }
 
   return (
@@ -218,8 +269,11 @@ export default function SellerCategories() {
         }
       />
 
-      <ErrorBanner>{actionError || error?.message}</ErrorBanner>
+      <ErrorBanner>
+        {actionError || error?.message}
+      </ErrorBanner>
 
+      {/* Category list */}
       <DataCard
         icon={Layers}
         title="All categories"
@@ -240,7 +294,7 @@ export default function SellerCategories() {
           />
         ) : list.total === 0 ? (
           <EmptyState
-            icon={Layers}
+            icon={Search}
             title={`No results for "${list.query.trim()}"`}
             text="Try a different name or slug."
           />
@@ -276,13 +330,20 @@ export default function SellerCategories() {
                     </Td>
 
                     <Td>
-                      <StatusPill tone={category.isAvailable ? "green" : "gray"}>
-                        {category.isAvailable ? "Available" : "Unavailable"}
+                      <StatusPill
+                        tone={category.isAvailable ? "green" : "gray"}
+                      >
+                        {category.isAvailable
+                          ? "Available"
+                          : "Unavailable"}
                       </StatusPill>
                     </Td>
 
                     <Td align="right" className="whitespace-nowrap">
-                      <RowLink to={detailUrl} state={{ category }}>
+                      <RowLink
+                        to={detailUrl}
+                        state={{ category }}
+                      >
                         <Eye className="h-4 w-4" />
                         View
                       </RowLink>

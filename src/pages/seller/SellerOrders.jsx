@@ -44,7 +44,15 @@ import { getOutlets } from "../../services/outletService";
 
 const LIMIT = 20;
 
-const STATUS_OPTIONS = [
+const STATUS_FILTER_OPTIONS = [
+  "PENDING",
+  "PROCESSING",
+  "DELIVERED",
+  "CANCELLED",
+  "RETURNED",
+];
+
+const STATUS_UPDATE_OPTIONS = [
   "PROCESSING",
   "DELIVERED",
   "CANCELLED",
@@ -79,8 +87,20 @@ const formatLabel = (value) =>
     .toLowerCase()
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
+const getChannelLabel = (channel) => {
+  const labels = {
+    ADMIN: "Admin Dashboard",
+    POS: "POS",
+    WEB: "Online Store",
+  };
+
+  return labels[channel] || formatLabel(channel);
+};
+
 const getStatusStyle = (status) => {
   switch (status) {
+    case "PENDING":
+      return "bg-amber-50 text-amber-700";
     case "DELIVERED":
       return "bg-green-50 text-green-700";
     case "PROCESSING":
@@ -177,6 +197,7 @@ const inputClass =
 const labelClass = "mb-1.5 block text-sm font-medium";
 
 const initialOrderForm = {
+  channel: "ADMIN",
   customerId: "",
   province: "",
   district: "",
@@ -293,7 +314,6 @@ function CreateOrderModal({ storeId, onClose, onCreated }) {
   const [quantity, setQuantity] = useState("1");
   const [items, setItems] = useState([]);
   const [formError, setFormError] = useState("");
-  
 
   const customersQuery = useCustomers(
     {
@@ -314,24 +334,23 @@ function CreateOrderModal({ storeId, onClose, onCreated }) {
   ]);
 
   const filteredCustomers = useMemo(() => {
-  const search = customerSearch.trim().toLowerCase();
+    const search = customerSearch.trim().toLowerCase();
 
-  if (!search) return customers;
+    if (!search) return customers;
 
-  return customers.filter((customer) => {
-    const name = getCustomerName(customer).toLowerCase();
-    const phone = String(customer.phone || "").toLowerCase();
-    const email = String(customer.email || "").toLowerCase();
+    return customers.filter((customer) => {
+      const name = getCustomerName(customer).toLowerCase();
+      const phone = String(customer.phone || "").toLowerCase();
+      const email = String(customer.email || "").toLowerCase();
 
-    return (
-      name.includes(search) ||
-      phone.includes(search) ||
-      email.includes(search)
-    );
-  });
-}, [customers, customerSearch]);
+      return (
+        name.includes(search) ||
+        phone.includes(search) ||
+        email.includes(search)
+      );
+    });
+  }, [customers, customerSearch]);
 
-  // FIX: Find the currently selected customer.
   const selectedCustomer =
     customers.find(
       (customer) =>
@@ -368,10 +387,21 @@ function CreateOrderModal({ storeId, onClose, onCreated }) {
   );
 
   const deliveryFee = Math.max(0, Number(form.deliveryFee) || 0);
-  const discountValue = Math.max(0, Number(form.discountValue) || 0);
 
-  const discountAmount =
-    form.discountType === "PERCENT"
+  // Discount is optional. Empty or zero means no discount.
+  const rawDiscountValue = form.discountValue.trim();
+  const discountValue = rawDiscountValue === ""
+    ? 0
+    : Number(rawDiscountValue);
+
+  const hasDiscount =
+    rawDiscountValue !== "" &&
+    Number.isFinite(discountValue) &&
+    discountValue > 0;
+
+  const discountAmount = !hasDiscount
+    ? 0
+    : form.discountType === "PERCENT"
       ? Math.min(subtotal, (subtotal * discountValue) / 100)
       : Math.min(subtotal, discountValue);
 
@@ -508,12 +538,17 @@ function CreateOrderModal({ storeId, onClose, onCreated }) {
       return;
     }
 
-    if (discountValue < 0) {
-      setFormError("Discount cannot be negative.");
+    // Validate discount only when a value has been entered.
+    if (
+      rawDiscountValue !== "" &&
+      (!Number.isFinite(discountValue) || discountValue < 0)
+    ) {
+      setFormError("Please enter a valid discount value.");
       return;
     }
 
     if (
+      hasDiscount &&
       form.discountType === "PERCENT" &&
       discountValue > 100
     ) {
@@ -521,8 +556,17 @@ function CreateOrderModal({ storeId, onClose, onCreated }) {
       return;
     }
 
+    if (
+      hasDiscount &&
+      form.discountType === "FIXED" &&
+      discountValue > subtotal
+    ) {
+      setFormError("Fixed discount cannot exceed the subtotal.");
+      return;
+    }
+
     const body = {
-      channel: "ADMIN",
+      channel: form.channel,
       customerId: form.customerId,
       province: form.province.trim(),
       district: form.district.trim(),
@@ -531,10 +575,15 @@ function CreateOrderModal({ storeId, onClose, onCreated }) {
       landmark: form.landmark.trim(),
       orderNote: form.orderNote.trim(),
       deliveryFee,
-      discount: {
-        type: form.discountType,
-        value: discountValue,
-      },
+
+      // Send discount only when a discount greater than zero is applied.
+      ...(hasDiscount && {
+        discount: {
+          type: form.discountType,
+          value: discountValue,
+        },
+      }),
+
       paymentMethod: form.paymentMethod,
       paymentStatus: form.paymentStatus,
       paymentReference: form.paymentReference.trim() || null,
@@ -594,6 +643,29 @@ function CreateOrderModal({ storeId, onClose, onCreated }) {
 
         <form onSubmit={handleSubmit} className="overflow-y-auto p-5">
           <div className="space-y-6">
+            {/* Order channel */}
+            <section>
+              <h3 className="mb-3 flex items-center gap-2 font-semibold">
+                <ShoppingBag className="h-4 w-4" />
+                Order channel
+              </h3>
+
+              <div>
+                <label className={labelClass}>Channel</label>
+                <select
+                  value={form.channel}
+                  onChange={(event) =>
+                    updateField("channel", event.target.value)
+                  }
+                  className={inputClass}
+                >
+                  <option value="ADMIN">Admin Dashboard</option>
+                  <option value="POS">POS</option>
+                  <option value="WEB">Online Store</option>
+                </select>
+              </div>
+            </section>
+
             {/* Customer */}
             <section>
               <h3 className="mb-3 flex items-center gap-2 font-semibold">
@@ -650,83 +722,83 @@ function CreateOrderModal({ storeId, onClose, onCreated }) {
                 Products
               </h3>
 
-                <SelectionSearch
-                  value={productSearch}
-                  onChange={setProductSearch}
-                  results={filteredProducts}
-                  loading={productsQuery.loading}
-                  placeholder="Search products"
-                  emptyMessage="No products found."
-                  getLabel={(product) =>
-                    `${getProductName(product)} — ${formatMoney(getProductPrice(product))}`
+              <SelectionSearch
+                value={productSearch}
+                onChange={setProductSearch}
+                results={filteredProducts}
+                loading={productsQuery.loading}
+                placeholder="Search products"
+                emptyMessage="No products found."
+                getLabel={(product) =>
+                  `${getProductName(product)} — ${formatMoney(getProductPrice(product))}`
+                }
+                getDescription={(product) =>
+                  `Available stock: ${getProductStock(product)}`
+                }
+                onSelect={(product) => {
+                  setSelectedProductId(String(getProductId(product)));
+                  setSelectedVariantId("");
+                  setProductSearch(getProductName(product));
+                }}
+              />
+
+              {selectedProduct && variants.length > 0 && (
+                <select
+                  value={selectedVariantId}
+                  onChange={(event) =>
+                    setSelectedVariantId(event.target.value)
                   }
-                  getDescription={(product) =>
-                    `Available stock: ${getProductStock(product)}`
-                  }
-                  onSelect={(product) => {
-                    setSelectedProductId(String(getProductId(product)));
-                    setSelectedVariantId("");
-                    setProductSearch(getProductName(product));
-                  }}
+                  className={`${inputClass} mt-2`}
+                >
+                  <option value="">Select variant</option>
+
+                  {variants.map((variant, index) => {
+                    const id = getVariantId(variant);
+
+                    return (
+                      <option
+                        key={id ?? index}
+                        value={id}
+                      >
+                        {getVariantName(variant)} —{" "}
+                        {formatMoney(
+                          getVariantPrice(variant, selectedProduct)
+                        )}
+                      </option>
+                    );
+                  })}
+                </select>
+              )}
+
+              {selectedProduct && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Available stock:{" "}
+                  {selectedVariant
+                    ? getVariantStock(selectedVariant, selectedProduct)
+                    : getProductStock(selectedProduct)}
+                </p>
+              )}
+
+              <div className="mt-2 flex gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(event) => setQuantity(event.target.value)}
+                  placeholder="Quantity"
+                  className={`${inputClass} max-w-32`}
                 />
 
-                  {selectedProduct && variants.length > 0 && (
-                    <select
-                      value={selectedVariantId}
-                      onChange={(event) =>
-                        setSelectedVariantId(event.target.value)
-                      }
-                      className={`${inputClass} mt-2`}
-                    >
-                      <option value="">Select variant</option>
+                <button
+                  type="button"
+                  onClick={addProduct}
+                  className="inline-flex items-center gap-2 rounded-lg bg-brand-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-red-700"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add
+                </button>
+              </div>
 
-                      {variants.map((variant, index) => {
-                        const id = getVariantId(variant);
-
-                        return (
-                          <option
-                            key={id ?? index}
-                            value={id}
-                          >
-                            {getVariantName(variant)} —{" "}
-                            {formatMoney(
-                              getVariantPrice(variant, selectedProduct)
-                            )}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  )}
-
-                  {selectedProduct && (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Available stock:{" "}
-                      {selectedVariant
-                        ? getVariantStock(selectedVariant, selectedProduct)
-                        : getProductStock(selectedProduct)}
-                    </p>
-                  )}
-
-                  <div className="mt-2 flex gap-2">
-                    <input
-                      type="number"
-                      min="1"
-                      value={quantity}
-                      onChange={(event) => setQuantity(event.target.value)}
-                      placeholder="Quantity"
-                      className={`${inputClass} max-w-32`}
-                    />
-
-                    <button
-                      type="button"
-                      onClick={addProduct}
-                      className="inline-flex items-center gap-2 rounded-lg bg-brand-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-red-700"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add
-                    </button>
-                  </div>
-  
               {items.length > 0 && (
                 <div className="mt-4 overflow-hidden rounded-xl border border-yz-border">
                   {items.map((item) => (
@@ -876,7 +948,7 @@ function CreateOrderModal({ storeId, onClose, onCreated }) {
                   >
                     <option value="COD">Cash on Delivery</option>
                     <option value="CASH">Cash</option>
-                    <option value="ONLINE">Online</option>
+                    {/* <option value="ONLINE">Online</option> */}
                   </select>
                 </div>
 
@@ -891,7 +963,7 @@ function CreateOrderModal({ storeId, onClose, onCreated }) {
                   >
                     <option value="UNPAID">Unpaid</option>
                     <option value="PAID">Paid</option>
-                    <option value="PARTIALLY_PAID">Partially Paid</option>
+                    {/* <option value="PARTIALLY_PAID">Partially Paid</option> */}
                   </select>
                 </div>
 
@@ -933,14 +1005,18 @@ function CreateOrderModal({ storeId, onClose, onCreated }) {
                 </div>
 
                 <div>
-                  <label className={labelClass}>Discount value</label>
+                  <label className={labelClass}>
+                    Discount value (Optional)
+                  </label>
                   <input
                     type="number"
                     min="0"
+                    step="any"
                     value={form.discountValue}
                     onChange={(event) =>
                       updateField("discountValue", event.target.value)
                     }
+                    placeholder="No discount"
                     className={inputClass}
                   />
                 </div>
@@ -1226,7 +1302,7 @@ export default function SellerOrders() {
               >
                 <option value="">All statuses</option>
 
-                {STATUS_OPTIONS.map((status) => (
+                {STATUS_FILTER_OPTIONS.map((status) => (
                   <option key={status} value={status}>
                     {formatLabel(status)}
                   </option>
@@ -1243,7 +1319,6 @@ export default function SellerOrders() {
                 <option value="ALL">All channels</option>
                 <option value="POS">POS</option>
                 <option value="WEB">Website</option>
-                <option value="ADMIN">Admin</option>
               </select>
 
               <button
@@ -1343,7 +1418,7 @@ export default function SellerOrders() {
                             <td className="px-4 py-4">{customerName}</td>
 
                             <td className="px-4 py-4">
-                              {formatLabel(item.channel)}
+                              {getChannelLabel(item.channel)}
                             </td>
 
                             <td className="px-4 py-4 text-muted-foreground">
@@ -1508,7 +1583,7 @@ export default function SellerOrders() {
                       </span>
 
                       <span className="text-xs text-muted-foreground">
-                        {formatLabel(order.channel)}
+                        {getChannelLabel(order.channel)}
                       </span>
                     </div>
                   </section>
@@ -1862,7 +1937,7 @@ export default function SellerOrders() {
                         >
                           <option value="">Choose a new status</option>
 
-                          {STATUS_OPTIONS.filter(
+                          {STATUS_UPDATE_OPTIONS.filter(
                             (status) => status !== order.status
                           ).map((status) => (
                             <option key={status} value={status}>

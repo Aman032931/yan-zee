@@ -1,6 +1,14 @@
+
 import { useState } from "react"
 import { useOutletContext } from "react-router-dom"
-import { Pencil, Plus, Tag, Trash2 } from "lucide-react"
+import {
+  Pencil,
+  Plus,
+  Tag,
+  Trash2,
+  Package,
+  Search,
+} from "lucide-react"
 
 import {
   useBrands,
@@ -40,7 +48,8 @@ const COLUMNS = [
   { label: "Actions", align: "right" },
 ]
 
-/* ---------------- Add / Edit form (popup) ---------------- */
+/* ---------------- Add / Edit form ---------------- */
+
 function BrandForm({ storeId, brand, onDone }) {
   const isEdit = Boolean(brand)
   const create = useCreateBrand(storeId)
@@ -48,7 +57,9 @@ function BrandForm({ storeId, brand, onDone }) {
   const saving = create.isPending || update.isPending
 
   const [name, setName] = useState(brand?.name ?? "")
-  const [isAvailable, setIsAvailable] = useState(brand?.isAvailable ?? true)
+  const [isAvailable, setIsAvailable] = useState(
+    brand?.isAvailable ?? true
+  )
   const [logoFile, setLogoFile] = useState(null)
   const [seoImageFile, setSeoImageFile] = useState(null)
   const [error, setError] = useState("")
@@ -58,6 +69,7 @@ function BrandForm({ storeId, brand, onDone }) {
     setError("")
 
     const trimmed = name.trim()
+
     if (!trimmed) {
       setError("Brand name is required.")
       return
@@ -80,6 +92,7 @@ function BrandForm({ storeId, brand, onDone }) {
           seoImageFile,
         })
       }
+
       onDone()
     } catch (err) {
       setError(err.message || "Unable to save brand.")
@@ -92,13 +105,14 @@ function BrandForm({ storeId, brand, onDone }) {
       onClose={onDone}
       busy={saving}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <ErrorBanner>{error}</ErrorBanner>
 
         <div>
           <label className={labelClass}>
             Brand name <Req />
           </label>
+
           <input
             required
             value={name}
@@ -110,7 +124,7 @@ function BrandForm({ storeId, brand, onDone }) {
 
         <ImageUploadField
           id="brand-logo"
-          label="Logo (optional)"
+          label="Brand logo (optional)"
           file={logoFile}
           currentUrl={brand?.logo}
           onChange={setLogoFile}
@@ -128,22 +142,37 @@ function BrandForm({ storeId, brand, onDone }) {
           fit="contain"
         />
 
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-700">
-          <input
-            type="checkbox"
-            checked={isAvailable}
-            onChange={(e) => setIsAvailable(e.target.checked)}
-            className="h-4 w-4 accent-brand-red-600"
-          />
-          Available to use on products
-        </label>
+        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+          <label className="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              checked={isAvailable}
+              onChange={(e) => setIsAvailable(e.target.checked)}
+              className="h-4 w-4 accent-brand-red-600"
+            />
 
-        <div className="flex justify-end gap-2 pt-2">
+            <span>
+              <span className="block text-sm font-semibold text-zinc-900">
+                Available to use on products
+              </span>
+              <span className="mt-0.5 block text-xs text-zinc-500">
+                This brand can be selected when creating products.
+              </span>
+            </span>
+          </label>
+        </div>
+
+        <div className="flex justify-end gap-2 border-t border-zinc-100 pt-4">
           <SecondaryButton onClick={onDone} disabled={saving}>
             Cancel
           </SecondaryButton>
+
           <PrimaryButton type="submit" disabled={saving}>
-            {saving ? "Saving..." : isEdit ? "Save changes" : "Create brand"}
+            {saving
+              ? "Saving..."
+              : isEdit
+                ? "Save changes"
+                : "Create brand"}
           </PrimaryButton>
         </div>
       </form>
@@ -151,17 +180,26 @@ function BrandForm({ storeId, brand, onDone }) {
   )
 }
 
-/* ---------------- Page ---------------- */
+/* ---------------- Brands page ---------------- */
+
 export default function SellerBrands() {
   const { shop } = useOutletContext()
 
-  const { data: brands = [], isLoading, error } = useBrands(shop.id)
+  const {
+    data: brands = [],
+    isLoading,
+    error,
+  } = useBrands(shop.id)
+
   const toggle = useToggleBrandAvailability(shop.id)
   const remove = useDeleteBrand(shop.id)
 
-  const list = useListControls(brands, (b) => `${b.name} ${b.slug ?? ""}`)
+  const list = useListControls(
+    brands,
+    (brand) => `${brand.name} ${brand.slug ?? ""}`
+  )
 
-  // null = popup closed, {} = add, brand object = edit
+  // null = closed, {} = add, brand object = edit
   const [formBrand, setFormBrand] = useState(null)
   const [actionError, setActionError] = useState("")
   const [busyId, setBusyId] = useState(null)
@@ -169,22 +207,41 @@ export default function SellerBrands() {
   const run = async (id, fn) => {
     setActionError("")
     setBusyId(id)
+
     try {
       await fn()
     } catch (err) {
-      setActionError(err.message)
+      setActionError(
+        err.message || "The action could not be completed."
+      )
     } finally {
       setBusyId(null)
     }
   }
 
-  const handleToggle = (brand) =>
-    run(brand.id, () => toggle.mutateAsync(brand.id))
+  const handleToggle = (brand) => {
+    run(brand.id, () =>
+      toggle.mutateAsync(brand.id)
+    )
+  }
 
   const handleDelete = (brand) => {
     if (!window.confirm(`Delete "${brand.name}"?`)) return
-    run(brand.id, () => remove.mutateAsync(brand.id))
+
+    run(brand.id, () =>
+      remove.mutateAsync(brand.id)
+    )
   }
+
+  const availableCount = brands.filter(
+    (brand) => brand.isAvailable
+  ).length
+
+  const productCount = brands.reduce(
+    (total, brand) =>
+      total + (brand._count?.products ?? 0),
+    0
+  )
 
   return (
     <PageShell>
@@ -199,8 +256,11 @@ export default function SellerBrands() {
         }
       />
 
-      <ErrorBanner>{actionError || error?.message}</ErrorBanner>
+      <ErrorBanner>
+        {actionError || error?.message}
+      </ErrorBanner>
 
+      {/* Brand list */}
       <DataCard
         icon={Tag}
         title="All brands"
@@ -221,7 +281,7 @@ export default function SellerBrands() {
           />
         ) : list.total === 0 ? (
           <EmptyState
-            icon={Tag}
+            icon={Search}
             title={`No results for "${list.query.trim()}"`}
             text="Try a different name or slug."
           />
@@ -238,7 +298,7 @@ export default function SellerBrands() {
                         image={brand.logo}
                         icon={Tag}
                         name={brand.name}
-                        sub={brand.slug}
+                        sub={brand.slug || "No slug"}
                         fit="contain"
                       />
                     </Td>
@@ -248,8 +308,12 @@ export default function SellerBrands() {
                     </Td>
 
                     <Td>
-                      <StatusPill tone={brand.isAvailable ? "green" : "gray"}>
-                        {brand.isAvailable ? "Available" : "Unavailable"}
+                      <StatusPill
+                        tone={brand.isAvailable ? "green" : "gray"}
+                      >
+                        {brand.isAvailable
+                          ? "Available"
+                          : "Unavailable"}
                       </StatusPill>
                     </Td>
 

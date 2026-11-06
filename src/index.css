@@ -14,8 +14,8 @@
    `brand-red-600` / `brand-red-700` instead of `red-600`/`red-700`.
    ========================================================== */
 @theme {
-  --color-brand-red-600: #dc2020;
-  --color-brand-red-700: #b81a1a;
+  --color-brand-red-600: #EF4444;
+  --color-brand-red-700: #DC2626;
 
   --color-yz-bg: #f8f7f5;
   --color-yz-card: #ffffff;
